@@ -1,0 +1,33 @@
+{
+  "hkbp_arsip_pdf": [
+    {
+      "id": "arsip-1",
+      "judul": "Tata Gereja HKBP (Amanat & Peraturan)",
+      "keterangan": "Aturan, Peraturan, dan Konfesi resmi HKBP sebagai landasan pelayanan gerejawi.",
+      "tanggalUpload": "2026-06-15",
+      "fileName": "tata_gereja_hkbp_2026.pdf",
+      "fileSize": "1.24 MB",
+      "pdfUrl": "data:application/pdf;base64,JVBERi0xLjQKJ..."
+    },
+    {
+      "id": "arsip-2",
+      "judul": "Kumpulan Lagu Koor Huria Batak",
+      "keterangan": "Daftar lagu koor koor Batak populer untuk latihan Koor Ama, Ina, dan Remaja.",
+      "tanggalUpload": "2026-06-20",
+      "fileName": "kumpulan_koor_batak.pdf",
+      "fileSize": "3.12 MB",
+      "pdfUrl": ""
+    }
+  ],
+  "updated_at": "1783859669919",
+  "other_key": "some value",
+  "hkbp_registered_admins": [
+    {
+      "username": "admin",
+      "email": "admin@hkbp.or.id",
+      "password": "adminpassword123",
+      "namaGereja": "HKBP Hinalang Silalahi",
+      "status": "parhalado"
+    }
+  ]
+}

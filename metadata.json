@@ -1,0 +1,6 @@
+{
+  "name": "Pelayanan Gereja HKBP",
+  "description": "Portal pelayanan digital Gereja HKBP dengan jadwal kebaktian, warta jemaat, keuangan modern, jemaat berulang tahun, live stream presenter, dan dashboard admin terproteksi.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
