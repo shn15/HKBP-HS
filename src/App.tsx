@@ -4,6 +4,7 @@ import MemberView from './components/MemberView';
 import AdminLogin from './components/AdminLogin';
 import AdminView from './components/AdminView';
 import StandaloneTentang from './components/StandaloneTentang';
+import { fetchDbFromServer, saveDbKey, saveDbBatch } from './services/dbClient';
 import { Liturgi, Warta, Transaksi, Jemaat, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, TentangGerejaItem, WeeklyAttendanceTrend } from './types';
 import {
   INITIAL_LITURGI_MINGGU,
@@ -46,13 +47,9 @@ export default function App() {
   const [parhaladoList, setParhaladoList] = useState<ParhaladoMember[]>([]);
   const [attendanceTrends, setAttendanceTrends] = useState<WeeklyAttendanceTrend[]>([]);
 
-  // Helper to save key to server
+  // Helper to save key to server/Firestore
   const saveKeyToServer = (key: string, value: any) => {
-    fetch('/api/db', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, value })
-    }).catch(err => console.error(`Failed to sync ${key} to server:`, err));
+    saveDbKey(key, value).catch(err => console.error(`Failed to sync ${key}:`, err));
   };
 
   // 1. Initial hydration and safety checks
@@ -132,9 +129,8 @@ export default function App() {
     if (localTrends) setAttendanceTrends(JSON.parse(localTrends));
     else setAttendanceTrends(INITIAL_ATTENDANCE_TRENDS);
 
-    // B. Fetch server database for real synchronization
-    fetch('/api/db')
-      .then(res => res.json())
+    // B. Fetch server/Firestore database for real synchronization
+    fetchDbFromServer()
       .then(db => {
         if (db && typeof db === 'object' && Object.keys(db).length > 0) {
           // Update all React state and local storage caches with server state
@@ -227,14 +223,10 @@ export default function App() {
             hkbp_parhalado_list: localParhalado ? JSON.parse(localParhalado) : INITIAL_PARHALADO_LIST,
             hkbp_attendance_trends: localTrends ? JSON.parse(localTrends) : INITIAL_ATTENDANCE_TRENDS,
           };
-          fetch('/api/db', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: seedData })
-          }).catch(e => console.error('Failed to seed server DB:', e));
+          saveDbBatch(seedData).catch(e => console.error('Failed to seed DB:', e));
         }
       })
-      .catch(err => console.error('Failed to load server DB:', err));
+      .catch(err => console.error('Failed to load DB:', err));
   }, []);
 
   // 2. Synchronization updaters to local storage AND server database

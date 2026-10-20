@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, Key, Mail, User, Eye, EyeOff, Building, Database } from 'lucide-react';
 import { AdminCredentials } from '../types';
+import { fetchDbFromServer, saveDbKey } from '../services/dbClient';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -25,8 +26,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
   const [showRegPassword, setShowRegPassword] = useState(false);
 
   React.useEffect(() => {
-    fetch('/api/db')
-      .then(res => res.json())
+    fetchDbFromServer()
       .then(db => {
         if (db && db.hkbp_registered_admins) {
           localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
@@ -35,12 +35,16 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
             setIsRegisterMode(true);
           }
         } else {
-          setIsDbEmpty(true);
-          setIsRegisterMode(true);
+          const localData = localStorage.getItem('hkbp_registered_admins');
+          const parsed = localData ? JSON.parse(localData) : [];
+          setIsDbEmpty(parsed.length === 0);
+          if (parsed.length === 0) {
+            setIsRegisterMode(true);
+          }
         }
       })
       .catch(err => {
-        console.error('Failed to load registered admins from server:', err);
+        console.error('Failed to load registered admins:', err);
         try {
           const localData = localStorage.getItem('hkbp_registered_admins');
           const parsed = localData ? JSON.parse(localData) : [];
@@ -131,29 +135,29 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     try {
       const accountList = [newAccount];
 
-      const res = await fetch('/api/db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'hkbp_registered_admins', value: accountList })
-      });
+      await saveDbKey('hkbp_registered_admins', accountList);
 
-      if (res.ok) {
-        localStorage.setItem('hkbp_registered_admins', JSON.stringify(accountList));
-        setIsDbEmpty(false);
-        setIsRegisterMode(false);
-        setError('');
-        setSuccessMsg('Akun Khusus Pertama Berhasil Dibuat! Silakan masuk dengan akun tersebut.');
-        
-        // Autofill login form
-        setUsername(newAccount.username);
-        setEmail(newAccount.email);
-        setPassword(newAccount.password || '');
-      } else {
-        setError('Gagal menyimpan akun ke server. Silakan coba lagi.');
-      }
+      localStorage.setItem('hkbp_registered_admins', JSON.stringify(accountList));
+      setIsDbEmpty(false);
+      setIsRegisterMode(false);
+      setError('');
+      setSuccessMsg('Akun Khusus Pertama Berhasil Dibuat! Silakan masuk dengan akun tersebut.');
+      
+      // Autofill login form
+      setUsername(newAccount.username);
+      setEmail(newAccount.email);
+      setPassword(newAccount.password || '');
     } catch (err) {
       console.error('Failed to register first account:', err);
-      setError('Terjadi kesalahan koneksi saat mendaftarkan akun.');
+      // Fallback: save to localStorage anyway so users on Vercel are never stuck
+      localStorage.setItem('hkbp_registered_admins', JSON.stringify([newAccount]));
+      setIsDbEmpty(false);
+      setIsRegisterMode(false);
+      setError('');
+      setSuccessMsg('Akun Berhasil Dibuat! Silakan masuk dengan akun tersebut.');
+      setUsername(newAccount.username);
+      setEmail(newAccount.email);
+      setPassword(newAccount.password || '');
     }
   };
 

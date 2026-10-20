@@ -7,5 +7,6 @@
   "storageBucket": "wide-destination-41b2m.firebasestorage.app",
   "messagingSenderId": "1064630505789",
   "measurementId": "",
-  "oAuthClientId": "1064630505789-7km2b7ardqfhtpaamtmjb7kmdiepsp99.apps.googleusercontent.com"
+  "oAuthClientId": "1064630505789-7km2b7ardqfhtpaamtmjb7kmdiepsp99.apps.googleusercontent.com",
+  "recaptchaSiteKey": ""
 }

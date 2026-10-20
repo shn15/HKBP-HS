@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PdfJsViewer } from './PdfJsViewer';
 import * as XLSX from 'xlsx';
+import { fetchDbFromServer, saveDbKey } from '../services/dbClient';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -163,11 +164,7 @@ export default function AdminView({
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
 
   const saveRegisteredAdminsToServer = (data: AdminCredentials[]) => {
-    fetch('/api/db', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: 'hkbp_registered_admins', value: data })
-    }).catch(err => console.error('Failed to sync registered admins to server:', err));
+    saveDbKey('hkbp_registered_admins', data).catch(err => console.error('Failed to sync registered admins to server:', err));
   };
 
   useEffect(() => {
@@ -193,9 +190,8 @@ export default function AdminView({
         setAccountsList(defaultAdmins);
       }
 
-      // Sync with server DB on mount
-      fetch('/api/db')
-        .then(res => res.json())
+      // Sync with server/Firestore DB on mount
+      fetchDbFromServer()
         .then(db => {
           if (db) {
             if (db.hkbp_registered_admins) {
@@ -240,15 +236,11 @@ export default function AdminView({
                   pdfUrl: ''
                 }
               ];
-              fetch('/api/db', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'hkbp_arsip_pdf', value: defaultArsip })
-              }).catch(e => console.error(e));
+              saveDbKey('hkbp_arsip_pdf', defaultArsip).catch(e => console.error(e));
             }
           }
         })
-        .catch(err => console.error('Failed to load registered admins/PDFs from server:', err));
+        .catch(err => console.error('Failed to load registered admins/PDFs:', err));
     } catch (e) {
       console.error(e);
     }
@@ -723,12 +715,7 @@ export default function AdminView({
 
   const saveArsipPdfs = (data: any[]) => {
     setArsipPdfs(data);
-    localStorage.setItem('hkbp_arsip_pdf', JSON.stringify(data));
-    fetch('/api/db', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: 'hkbp_arsip_pdf', value: data })
-    }).catch(err => console.error('Failed to sync arsip PDF to server:', err));
+    saveDbKey('hkbp_arsip_pdf', data).catch(err => console.error('Failed to sync arsip PDF:', err));
   };
 
   // ----------------------------------------------------
