@@ -22,6 +22,8 @@ export interface PartangianganAttendanceRow {
   parhalado: number;
 }
 
+export type PartangianganMode = 'normal' | 'keluarga' | 'selesai';
+
 export interface PetugasPartangianganRow {
   hari: 'Selasa' | 'Rabu';
   lunggu: string;
@@ -119,6 +121,9 @@ export interface WeeklyAttendanceTrend {
   mingguSm: number;
   mingguRena: number;
   mingguParhalado: number;
+  shift1?: number;
+  shift2?: number;
+  sekolahMinggu?: number;
   partangianganAma: number;
   partangianganIna: number;
   partangianganSm: number;

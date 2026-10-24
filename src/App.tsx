@@ -5,7 +5,7 @@ import AdminLogin from './components/AdminLogin';
 import AdminView from './components/AdminView';
 import StandaloneTentang from './components/StandaloneTentang';
 import { fetchDbFromServer, saveDbKey, saveDbBatch } from './services/dbClient';
-import { Liturgi, Warta, Transaksi, Jemaat, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, TentangGerejaItem, WeeklyAttendanceTrend } from './types';
+import { Liturgi, Warta, Transaksi, Jemaat, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, TentangGerejaItem, WeeklyAttendanceTrend, PartangianganMode } from './types';
 import {
   INITIAL_LITURGI_MINGGU,
   INITIAL_LITURGI_PARTANGIANGAN,
@@ -23,9 +23,15 @@ import {
 } from './data/mockData';
 
 export default function App() {
-  // Navigation states
-  const [isAdminMode, setIsAdminMode] = useState(false);
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  // Navigation states with persistence
+  const [isAdminMode, setIsAdminMode] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'admin') return true;
+    return sessionStorage.getItem('hkbp_is_admin_mode') === 'true';
+  });
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
+    return sessionStorage.getItem('hkbp_admin_logged') === 'true';
+  });
   const [isStandaloneTentang, setIsStandaloneTentang] = useState(false);
 
   // Core synchronized application state
@@ -46,6 +52,7 @@ export default function App() {
   const [tentangGerejaList, setTentangGerejaList] = useState<TentangGerejaItem[]>([]);
   const [parhaladoList, setParhaladoList] = useState<ParhaladoMember[]>([]);
   const [attendanceTrends, setAttendanceTrends] = useState<WeeklyAttendanceTrend[]>([]);
+  const [partangianganMode, setPartangianganMode] = useState<PartangianganMode>('normal');
 
   // Helper to save key to server/Firestore
   const saveKeyToServer = (key: string, value: any) => {
@@ -90,6 +97,8 @@ export default function App() {
     setPartangianganAttendanceDate(localStorage.getItem('hkbp_partangiangan_attendance_date') || 'Selasa, 09 Juni & Rabu, 10 Juni 2026');
     setPetugasPartangianganDate(localStorage.getItem('hkbp_petugas_partangiangan_date') || 'Selasa, 16 Juni & Rabu, 17 Juni 2026');
     setPetugasMingguDate(localStorage.getItem('hkbp_petugas_minggu_date') || 'Minggu, 14 Juni 2026');
+    const localPartangianganMode = localStorage.getItem('hkbp_partangiangan_mode') as PartangianganMode;
+    if (localPartangianganMode) setPartangianganMode(localPartangianganMode);
 
     const localWarta = localStorage.getItem('hkbp_warta_list');
     if (localWarta) setWartaList(JSON.parse(localWarta));
@@ -166,6 +175,10 @@ export default function App() {
             setPetugasMingguDate(db.hkbp_petugas_minggu_date);
             localStorage.setItem('hkbp_petugas_minggu_date', db.hkbp_petugas_minggu_date);
           }
+          if (db.hkbp_partangiangan_mode !== undefined) {
+            setPartangianganMode(db.hkbp_partangiangan_mode as PartangianganMode);
+            localStorage.setItem('hkbp_partangiangan_mode', db.hkbp_partangiangan_mode);
+          }
           if (db.hkbp_warta_list) {
             setWartaList(db.hkbp_warta_list);
             localStorage.setItem('hkbp_warta_list', JSON.stringify(db.hkbp_warta_list));
@@ -229,17 +242,67 @@ export default function App() {
       .catch(err => console.error('Failed to load DB:', err));
   }, []);
 
+  // Real-time synchronization: cross-tab storage events, focus sync, and multi-device polling
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (!e.newValue) return;
+      try {
+        if (e.key === 'hkbp_liturgi_minggu') setLiturgiMinggu(JSON.parse(e.newValue));
+        if (e.key === 'hkbp_liturgi_partangiangan') setLiturgiPartangiangan(JSON.parse(e.newValue));
+        if (e.key === 'hkbp_warta_list') setWartaList(JSON.parse(e.newValue));
+        if (e.key === 'hkbp_transaksi_list') setTransaksiList(JSON.parse(e.newValue));
+        if (e.key === 'hkbp_jemaat_list') setJemaatList(JSON.parse(e.newValue));
+        if (e.key === 'hkbp_petugas_minggu') setPetugasMinggu(JSON.parse(e.newValue));
+        if (e.key === 'hkbp_petugas_partangiangan') setPetugasPartangiangan(JSON.parse(e.newValue));
+        if (e.key === 'hkbp_jadwal_ibadah') setJadwalIbadah(JSON.parse(e.newValue));
+        if (e.key === 'hkbp_tentang_gereja_list') setTentangGerejaList(JSON.parse(e.newValue));
+        if (e.key === 'hkbp_parhalado_list') setParhaladoList(JSON.parse(e.newValue));
+      } catch (err) {
+        console.error('Storage sync error:', err);
+      }
+    };
+
+    const syncFromServer = () => {
+      fetchDbFromServer().then(db => {
+        if (db && typeof db === 'object' && Object.keys(db).length > 0) {
+          if (db.hkbp_liturgi_minggu) setLiturgiMinggu(db.hkbp_liturgi_minggu);
+          if (db.hkbp_liturgi_partangiangan) setLiturgiPartangiangan(db.hkbp_liturgi_partangiangan);
+          if (db.hkbp_warta_list) setWartaList(db.hkbp_warta_list);
+          if (db.hkbp_petugas_minggu) setPetugasMinggu(db.hkbp_petugas_minggu);
+          if (db.hkbp_petugas_partangiangan) setPetugasPartangiangan(db.hkbp_petugas_partangiangan);
+          if (db.hkbp_transaksi_list) setTransaksiList(db.hkbp_transaksi_list);
+          if (db.hkbp_jemaat_list) setJemaatList(db.hkbp_jemaat_list);
+          if (db.hkbp_jadwal_ibadah) setJadwalIbadah(db.hkbp_jadwal_ibadah);
+          if (db.hkbp_tentang_gereja_list) setTentangGerejaList(db.hkbp_tentang_gereja_list);
+          if (db.hkbp_parhalado_list) setParhaladoList(db.hkbp_parhalado_list);
+        }
+      }).catch(() => {});
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('focus', syncFromServer);
+    const interval = setInterval(syncFromServer, 8000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('focus', syncFromServer);
+      clearInterval(interval);
+    };
+  }, []);
+
   // 2. Synchronization updaters to local storage AND server database
   const handleUpdateLiturgiMinggu = (data: Liturgi[]) => {
     setLiturgiMinggu(data);
     localStorage.setItem('hkbp_liturgi_minggu', JSON.stringify(data));
     saveKeyToServer('hkbp_liturgi_minggu', data);
+    window.dispatchEvent(new CustomEvent('hkbp_data_updated', { detail: { key: 'hkbp_liturgi_minggu', data } }));
   };
 
   const handleUpdateLiturgiPartangiangan = (data: Liturgi[]) => {
     setLiturgiPartangiangan(data);
     localStorage.setItem('hkbp_liturgi_partangiangan', JSON.stringify(data));
     saveKeyToServer('hkbp_liturgi_partangiangan', data);
+    window.dispatchEvent(new CustomEvent('hkbp_data_updated', { detail: { key: 'hkbp_liturgi_partangiangan', data } }));
   };
 
   const handleUpdatePetugasMinggu = (data: PetugasMingguRow[]) => {
@@ -276,6 +339,12 @@ export default function App() {
     setPetugasMingguDate(date);
     localStorage.setItem('hkbp_petugas_minggu_date', date);
     saveKeyToServer('hkbp_petugas_minggu_date', date);
+  };
+
+  const handleUpdatePartangianganMode = (mode: PartangianganMode) => {
+    setPartangianganMode(mode);
+    localStorage.setItem('hkbp_partangiangan_mode', mode);
+    saveKeyToServer('hkbp_partangiangan_mode', mode);
   };
 
   const handleUpdateWarta = (data: Warta[]) => {
@@ -332,38 +401,66 @@ export default function App() {
     saveKeyToServer('hkbp_attendance_trends', data);
   };
 
+  const handleOpenAdmin = () => {
+    setIsAdminMode(true);
+    sessionStorage.setItem('hkbp_is_admin_mode', 'true');
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', 'admin');
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  const handleCloseAdmin = () => {
+    setIsAdminMode(false);
+    sessionStorage.removeItem('hkbp_is_admin_mode');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('view');
+    url.searchParams.delete('admin_tab');
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  const handleLoginSuccess = () => {
+    setIsAdminLoggedIn(true);
+    sessionStorage.setItem('hkbp_admin_logged', 'true');
+    sessionStorage.setItem('hkbp_is_admin_mode', 'true');
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', 'admin');
+    window.history.replaceState({}, '', url.toString());
+  };
+
   // Logout routine
   const handleLogout = () => {
     sessionStorage.removeItem('hkbp_admin_logged');
+    sessionStorage.removeItem('hkbp_is_admin_mode');
     setIsAdminLoggedIn(false);
     setIsAdminMode(false);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('view');
+    url.searchParams.delete('admin_tab');
+    window.history.replaceState({}, '', url.toString());
   };
 
   const triggerResetAllData = () => {
-    if (window.confirm('Apakah Anda yakin ingin menyetel ulang seluruh database aplikasi ini ke mode Demo Setelan Awal? Semua inputan khusus Anda akan hilang.')) {
-      localStorage.clear();
-      sessionStorage.clear();
-      setLiturgiMinggu(INITIAL_LITURGI_MINGGU);
-      setLiturgiPartangiangan(INITIAL_LITURGI_PARTANGIANGAN);
-      setPetugasMinggu(INITIAL_PETUGAS_MINGGU);
-      setPartangianganAttendance(INITIAL_PARTANGIANGAN_ATTENDANCE);
-      setPetugasPartangiangan(INITIAL_PETUGAS_PARTANGIANGAN);
-      setPartangianganAttendanceDate('Selasa, 09 Juni & Rabu, 10 Juni 2026');
-      setPetugasPartangianganDate('Selasa, 16 Juni & Rabu, 17 Juni 2026');
-      setPetugasMingguDate('Minggu, 14 Juni 2026');
-      setWartaList(INITIAL_WARTA);
-      setTransaksiList(INITIAL_TRANSAKSI);
-      setJemaatList([]);
-      setCustomBalanceTitle('Kas Remaja & Naposo');
-      setCustomBalanceValue(2500000);
-      setJadwalIbadah(INITIAL_JADWAL_IBADAH);
-      setTentangGerejaList(INITIAL_TENTANG_GEREJA);
-      setParhaladoList(INITIAL_PARHALADO_LIST);
-      setAttendanceTrends(INITIAL_ATTENDANCE_TRENDS);
-      setIsAdminLoggedIn(false);
-      setIsAdminMode(false);
-      alert('Database Parhalado berhasil di-reset!');
-    }
+    localStorage.clear();
+    sessionStorage.clear();
+    setLiturgiMinggu(INITIAL_LITURGI_MINGGU);
+    setLiturgiPartangiangan(INITIAL_LITURGI_PARTANGIANGAN);
+    setPetugasMinggu(INITIAL_PETUGAS_MINGGU);
+    setPartangianganAttendance(INITIAL_PARTANGIANGAN_ATTENDANCE);
+    setPetugasPartangiangan(INITIAL_PETUGAS_PARTANGIANGAN);
+    setPartangianganAttendanceDate('Selasa, 09 Juni & Rabu, 10 Juni 2026');
+    setPetugasPartangianganDate('Selasa, 16 Juni & Rabu, 17 Juni 2026');
+    setPetugasMingguDate('Minggu, 14 Juni 2026');
+    setWartaList(INITIAL_WARTA);
+    setTransaksiList(INITIAL_TRANSAKSI);
+    setJemaatList([]);
+    setCustomBalanceTitle('Kas Remaja & Naposo');
+    setCustomBalanceValue(2500000);
+    setJadwalIbadah(INITIAL_JADWAL_IBADAH);
+    setTentangGerejaList(INITIAL_TENTANG_GEREJA);
+    setParhaladoList(INITIAL_PARHALADO_LIST);
+    setAttendanceTrends(INITIAL_ATTENDANCE_TRENDS);
+    setIsAdminLoggedIn(false);
+    setIsAdminMode(false);
   };
 
   // RENDERING ENGINE
@@ -403,7 +500,9 @@ export default function App() {
           jadwalIbadah={jadwalIbadah}
           tentangGerejaList={tentangGerejaList}
           parhaladoList={parhaladoList}
-          onGoToLogin={() => setIsAdminMode(true)}
+          partangianganMode={partangianganMode}
+          attendanceTrends={attendanceTrends}
+          onGoToLogin={handleOpenAdmin}
           onUpdateLiturgiMinggu={handleUpdateLiturgiMinggu}
           onUpdateLiturgiPartangiangan={handleUpdateLiturgiPartangiangan}
           onUpdateJemaat={handleUpdateJemaat}
@@ -415,11 +514,11 @@ export default function App() {
           {/* Admin Header Utilities */}
           <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
             <button
-              onClick={() => setIsAdminMode(false)}
+              onClick={handleCloseAdmin}
               className="flex items-center space-x-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Kembali ke Portal Jemaat</span>
+              <span>Kembali</span>
             </button>
             
             <div className="text-[11px] text-slate-500 font-medium">
@@ -429,7 +528,7 @@ export default function App() {
 
           {!isAdminLoggedIn ? (
             /* ADMIN LOGIN GATE */
-            <AdminLogin onLoginSuccess={() => setIsAdminLoggedIn(true)} />
+            <AdminLogin onLoginSuccess={handleLoginSuccess} />
           ) : (
             /* FULLY DOCKABLE ADMIN DASHBOARD */
             <AdminView
@@ -449,6 +548,7 @@ export default function App() {
               jadwalIbadah={jadwalIbadah}
               tentangGerejaList={tentangGerejaList}
               parhaladoList={parhaladoList}
+              partangianganMode={partangianganMode}
               onUpdateLiturgiMinggu={handleUpdateLiturgiMinggu}
               onUpdateLiturgiPartangiangan={handleUpdateLiturgiPartangiangan}
               onUpdatePetugasMinggu={handleUpdatePetugasMinggu}
@@ -457,6 +557,7 @@ export default function App() {
               onUpdatePartangianganAttendanceDate={handleUpdatePartangianganAttendanceDate}
               onUpdatePetugasPartangianganDate={handleUpdatePetugasPartangianganDate}
               onUpdatePetugasMingguDate={handleUpdatePetugasMingguDate}
+              onUpdatePartangianganMode={handleUpdatePartangianganMode}
               onUpdateWarta={handleUpdateWarta}
               onUpdateTransaksi={handleUpdateTransaksi}
               onUpdateJemaat={handleUpdateJemaat}

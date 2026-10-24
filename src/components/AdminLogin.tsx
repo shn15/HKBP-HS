@@ -141,7 +141,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
       setIsDbEmpty(false);
       setIsRegisterMode(false);
       setError('');
-      setSuccessMsg('Akun Khusus Pertama Berhasil Dibuat! Silakan masuk dengan akun tersebut.');
+      setSuccessMsg('Akun Berhasil Dibuat! Silakan masuk dengan akun tersebut.');
       
       // Autofill login form
       setUsername(newAccount.username);
@@ -187,13 +187,13 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
             <>
               <div className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-[10px] text-amber-700 font-bold uppercase tracking-wider mb-2">
                 <Database className="w-3 h-3" />
-                <span>Database Akun Kosong</span>
+                <span>Akun Kosong</span>
               </div>
               <h2 className="text-xl font-black tracking-tight text-slate-900 uppercase">
-                Registrasi Akun Utama
+                Registrasi Akun
               </h2>
               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                Silakan daftarkan akun khusus pertama (Primary Admin) untuk mulai mengelola database dan sistem gereja.
+                Silakan daftarkan akun (Primary Admin) untuk mulai mengelola database dan sistem gereja.
               </p>
             </>
           ) : (
@@ -234,7 +234,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                   type="text"
                   value={regUsername}
                   onChange={(e) => setRegUsername(e.target.value)}
-                  placeholder="Contoh: Pirma Admin"
+                  placeholder="User Admin"
                   className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:bg-slate-50/50 transition-all"
                   required
                 />
@@ -345,7 +345,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                 onClick={() => setIsRegisterMode(false)}
                 className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition py-1 block"
               >
-                Kembali ke Login Portal
+                Kembali ke login
               </button>
             )}
           </form>

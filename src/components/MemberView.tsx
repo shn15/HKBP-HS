@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { PdfJsViewer } from './PdfJsViewer';
 import {
   BookOpen,
   Calendar,
@@ -43,7 +42,12 @@ import {
   Trash2,
   Save,
   Plus,
-  UserPlus
+  Wrench,
+  AlertTriangle,
+  AlertCircle,
+  Navigation,
+  Copy,
+  Check
 } from 'lucide-react';
 import {
   BarChart,
@@ -58,7 +62,9 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, TentangGerejaItem } from '../types';
+import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, TentangGerejaItem, PartangianganMode, WeeklyAttendanceTrend } from '../types';
+import AlkitabModal from './AlkitabModal';
+import { INITIAL_ATTENDANCE_TRENDS } from '../data/mockData';
 
 const BIRTHDAY_VERSES = [
   {
@@ -131,6 +137,8 @@ interface MemberViewProps {
   jadwalIbadah: JadwalIbadah;
   tentangGerejaList: TentangGerejaItem[];
   parhaladoList: ParhaladoMember[];
+  partangianganMode?: PartangianganMode;
+  attendanceTrends?: WeeklyAttendanceTrend[];
   onGoToLogin: () => void;
   onUpdateLiturgiMinggu?: (list: Liturgi[]) => void;
   onUpdateLiturgiPartangiangan?: (list: Liturgi[]) => void;
@@ -154,21 +162,75 @@ export default function MemberView({
   jadwalIbadah,
   tentangGerejaList,
   parhaladoList,
+  partangianganMode = 'normal',
+  attendanceTrends = [],
   onGoToLogin,
   onUpdateLiturgiMinggu,
   onUpdateLiturgiPartangiangan,
   onUpdateJemaat
 }: MemberViewProps) {
-  const [activeTab, setActiveTab] = useState<'minggu' | 'petugas' | 'warta' | 'keuangan' | 'ultah' | 'live'>('minggu');
-  const [showLiveControls, setShowLiveControls] = useState(true);
-  const [kebaktianSubTab, setKebaktianSubTab] = useState<'minggu' | 'partangiangan'>('minggu');
-  const [petugasSubTab, setPetugasSubTab] = useState<'minggu' | 'partangiangan'>('minggu');
+  const [activeTab, setActiveTab] = useState<'minggu' | 'petugas' | 'warta' | 'keuangan' | 'ultah' | 'live'>(() => {
+    const urlTab = new URLSearchParams(window.location.search).get('tab');
+    const validTabs = ['minggu', 'petugas', 'warta', 'keuangan', 'ultah', 'live'];
+    if (urlTab && validTabs.includes(urlTab)) return urlTab as any;
+    const hash = window.location.hash.replace('#', '');
+    if (hash && validTabs.includes(hash)) return hash as any;
+    const local = localStorage.getItem('hkbp_member_active_tab');
+    if (local && validTabs.includes(local)) return local as any;
+    return 'minggu';
+  });
+  const [kebaktianSubTab, setKebaktianSubTab] = useState<'minggu' | 'partangiangan'>(() => {
+    const urlSub = new URLSearchParams(window.location.search).get('kebaktian');
+    if (urlSub === 'minggu' || urlSub === 'partangiangan') return urlSub;
+    const local = localStorage.getItem('hkbp_kebaktian_subtab');
+    if (local === 'minggu' || local === 'partangiangan') return local;
+    return 'minggu';
+  });
+  const [petugasSubTab, setPetugasSubTab] = useState<'minggu' | 'partangiangan'>(() => {
+    const urlSub = new URLSearchParams(window.location.search).get('petugas');
+    if (urlSub === 'minggu' || urlSub === 'partangiangan') return urlSub;
+    const local = localStorage.getItem('hkbp_petugas_subtab');
+    if (local === 'minggu' || local === 'partangiangan') return local;
+    return 'minggu';
+  });
+
+  // Sync navigation states to localStorage and URL for refresh persistence
+  useEffect(() => {
+    localStorage.setItem('hkbp_member_active_tab', activeTab);
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('view') !== 'admin') {
+      url.searchParams.set('tab', activeTab);
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    localStorage.setItem('hkbp_kebaktian_subtab', kebaktianSubTab);
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('view') !== 'admin') {
+      url.searchParams.set('kebaktian', kebaktianSubTab);
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [kebaktianSubTab]);
+
+  useEffect(() => {
+    localStorage.setItem('hkbp_petugas_subtab', petugasSubTab);
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('view') !== 'admin') {
+      url.searchParams.set('petugas', petugasSubTab);
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [petugasSubTab]);
+
   const [expandedLiturgySteps, setExpandedLiturgySteps] = useState<Record<string, boolean>>({});
   const [wartaFilter, setWartaFilter] = useState<WartaKategori | 'semua'>('semua');
   const [wartaSearch, setWartaSearch] = useState('');
   const [keuanganFilter, setKeuanganFilter] = useState<'semua' | 'pemasukan' | 'pengeluaran'>('semua');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeMenuModal, setActiveMenuModal] = useState<'jadwal' | 'sejarah' | 'parhalado' | 'alamat' | 'developer' | null>(null);
+  const [copiedLocation, setCopiedLocation] = useState(false);
+  const [isAlkitabModalOpen, setIsAlkitabModalOpen] = useState(false);
+  const [alkitabQuery, setAlkitabQuery] = useState('');
 
   // ----------------------------------------------------
   // STATES FOR JEMAAT EDITING IN MEMBER VIEW (PORTAL JEMAAT)
@@ -280,17 +342,44 @@ export default function MemberView({
     showMemberToast('Data Jemaat Berhasil Disimpan!');
   };
 
-  const handleDeleteJemaat = (id: string) => {
-    if (!onUpdateJemaat) return;
-    if (confirm('Apakah Anda yakin ingin menghapus data biodata jemaat ini?')) {
-      const filtered = jemaatList.filter((j) => j.id !== id);
-      onUpdateJemaat(filtered);
-      showMemberToast('Biodata Jemaat Dihapus.');
-    }
+  // Safe Confirm Dialog state for MemberView
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
+  const triggerConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
-  // State to track view selection dynamically so clicks immediately respond
-  const [userSelectedMode, setUserSelectedMode] = useState<Record<string, 'teks' | 'pdf'>>({});
+  const handleDeleteJemaat = (id: string) => {
+    if (!onUpdateJemaat) return;
+    triggerConfirm(
+      'Hapus Data Jemaat',
+      'Apakah Anda yakin ingin menghapus data biodata jemaat ini?',
+      () => {
+        const filtered = jemaatList.filter((j) => j.id !== id);
+        onUpdateJemaat(filtered);
+        showMemberToast('Biodata Jemaat Dihapus.');
+      }
+    );
+  };
+
 
   // Disable body scroll when Live mode (Fullscreen) is active to prevent page scrolling behind the iframe
   useEffect(() => {
@@ -628,13 +717,10 @@ export default function MemberView({
               {kebaktianSubTab === 'minggu' ? (
                 /* Sunday Liturgy */
                 liturgiMinggu.slice(0, 1).map((liturgy) => {
-                  const hasFile = !!liturgy.uploadedPdfName;
-                  const currentMode = userSelectedMode[liturgy.id] || (hasFile || liturgy.isPdfMode ? 'pdf' : 'teks');
-
                   return (
                     <div key={liturgy.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md relative z-10" id="agenda-minggu-container">
                       
-                      {/* Render card header always with info and toggles to prevent double headers */}
+                      {/* Card header with info and optional download button */}
                       <div className="p-5 bg-slate-50 border-b border-slate-200">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
@@ -650,170 +736,87 @@ export default function MemberView({
                                 <span className="break-words">Topik: {liturgy.topik}</span>
                               </div>
                             )}
-                            <div className="flex items-center space-x-2 text-xs text-slate-500 mt-1.5">
-                              <Clock className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                              <span>Jadwal: {liturgy.tanggal} (Pkl 09:00 WIB)</span>
-                            </div>
                             {(liturgy.ayatReferensi || liturgy.ayatBacaan) && (
-                              <>
+                              <div className="mt-2 flex flex-wrap gap-2 items-center">
                                 {liturgy.ayatReferensi && (
-                                  <div className="mt-2 text-xs text-amber-800 font-bold bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg inline-block mr-2">
-                                    Epistel: {liturgy.ayatReferensi}
+                                  <div className="text-xs text-amber-900 font-extrabold bg-amber-100/90 border border-amber-300 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 shadow-2xs">
+                                    <BookOpen className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                                    <span>Epistel: {liturgy.ayatReferensi}</span>
                                   </div>
                                 )}
                                 {liturgy.ayatBacaan && (
-                                  <div className="mt-2 text-xs text-amber-800 font-bold bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg inline-block">
-                                    Khotbah: {liturgy.ayatBacaan}
+                                  <div className="text-xs text-amber-900 font-extrabold bg-amber-100/90 border border-amber-300 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 shadow-2xs">
+                                    <BookOpen className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                                    <span>Khotbah: {liturgy.ayatBacaan}</span>
                                   </div>
                                 )}
-                              </>
-                            )}
-                          </div>
-
-                          {/* Interactive toggle mode - available always */}
-                          <div className="flex items-center space-x-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200 self-start sm:self-center">
-                            <button
-                              onClick={() => {
-                                setUserSelectedMode((prev) => ({ ...prev, [liturgy.id]: 'teks' }));
-                              }}
-                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight uppercase transition-all cursor-pointer ${
-                                currentMode === 'teks'
-                                  ? 'bg-blue-600 text-white shadow shadow-blue-500/20'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              }`}
-                            >
-                              Teks
-                            </button>
-                            <button
-                              onClick={() => {
-                                setUserSelectedMode((prev) => ({ ...prev, [liturgy.id]: 'pdf' }));
-                              }}
-                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight uppercase transition-all cursor-pointer ${
-                                currentMode === 'pdf'
-                                  ? 'bg-blue-600 text-white shadow shadow-blue-500/20'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              }`}
-                            >
-                              PDF Viewer
-                            </button>
-
-                            {/* Divider and download buttons directly in the clean unified header, shown only when PDF exists */}
-                            {hasFile && (
-                              <>
-                                <div className="h-4 w-px bg-slate-200 mx-1"></div>
-                                <a
-                                  href={liturgy.pdfUrl || '#'}
-                                  download={liturgy.uploadedPdfName || 'Tata_Ibadah_Minggu.pdf'}
-                                  title="Unduh Berkas PDF"
-                                  className="p-1 px-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-all flex items-center space-x-1"
-                                >
-                                  <Download className="w-3.5 h-3.5 text-blue-600" />
-                                  <span className="text-[10px] hidden md:inline">Unduh</span>
-                                </a>
-                                {liturgy.pdfUrl && (
-                                  <a
-                                    href={liturgy.pdfUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    title="Buka di Tab Baru"
-                                    className="p-1 px-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-all text-[10px]"
-                                  >
-                                    Tab Baru ↗
-                                  </a>
-                                )}
-                              </>
+                              </div>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      {/* RENDERING MODE */}
-                      {currentMode === 'pdf' ? (
-                        /* PDF VIEWER AND DIRECT EMBED */
-                        <div className="w-full">
-                          {!hasFile ? (
-                            <div className="p-5">
-                              <div className="w-full bg-slate-50 rounded-2xl border border-slate-200 p-8 flex flex-col items-center justify-center text-center py-10 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl font-sans"></div>
-                                <div className="p-4 bg-white text-slate-400 rounded-full border border-slate-150 mb-4 shadow">
-                                  <FileText className="w-8 h-8 opacity-60 text-red-500 shadow-lg shadow-red-500/10" />
-                                </div>
-                                <h4 className="text-sm font-bold text-slate-850">Admin belum mengupload acara</h4>
-                                <p className="text-xs text-slate-500 mt-2 max-w-sm leading-relaxed">
-                                  Mohon bersabar atau lihat acara pada teks.
-                                </p>
-                              </div>
-                            </div>
-                          ) : (
-                            /* Render PDF iframe directly to keep layout clean, unified, and free of double headers */
-                            <div className="w-full h-[650px] bg-white relative rounded-xl overflow-hidden">
-                              {liturgy.pdfUrl ? (
-                                <SafePdfIframe pdfUrl={liturgy.pdfUrl} title={liturgy.judul} />
-                              ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 text-xs font-mono">
-                                  Format PDF didukung oleh device jemaat
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        /* MANUAL LITURGY ACCORDION LIST */
-                        <div className="p-4 divide-y divide-slate-100 bg-transparent">
-                          {liturgy.teksLiturgi.map((step) => {
-                             const isExpanded = !!expandedLiturgySteps[step.id];
-                             return (
-                               <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-slate-50">
-                                 <button
-                                   onClick={() => toggleStep(step.id)}
-                                   className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group"
-                                 >
-                                   <div className="flex items-start space-x-2.5">
-                                     <span className="text-xs md:text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
-                                       {step.label}
-                                     </span>
-                                   </div>
-                                   <div className="text-slate-400 group-hover:text-slate-600 pl-2 shrink-0">
-                                     {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                   </div>
-                                 </button>
+                      {/* MANUAL LITURGY ACCORDION LIST */}
+                      <div className="p-4 divide-y divide-slate-100 bg-transparent">
+                        {liturgy.teksLiturgi && liturgy.teksLiturgi.length > 0 ? (
+                          <>
+                            {liturgy.teksLiturgi.map((step) => {
+                               const isExpanded = !!expandedLiturgySteps[step.id];
+                               return (
+                                 <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-slate-50">
+                                   <button
+                                     onClick={() => toggleStep(step.id)}
+                                     className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group"
+                                   >
+                                     <div className="flex items-start space-x-2.5">
+                                       <span className="text-xs md:text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+                                         {step.label}
+                                       </span>
+                                     </div>
+                                     <div className="text-slate-400 group-hover:text-slate-600 pl-2 shrink-0">
+                                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                     </div>
+                                   </button>
 
-                                 <AnimatePresence>
-                                   {isExpanded && (
-                                     <motion.div
-                                       initial={{ height: 0, opacity: 0 }}
-                                       animate={{ height: 'auto', opacity: 1 }}
-                                       exit={{ height: 0, opacity: 0 }}
-                                       transition={{ duration: 0.15 }}
-                                       className="overflow-hidden"
-                                     >
-                                       <div className="mt-2.5 pl-3.5 border-l-2 border-blue-500 text-xs md:text-sm text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150">
-                                         {step.isi}
-                                       </div>
-                                     </motion.div>
-                                   )}
-                                 </AnimatePresence>
-                               </div>
-                             );
-                          })}
-                          <div className="pt-3 text-center text-[11px] text-slate-400 italic">
-                            (Ketuk baris acara di atas untuk memunculkan isi bait lirik & doa)
+                                   <AnimatePresence>
+                                     {isExpanded && (
+                                       <motion.div
+                                         initial={{ height: 0, opacity: 0 }}
+                                         animate={{ height: 'auto', opacity: 1 }}
+                                         exit={{ height: 0, opacity: 0 }}
+                                         transition={{ duration: 0.15 }}
+                                         className="overflow-hidden"
+                                       >
+                                         <div className="mt-2.5 pl-3.5 border-l-2 border-blue-500 text-xs md:text-sm text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150">
+                                           {step.isi}
+                                         </div>
+                                       </motion.div>
+                                     )}
+                                   </AnimatePresence>
+                                 </div>
+                               );
+                            })}
+                            <div className="pt-3 text-center text-[11px] text-slate-400 italic">
+                              (Ketuk pada baris acara di atas untuk memunculkan isi acara)
+                            </div>
+                          </>
+                        ) : (
+                          <div className="p-8 text-center bg-slate-50/50 rounded-2xl m-2 border border-dashed border-slate-200">
+                            <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
+                            <p className="text-xs font-bold text-slate-700">Acara belum di isi oleh pengurus</p>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   );
                 })
               ) : (
                 /* Partangiangan Liturgy */
                 liturgiPartangiangan.slice(0, 1).map((liturgy) => {
-                  const hasFile = !!liturgy.uploadedPdfName;
-                  const currentMode = userSelectedMode[liturgy.id] || (hasFile || liturgy.isPdfMode ? 'pdf' : 'teks');
-
                   return (
                     <div key={liturgy.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md relative z-10" id="agenda-partangiangan-container">
                       
-                      {/* Render card header always with info and toggles to prevent double headers */}
+                      {/* Card header with info and optional download button */}
                       <div className="p-5 bg-slate-50 border-b border-slate-200">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
@@ -842,138 +845,60 @@ export default function MemberView({
                               </>
                             )}
                           </div>
-
-                          {/* Interactive toggle mode - available always */}
-                          <div className="flex items-center space-x-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200 self-start sm:self-center">
-                            <button
-                              onClick={() => {
-                                setUserSelectedMode((prev) => ({ ...prev, [liturgy.id]: 'teks' }));
-                              }}
-                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight uppercase transition-all cursor-pointer ${
-                                currentMode === 'teks'
-                                  ? 'bg-blue-600 text-white shadow shadow-blue-500/20'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              }`}
-                            >
-                              Teks
-                            </button>
-                            <button
-                              onClick={() => {
-                                setUserSelectedMode((prev) => ({ ...prev, [liturgy.id]: 'pdf' }));
-                              }}
-                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight uppercase transition-all cursor-pointer ${
-                                currentMode === 'pdf'
-                                  ? 'bg-blue-600 text-white shadow shadow-blue-500/20'
-                                  : 'text-slate-500 hover:text-slate-800'
-                              }`}
-                            >
-                              PDF Viewer
-                            </button>
-
-                            {/* Divider and download buttons directly in the clean unified header, shown only when PDF exists */}
-                            {hasFile && (
-                              <>
-                                <div className="h-4 w-px bg-slate-200 mx-1"></div>
-                                <a
-                                  href={liturgy.pdfUrl || '#'}
-                                  download={liturgy.uploadedPdfName || 'Tata_Ibadah_Partangiangan.pdf'}
-                                  title="Unduh Berkas PDF"
-                                  className="p-1 px-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-all flex items-center space-x-1"
-                                >
-                                  <Download className="w-3.5 h-3.5 text-blue-600" />
-                                  <span className="text-[10px] hidden md:inline">Unduh</span>
-                                </a>
-                                {liturgy.pdfUrl && (
-                                  <a
-                                    href={liturgy.pdfUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    title="Buka di Tab Baru"
-                                    className="p-1 px-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-all text-[10px]"
-                                  >
-                                    Tab Baru ↗
-                                  </a>
-                                )}
-                              </>
-                            )}
-                          </div>
                         </div>
                       </div>
 
-                      {/* RENDERING MODE */}
-                      {currentMode === 'pdf' ? (
-                        /* PDF VIEWER AND DIRECT EMBED */
-                        <div className="w-full">
-                          {!hasFile ? (
-                            <div className="p-5">
-                              <div className="w-full bg-slate-50 rounded-2xl border border-slate-200 p-8 flex flex-col items-center justify-center text-center py-10 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl font-sans"></div>
-                                <div className="p-4 bg-white text-slate-400 rounded-full border border-slate-150 mb-4 shadow">
-                                  <FileText className="w-8 h-8 opacity-60 text-red-500 shadow-lg shadow-red-500/10" />
-                                </div>
-                                <h4 className="text-sm font-bold text-slate-850">Admin belum mengupload acara</h4>
-                                <p className="text-xs text-slate-500 mt-2 max-w-sm leading-relaxed">
-                                  Mohon bersabar atau lihat acara pada teks.
-                                </p>
-                              </div>
-                            </div>
-                          ) : (
-                            /* Render PDF iframe directly to keep layout clean, unified, and free of double headers */
-                            <div className="w-full h-[650px] bg-white relative rounded-xl overflow-hidden">
-                              {liturgy.pdfUrl ? (
-                                <SafePdfIframe pdfUrl={liturgy.pdfUrl} title={liturgy.judul} />
-                              ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 text-xs font-mono">
-                                  Format PDF didukung oleh device jemaat
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        /* Manual liturgy */
-                        <div className="p-4 divide-y divide-slate-100 bg-transparent">
-                          {liturgy.teksLiturgi.map((step) => {
-                            const isExpanded = !!expandedLiturgySteps[step.id];
-                            return (
-                              <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-slate-50">
-                                <button
-                                  onClick={() => toggleStep(step.id)}
-                                  className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group"
-                                >
-                                  <div className="flex items-start space-x-2.5">
-                                    <span className="text-xs md:text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
-                                      {step.label}
-                                    </span>
-                                  </div>
-                                  <div className="text-slate-400 group-hover:text-slate-600 pl-2 shrink-0">
-                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                  </div>
-                                </button>
+                      {/* Manual liturgy */}
+                      <div className="p-4 divide-y divide-slate-100 bg-transparent">
+                        {liturgy.teksLiturgi && liturgy.teksLiturgi.length > 0 ? (
+                          <>
+                            {liturgy.teksLiturgi.map((step) => {
+                              const isExpanded = !!expandedLiturgySteps[step.id];
+                              return (
+                                <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-slate-50">
+                                  <button
+                                    onClick={() => toggleStep(step.id)}
+                                    className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group"
+                                  >
+                                    <div className="flex items-start space-x-2.5">
+                                      <span className="text-xs md:text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+                                        {step.label}
+                                      </span>
+                                    </div>
+                                    <div className="text-slate-400 group-hover:text-slate-600 pl-2 shrink-0">
+                                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                    </div>
+                                  </button>
 
-                                <AnimatePresence>
-                                  {isExpanded && (
-                                    <motion.div
-                                      initial={{ height: 0, opacity: 0 }}
-                                      animate={{ height: 'auto', opacity: 1 }}
-                                      exit={{ height: 0, opacity: 0 }}
-                                      transition={{ duration: 0.15 }}
-                                      className="overflow-hidden"
-                                    >
-                                      <div className="mt-2.5 pl-3.5 border-l-2 border-emerald-500 text-xs md:text-sm text-slate-700 whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150 leading-relaxed">
-                                        {step.isi}
-                                      </div>
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </div>
-                            );
-                          })}
-                          <div className="pt-3 text-center text-[11px] text-slate-400 italic">
-                            (Ketuk baris acara di atas untuk memunculkan isi bait lirik & doa)
+                                  <AnimatePresence>
+                                    {isExpanded && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="mt-2.5 pl-3.5 border-l-2 border-emerald-500 text-xs md:text-sm text-slate-700 whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150 leading-relaxed">
+                                          {step.isi}
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              );
+                            })}
+                            <div className="pt-3 text-center text-[11px] text-slate-400 italic">
+                              (Ketuk pada baris acara di atas untuk memunculkan isi acara)
+                            </div>
+                          </>
+                        ) : (
+                          <div className="p-8 text-center bg-slate-50/50 rounded-2xl m-2 border border-dashed border-slate-200">
+                            <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
+                            <p className="text-xs font-bold text-slate-700">Acara belum di isi oleh pengurus</p>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   );
                 })
@@ -1101,7 +1026,7 @@ export default function MemberView({
                       </table>
                     </div>
                     <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-slate-500 font-medium">
-                      💡 Seret tabel ke samping jika Anda menggunakan layar HP / perangkat seluler.
+                      Seret tabel ke samping jika Anda menggunakan layar HP / perangkat seluler.
                     </div>
                   </div>
                 </div>
@@ -1118,130 +1043,132 @@ export default function MemberView({
                   return (
                     <div className="space-y-8 animate-fadeIn">
                       
-                      {/* TABEL 1: TOROP NARO MANDOHOTI PARTANGIANGAN */}
-                      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                        <div className="bg-slate-50 border-b border-slate-200 px-5 py-4">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <div className="flex items-center space-x-2">
-                              <div className="w-3 h-3 bg-teal-500 rounded-full animate-pulse"></div>
-                              <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide">
-                                Torop Naro Mandohoti Partangiangan di Minggu Naung Salpu
-                              </h4>
+                      {/* TABEL 1: TOROP NARO MANDOHOTI PARTANGIANGAN (Hanya tampil jika ada data) */}
+                      {partangianganAttendance && partangianganAttendance.length > 0 && (
+                        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                          <div className="bg-slate-50 border-b border-slate-200 px-5 py-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 bg-teal-500 rounded-full animate-pulse"></div>
+                                <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide">
+                                  Torop Naro Mandohoti Partangiangan di Minggu Naung Salpu
+                                </h4>
+                              </div>
+                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-full uppercase self-start sm:self-auto">
+                                Statistik Kehadiran
+                              </span>
                             </div>
-                            <span className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-full uppercase self-start sm:self-auto">
-                              Statistik Kehadiran
-                            </span>
+
+                            {/* DATE FOR TABEL 1 */}
+                            <div className="mt-3 flex items-center space-x-2 text-xs bg-teal-50/50 border border-teal-100 rounded-xl px-3.5 py-2 text-teal-950 font-semibold max-w-md">
+                              <Calendar className="w-4 h-4 text-teal-600 shrink-0" />
+                              <span>Tanggal: <span className="font-extrabold text-teal-800">{partangianganAttendanceDate || 'Belum diatur'}</span></span>
+                            </div>
                           </div>
 
-                          {/* DATE FOR TABEL 1 */}
-                          <div className="mt-3 flex items-center space-x-2 text-xs bg-teal-50/50 border border-teal-100 rounded-xl px-3.5 py-2 text-teal-950 font-semibold max-w-md">
-                            <Calendar className="w-4 h-4 text-teal-600 shrink-0" />
-                            <span>Tanggal: <span className="font-extrabold text-teal-800">{partangianganAttendanceDate || 'Belum diatur'}</span></span>
+                          <div className="overflow-x-auto">
+                            <table className="w-full border-collapse">
+                              <thead>
+                                <tr className="bg-gradient-to-r from-teal-900 to-emerald-900 text-white border-b border-teal-950">
+                                  <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[100px]">
+                                    Hari
+                                  </th>
+                                  <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[150px]">
+                                    Lunggu
+                                  </th>
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
+                                    Ama
+                                  </th>
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
+                                    Ina
+                                  </th>
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
+                                    SM
+                                  </th>
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
+                                    ReNa
+                                  </th>
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[80px]">
+                                    Parhalado
+                                  </th>
+                                  <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider min-w-[90px] bg-emerald-950/40">
+                                    Naro (Total)
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-200">
+                                {partangianganAttendance.map((row, idx) => {
+                                  const rowTotal = (Number(row.ama) || 0) + 
+                                                   (Number(row.ina) || 0) + 
+                                                   (Number(row.sm) || 0) + 
+                                                   (Number(row.rena) || 0) + 
+                                                   (Number(row.parhalado) || 0);
+                                  return (
+                                    <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                      <td className="px-4 py-3 text-xs font-bold text-slate-700 text-center border-r border-slate-200">
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                          row.hari === 'Selasa' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-sky-100 text-sky-800 border border-sky-200'
+                                        }`}>
+                                          {row.hari}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3 text-xs font-bold text-slate-900 border-r border-slate-200">
+                                        {row.lunggu}
+                                      </td>
+                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                        {row.ama}
+                                      </td>
+                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                        {row.ina}
+                                      </td>
+                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                        {row.sm}
+                                      </td>
+                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                        {row.rena}
+                                      </td>
+                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                        {row.parhalado}
+                                      </td>
+                                      <td className="px-4 py-3 text-xs font-extrabold text-teal-800 text-center bg-teal-50/30">
+                                        {rowTotal}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+
+                                {/* BARIS 7: TOROP NARO (GRAND TOTALS) */}
+                                <tr className="bg-teal-50/80 border-t-2 border-teal-300 font-extrabold text-slate-900">
+                                  <td colSpan={2} className="px-4 py-3.5 text-xs font-black text-teal-950 uppercase tracking-wide border-r border-teal-200 text-left bg-teal-100/60">
+                                    Torop Naro (Total Jumlah)
+                                  </td>
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                    {totalAma}
+                                  </td>
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                    {totalIna}
+                                  </td>
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                    {totalSM}
+                                  </td>
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                    {totalReNa}
+                                  </td>
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                    {totalParhalado}
+                                  </td>
+                                  <td className="px-4 py-3.5 text-xs text-center bg-teal-600 text-white font-black">
+                                    {grandTotalNaro}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                          <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-slate-500 font-medium">
+                            Jumlah "Torop Naro" dihitung secara otomatis sebagai gabungan per kolom dari seluruh Lunggu.
                           </div>
                         </div>
-
-                        <div className="overflow-x-auto">
-                          <table className="w-full border-collapse">
-                            <thead>
-                              <tr className="bg-gradient-to-r from-teal-900 to-emerald-900 text-white border-b border-teal-950">
-                                <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[100px]">
-                                  Hari
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[150px]">
-                                  Lunggu
-                                </th>
-                                <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
-                                  Ama
-                                </th>
-                                <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
-                                  Ina
-                                </th>
-                                <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
-                                  SM
-                                </th>
-                                <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
-                                  ReNa
-                                </th>
-                                <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[80px]">
-                                  Parhalado
-                                </th>
-                                <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider min-w-[90px] bg-emerald-950/40">
-                                  Naro (Total)
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200">
-                              {partangianganAttendance.map((row, idx) => {
-                                const rowTotal = (Number(row.ama) || 0) + 
-                                                 (Number(row.ina) || 0) + 
-                                                 (Number(row.sm) || 0) + 
-                                                 (Number(row.rena) || 0) + 
-                                                 (Number(row.parhalado) || 0);
-                                return (
-                                  <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-4 py-3 text-xs font-bold text-slate-700 text-center border-r border-slate-200">
-                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                        row.hari === 'Selasa' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-sky-100 text-sky-800 border border-sky-200'
-                                      }`}>
-                                        {row.hari}
-                                      </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-xs font-bold text-slate-900 border-r border-slate-200">
-                                      {row.lunggu}
-                                    </td>
-                                    <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
-                                      {row.ama}
-                                    </td>
-                                    <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
-                                      {row.ina}
-                                    </td>
-                                    <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
-                                      {row.sm}
-                                    </td>
-                                    <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
-                                      {row.rena}
-                                    </td>
-                                    <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
-                                      {row.parhalado}
-                                    </td>
-                                    <td className="px-4 py-3 text-xs font-extrabold text-teal-800 text-center bg-teal-50/30">
-                                      {rowTotal}
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-
-                              {/* BARIS 7: TOROP NARO (GRAND TOTALS) */}
-                              <tr className="bg-teal-50/80 border-t-2 border-teal-300 font-extrabold text-slate-900">
-                                <td colSpan={2} className="px-4 py-3.5 text-xs font-black text-teal-950 uppercase tracking-wide border-r border-teal-200 text-left bg-teal-100/60">
-                                  Torop Naro (Total Jumlah)
-                                </td>
-                                <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
-                                  {totalAma}
-                                </td>
-                                <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
-                                  {totalIna}
-                                </td>
-                                <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
-                                  {totalSM}
-                                </td>
-                                <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
-                                  {totalReNa}
-                                </td>
-                                <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
-                                  {totalParhalado}
-                                </td>
-                                <td className="px-4 py-3.5 text-xs text-center bg-teal-600 text-white font-black">
-                                  {grandTotalNaro}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-slate-500 font-medium">
-                          💡 Jumlah "Torop Naro" dihitung secara otomatis sebagai gabungan per kolom dari seluruh Lunggu.
-                        </div>
-                      </div>
+                      )}
 
                       {/* TABEL 2: PETUGAS PELAYANAN PARTANGIANGAN */}
                       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-fadeIn">
@@ -1265,77 +1192,111 @@ export default function MemberView({
                           </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                          <table className="w-full border-collapse">
-                            <thead>
-                              <tr className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white border-b border-blue-950">
-                                <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[80px]">
-                                  Hari
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[120px]">
-                                  Lunggu
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[140px]">
-                                  Dibagas Ni Keluarga
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[160px]">
-                                  Alamat
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[130px] bg-indigo-950/20">
-                                  Jamita
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[130px] bg-indigo-950/20">
-                                  Agenda
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider min-w-[130px] bg-indigo-950/20">
-                                  Ende
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-200">
-                              {petugasPartangiangan && petugasPartangiangan.length > 0 ? (
-                                petugasPartangiangan.map((row, idx) => (
-                                  <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-3 py-3 text-xs font-bold text-slate-700 text-center border-r border-slate-200">
-                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                        row.hari === 'Selasa' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-sky-100 text-sky-800 border border-sky-200'
-                                      }`}>
-                                        {row.hari}
-                                      </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-xs font-bold text-slate-900 border-r border-slate-200">
-                                      {row.lunggu}
-                                    </td>
-                                    <td className="px-4 py-3 text-xs font-bold text-slate-800 border-r border-slate-200">
-                                      {row.keluarga || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
-                                    </td>
-                                    <td className="px-4 py-3 text-xs font-medium text-slate-600 border-r border-slate-200">
-                                      {row.alamat || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
-                                    </td>
-                                    <td className="px-4 py-3 text-xs font-black text-indigo-950 bg-indigo-50/10 border-r border-slate-200">
-                                      {row.jamita || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
-                                    </td>
-                                    <td className="px-4 py-3 text-xs font-black text-indigo-950 bg-indigo-50/10 border-r border-slate-200">
-                                      {row.agenda || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
-                                    </td>
-                                    <td className="px-4 py-3 text-xs font-black text-indigo-950 bg-indigo-50/10">
-                                      {row.ende || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
-                                    </td>
+                        {partangianganMode === 'keluarga' ? (
+                          <div className="p-8 bg-gradient-to-br from-amber-50/80 via-orange-50/50 to-amber-50/80 text-center space-y-3">
+                            <div className="w-14 h-14 bg-amber-100 text-amber-800 rounded-2xl flex items-center justify-center mx-auto border border-amber-200 shadow-sm">
+                              <Building className="w-7 h-7 text-amber-700" />
+                            </div>
+                            <div>
+                              <span className="text-[10px] font-extrabold uppercase bg-amber-200/80 text-amber-900 px-3 py-1 rounded-full tracking-wider border border-amber-300/60">
+                                Partangiangan Keluarga (Ibadah Keluarga)
+                              </span>
+                              <h4 className="text-base font-black text-amber-950 mt-2">Ibadah Partangiangan Sektor</h4>
+                            </div>
+                            <p className="text-xs sm:text-sm font-bold text-amber-900 leading-relaxed max-w-2xl mx-auto bg-white/90 p-4 sm:p-5 rounded-2xl border border-amber-200/80 shadow-xs">
+                              "tidak ada petugas ibadah partangiangan dikarenakan ibadah keluarga akan dilakukan di rumah masing masing"
+                            </p>
+                          </div>
+                        ) : partangianganMode === 'selesai' ? (
+                          <div className="p-8 bg-gradient-to-br from-blue-50/80 via-indigo-50/50 to-blue-50/80 text-center space-y-3">
+                            <div className="w-14 h-14 bg-blue-100 text-blue-800 rounded-2xl flex items-center justify-center mx-auto border border-blue-200 shadow-sm">
+                              <Calendar className="w-7 h-7 text-blue-700" />
+                            </div>
+                            <div>
+                              <span className="text-[10px] font-extrabold uppercase bg-blue-200/80 text-blue-900 px-3 py-1 rounded-full tracking-wider border border-blue-300/60">
+                                Informasi Akhir Tahun
+                              </span>
+                              <h4 className="text-base font-black text-blue-950 mt-2">Status Ibadah Partangiangan</h4>
+                            </div>
+                            <p className="text-xs sm:text-sm font-bold text-blue-900 leading-relaxed max-w-2xl mx-auto bg-white/90 p-4 sm:p-5 rounded-2xl border border-blue-200/80 shadow-xs">
+                              "tidak ada ibadah partangiangan karena ibadah partangiangann untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="overflow-x-auto">
+                              <table className="w-full border-collapse">
+                                <thead>
+                                  <tr className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white border-b border-blue-950">
+                                    <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[80px]">
+                                      Hari
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[120px]">
+                                      Lunggu
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[140px]">
+                                      Dibagas Ni Keluarga
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[160px]">
+                                      Alamat
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[130px] bg-indigo-950/20">
+                                      Jamita
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[130px] bg-indigo-950/20">
+                                      Agenda
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider min-w-[130px] bg-indigo-950/20">
+                                      Ende
+                                    </th>
                                   </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={7} className="px-6 py-8 text-center text-xs text-slate-400 italic">
-                                    Data petugas pelayanan belum tersedia.
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-slate-500 font-medium">
-                          💡 3 kolom terakhir (Jamita, Agenda, Ende) merupakan daftar petugas pelayanan ibadah partangiangan.
-                        </div>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200">
+                                  {petugasPartangiangan && petugasPartangiangan.length > 0 ? (
+                                    petugasPartangiangan.map((row, idx) => (
+                                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-3 py-3 text-xs font-bold text-slate-700 text-center border-r border-slate-200">
+                                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                                            row.hari === 'Selasa' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-sky-100 text-sky-800 border border-sky-200'
+                                          }`}>
+                                            {row.hari}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-xs font-bold text-slate-900 border-r border-slate-200">
+                                          {row.lunggu}
+                                        </td>
+                                        <td className="px-4 py-3 text-xs font-bold text-slate-800 border-r border-slate-200">
+                                          {row.keluarga || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        </td>
+                                        <td className="px-4 py-3 text-xs font-medium text-slate-600 border-r border-slate-200">
+                                          {row.alamat || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        </td>
+                                        <td className="px-4 py-3 text-xs font-black text-indigo-950 bg-indigo-50/10 border-r border-slate-200">
+                                          {row.jamita || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        </td>
+                                        <td className="px-4 py-3 text-xs font-black text-indigo-950 bg-indigo-50/10 border-r border-slate-200">
+                                          {row.agenda || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        </td>
+                                        <td className="px-4 py-3 text-xs font-black text-indigo-950 bg-indigo-50/10">
+                                          {row.ende || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        </td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    <tr>
+                                      <td colSpan={7} className="px-6 py-8 text-center text-xs text-slate-400 italic">
+                                        Data petugas pelayanan belum tersedia.
+                                      </td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                            <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-slate-500 font-medium">
+                              3 kolom terakhir (Jamita, Agenda, Ende) merupakan daftar petugas pelayanan ibadah partangiangan.
+                            </div>
+                          </>
+                        )}
                       </div>
 
                     </div>
@@ -1355,6 +1316,69 @@ export default function MemberView({
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
+              {/* RINGKASAN TREN KEHADIRAN 1 MINGGU TERBARU (KHUSUS MINGGU, NO PARTANGIANGAN) */}
+              {(() => {
+                const latest1W = (attendanceTrends && attendanceTrends.length > 0) ? attendanceTrends[attendanceTrends.length - 1] : INITIAL_ATTENDANCE_TRENDS[INITIAL_ATTENDANCE_TRENDS.length - 1];
+                const smCount = latest1W.sekolahMinggu ?? latest1W.mingguSm ?? 95;
+                const shift1Count = latest1W.shift1 ?? latest1W.mingguAma ?? 215;
+                const shift2Count = latest1W.shift2 ?? latest1W.mingguIna ?? 212;
+                const totalSunday = smCount + shift1Count + shift2Count;
+
+                return (
+                  <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-md space-y-3.5 relative z-10">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 border-b border-slate-800 pb-2.5">
+                      <div>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                          Ringkasan Kebaktian Minggu (1 Minggu)
+                        </span>
+                        <h3 className="text-sm font-black text-white mt-1 flex items-center space-x-2">
+                          <TrendingUp className="w-4 h-4 text-emerald-400" />
+                          <span>Statistik Kehadiran Kebaktian Minggu</span>
+                        </h3>
+                        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
+                          Ibadah Minggu: {latest1W.tanggalRange || petugasMingguDate || 'Minggu Terbaru'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {/* Sekolah Minggu */}
+                      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sekolah Minggu</span>
+                          <span className="text-lg font-black text-amber-400 mt-0.5 block">{smCount} <span className="text-xs font-normal text-slate-400">orang</span></span>
+                        </div>
+                        <div className="p-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg">
+                          <BookOpen className="w-4 h-4" />
+                        </div>
+                      </div>
+
+                      {/* Shift 1 */}
+                      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Shift 1 (Pagi)</span>
+                          <span className="text-lg font-black text-cyan-400 mt-0.5 block">{shift1Count} <span className="text-xs font-normal text-slate-400">orang</span></span>
+                        </div>
+                        <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-lg">
+                          <Clock className="w-4 h-4" />
+                        </div>
+                      </div>
+
+                      {/* Shift 2 */}
+                      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Shift 2 (Siang)</span>
+                          <span className="text-lg font-black text-indigo-400 mt-0.5 block">{shift2Count} <span className="text-xs font-normal text-slate-400">orang</span></span>
+                        </div>
+                        <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg">
+                          <Users className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Filter and Search Box */}
               <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-3.5 relative z-10">
                 <div className="relative">
@@ -2008,7 +2032,7 @@ export default function MemberView({
             </motion.div>
           )}
 
-          {/* TAB 6: LIVE ACARA PROJECTOR */}
+          {/* TAB 6: LIVE ACARA PROJECTOR - STATUS SEDANG PERBAIKAN */}
           {activeTab === 'live' && (
             <motion.div
               key="tab-live"
@@ -2016,81 +2040,140 @@ export default function MemberView({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 w-screen h-screen bg-slate-950 overflow-hidden z-50 flex flex-col"
+              className="fixed inset-0 w-screen h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-y-auto z-50 flex flex-col font-sans"
               id="projector-live-frame"
             >
-              {/* Floating Sleek Controls at the Top */}
-              {showLiveControls ? (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] flex items-center space-x-2 bg-slate-900/90 backdrop-blur-md px-4 py-2.5 rounded-full border border-slate-800 shadow-2xl transition-all duration-300 opacity-95 hover:opacity-100">
-                  <div className="flex items-center space-x-2 mr-3 pr-3 border-r border-slate-800">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-300 select-none">
-                      Layar Proyektor
-                    </span>
+              {/* Top Navigation Bar */}
+              <div className="sticky top-0 z-30 w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 border border-white/20 flex items-center justify-center p-0.5">
+                    <img
+                      src="/hkbp.png"
+                      alt="HKBP Logo"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-xs font-bold text-white leading-tight">HKBP Hinalang Silalahi</h2>
+                    <div className="flex items-center space-x-1.5 mt-0.5">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                      </span>
+                      <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">
+                        Live: Sedang Perbaikan
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('minggu')}
+                  className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border border-blue-400/40 cursor-pointer shadow-lg shadow-blue-900/30"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Kembali</span>
+                </button>
+              </div>
+
+              {/* Maintenance Hero Content */}
+              <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 max-w-2xl mx-auto w-full text-center">
+                {/* Animated Badge & Icon */}
+                <div className="relative mb-6">
+                  <div className="w-24 h-24 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shadow-2xl shadow-amber-500/10 mx-auto">
+                    <div className="relative">
+                      <Tv className="w-12 h-12 text-slate-400" />
+                      <div className="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 p-1.5 rounded-xl border-2 border-slate-900 shadow-md">
+                        <Wrench className="w-4 h-4 animate-spin" style={{ animationDuration: '4s' }} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Sedang Dalam Perbaikan</span>
+                  </div>
+                </div>
+
+                {/* Title and Message */}
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-3">
+                  Menu Live Sedang Dalam Perbaikan
+                </h1>
+                <p className="text-sm text-slate-300 leading-relaxed max-w-lg mb-8">
+                  Mohon maaf atas ketidaknyamanannya. Layanan siaran langsung dan tayangan proyektor ibadah HKBP Hinalang Silalahi saat ini sedang dalam proses pemeliharaan serta optimalisasi server.
+                </p>
+
+                {/* Status Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mb-8 text-left">
+                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-2.5">
+                      <Wrench className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <h3 className="text-xs font-bold text-white mb-1">Status Sistem</h3>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Sedang dilakukan konfigurasi dan sinkronisasi proyektor.
+                    </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const elem = document.getElementById('projector-live-frame');
-                      if (elem) {
-                        if (!document.fullscreenElement) {
-                          elem.requestFullscreen().catch((err) => {
-                            console.error('Error entering native fullscreen:', err);
-                          });
-                        } else {
-                          document.exitFullscreen();
-                        }
-                      }
-                    }}
-                    className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full transition-all border border-slate-700 cursor-pointer"
-                    title="Aktifkan Layar Penuh Browser"
-                  >
-                    <Maximize2 className="w-3.5 h-3.5 text-slate-300" />
-                    <span className="hidden sm:inline">Layar Penuh Browser</span>
-                  </button>
+                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-2.5">
+                      <BookOpen className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <h3 className="text-xs font-bold text-white mb-1">Buku Acara</h3>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Jemaat tetap dapat mengakses tata ibadah lengkap di menu <span className="text-blue-300 font-semibold">Kebaktian</span>.
+                    </p>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowLiveControls(false)}
-                    className="flex items-center space-x-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full transition-all border border-slate-700 cursor-pointer"
-                    title="Sembunyikan Menu"
-                  >
-                    <span>Sembunyikan</span>
-                  </button>
+                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-2.5">
+                      <Clock className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <h3 className="text-xs font-bold text-white mb-1">Perkiraan Aktif</h3>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Akan segera aktif kembali untuk ibadah jemaat mendatang.
+                    </p>
+                  </div>
+                </div>
 
+                {/* Primary Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-md">
                   <button
                     type="button"
                     onClick={() => setActiveTab('minggu')}
-                    className="flex items-center space-x-1 bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full transition-all border border-red-500/50 cursor-pointer shadow-md shadow-red-900/10"
+                    className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider py-3 px-5 rounded-xl shadow-lg shadow-blue-900/30 transition cursor-pointer border border-blue-400/20"
                   >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Keluar</span>
+                    <BookOpen className="w-4 h-4" />
+                    <span>Kembali ke Kebaktian</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('warta')}
+                    className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs uppercase tracking-wider py-3 px-5 rounded-xl transition cursor-pointer border border-slate-700"
+                  >
+                    <FileText className="w-4 h-4 text-slate-400" />
+                    <span>Lihat Warta Jemaat</span>
                   </button>
                 </div>
-              ) : (
-                /* Unobtrusive Floating Restore Button at the Top Right */
-                <button
-                  type="button"
-                  onClick={() => setShowLiveControls(true)}
-                  className="absolute top-4 right-4 z-[60] bg-slate-900/40 hover:bg-slate-900/90 text-slate-400 hover:text-white border border-slate-800/40 hover:border-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all backdrop-blur-sm cursor-pointer"
-                  title="Tampilkan Menu Kontrol"
-                >
-                  Tampilkan Kontrol
-                </button>
-              )}
 
-              <iframe
-                id="projector-iframe"
-                src="https://church-presenter.ai.studio/projector?mode=share&account=acc_default"
-                className="w-full h-full border-0"
-                title="HKBP Church Presenter Screen"
-                allow="camera; microphone; fullscreen; display-capture"
-                allowFullScreen
-              />
+                {/* Emergency Link for Church Media Operators */}
+                <div className="mt-8 pt-6 border-t border-slate-800/80 w-full text-center">
+                  <p className="text-[11px] text-slate-500">
+                    Operator Media / Parhalado membutuhkan tautan manual?{' '}
+                    <a
+                      href="https://church-presenter.ai.studio/projector?mode=share&account=acc_default"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 font-semibold underline inline-flex items-center gap-1"
+                    >
+                      Buka Tautan Layar Proyektor
+                      <ExternalLink className="w-3 h-3 inline" />
+                    </a>
+                  </p>
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -2171,11 +2254,17 @@ export default function MemberView({
                 setActiveTab('live');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center space-y-1 cursor-pointer transition-all ${
+              className={`flex flex-col items-center space-y-1 cursor-pointer transition-all relative ${
                 activeTab === 'live' ? 'text-amber-300 font-bold scale-105' : 'text-blue-100/70 hover:text-white'
               }`}
+              title="Layar Live (Sedang Perbaikan)"
             >
-              <Tv className="w-5 h-5" />
+              <div className="relative">
+                <Tv className="w-5 h-5" />
+                <span className="absolute -top-1.5 -right-3.5 px-1 py-0.5 bg-amber-400 text-slate-950 text-[7px] font-black rounded-full uppercase leading-none tracking-tighter shadow-sm">
+                  Perbaikan
+                </span>
+              </div>
               <span className="text-[9px] font-semibold">Live</span>
             </button>
           </div>
@@ -2228,7 +2317,7 @@ export default function MemberView({
 
               <div className="flex-1 overflow-y-auto p-4 space-y-1.5">
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 pl-2.5">Menu Navigasi</p>
-                
+
                 <button
                   type="button"
                   onClick={() => {
@@ -2274,7 +2363,7 @@ export default function MemberView({
                   className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-slate-50 text-slate-700 hover:text-blue-700 font-extrabold text-xs transition-all text-left border border-transparent hover:border-slate-100 cursor-pointer"
                 >
                   <MapPin className="w-4.5 h-4.5 text-blue-600 shrink-0" />
-                  <span>Alamat (Google Maps)</span>
+                  <span>Alamat & Lokasi</span>
                 </button>
 
                 <button
@@ -2291,7 +2380,7 @@ export default function MemberView({
               </div>
 
               <div className="p-4 border-t border-slate-100 text-center bg-slate-50">
-                <p className="text-[10px] text-slate-400 font-mono">HKBP Hinalang Silalahi App © 2026 | Pirma Siahaan</p>
+                <p className="text-[10px] text-slate-400 font-mono">HKBP Hinalang Silalahi App © 2026</p>
               </div>
             </motion.div>
           </>
@@ -2348,7 +2437,7 @@ export default function MemberView({
                 {activeMenuModal === 'jadwal' && (
                   <div className="space-y-4">
                     <p className="text-slate-500 text-xs italic">
-                      Berikut adalah waktu pelaksanaan ibadah minggu rutin di HKBP Hinalang Silalahi:
+                      Berikut adalah waktu pelaksanaan ibadah minggu di HKBP Hinalang Silalahi:
                     </p>
 
                     <div className="grid grid-cols-1 gap-3">
@@ -2374,7 +2463,7 @@ export default function MemberView({
                           </div>
                           <div>
                             <h4 className="font-black text-slate-900 text-xs md:text-sm leading-tight">Ibadah Shift 1</h4>
-                            <p className="text-[10px] text-slate-500 mt-0.5">Umum & Jemaat</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">Umum</p>
                           </div>
                         </div>
                         <span className="px-3.5 py-1.5 bg-blue-100 text-blue-800 rounded-xl font-mono text-xs md:text-sm font-black border border-blue-200">
@@ -2389,7 +2478,7 @@ export default function MemberView({
                           </div>
                           <div>
                             <h4 className="font-black text-slate-900 text-xs md:text-sm leading-tight">Ibadah Shift 2</h4>
-                            <p className="text-[10px] text-slate-500 mt-0.5">Umum, Remaja & Naposobulung</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">Umum</p>
                           </div>
                         </div>
                         <span className="px-3.5 py-1.5 bg-indigo-100 text-indigo-800 rounded-xl font-mono text-xs md:text-sm font-black border border-indigo-200">
@@ -2538,37 +2627,105 @@ export default function MemberView({
 
                 {activeMenuModal === 'alamat' && (
                   <div className="space-y-4">
-                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-start space-x-3">
-                      <MapPin className="w-5 h-5 text-blue-600 shrink-0 mt-0.5 animate-bounce" />
-                      <div>
-                        <h4 className="font-black text-slate-900 text-xs">HKBP Hinalang Silalahi</h4>
-                        <p className="text-[11px] text-slate-600 mt-1 font-semibold leading-relaxed">
-                          Jl. Tarutung-Balige KM 3, Kelurahan Hinalang Bagasan, Kecamatan Balige, Kabupaten Toba, Sumatera Utara, 22312, Indonesia.
-                        </p>
+                    {/* Header Banner Lokasi Akurat */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50/70 p-4.5 rounded-2xl border border-blue-100 shadow-xs space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start space-x-3">
+                          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-600/30 mt-0.5">
+                            <MapPin className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-black text-slate-900 text-sm tracking-tight">HKBP Hinalang Silalahi</h4>
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1 shadow-2xs">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                Lokasi Akurat
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-blue-700 font-extrabold uppercase tracking-wide mt-0.5">
+                              HKBP Resort Hinalang Silalahi • Distrik XI Toba Hasundutan
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-xl p-3.5 border border-blue-150/70 space-y-2 text-xs shadow-2xs">
+                        <div className="flex items-start space-x-2">
+                          <span className="font-extrabold text-slate-800 shrink-0">Alamat:</span>
+                          <span className="text-slate-700 font-semibold leading-relaxed">
+                            Desa Hinalang Bagasan, Kecamatan Balige, Kabupaten Toba, Sumatera Utara 22312, Indonesia.
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-slate-100 text-[11px]">
+                          <span className="text-slate-500 font-medium">
+                            Titik Koordinat: <strong className="font-mono text-slate-900 font-bold">2.3346565, 99.0417933</strong>
+                          </span>
+                          <span className="text-slate-500 font-medium">
+                            Plus Code: <strong className="font-mono text-blue-700 font-bold">897R+VP Hinalang Bagasan</strong>
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="w-full aspect-[4/3] bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200 shadow-inner">
+                    {/* Google Maps Interactive Frame */}
+                    <div className="w-full aspect-[16/10] sm:aspect-[16/9] bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200 shadow-inner group">
                       <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.1504958632617!2d99.0494444!3d2.3166667!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x302e05cb0248c1e7%3A0xe543fa0df6ef61a7!2sHKBP%20Hinalang!5e0!3m2!1sid!2sid!4v1719572412345!5m2!1sid!2sid"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1994.57!2d99.0417933!3d2.3346565!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x302e04937513a287%3A0xd841b081a75a68d9!2sHKBP%20Hinalang%20Silalahi%20Lutheran%20Church!5e0!3m2!1sid!2sid!4v1720000000000!5m2!1sid!2sid"
                         className="w-full h-full border-0"
                         allowFullScreen
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
-                        title="Google Maps Location - HKBP Hinalang Silalahi"
+                        title="Google Maps Location - HKBP Hinalang Silalahi Lutheran Church"
                       />
                     </div>
 
-                    <div className="text-center">
+                    {/* Tombol Aksi Utama: Buka di Google Maps & Petunjuk Arah */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                       <a
-                        href="https://maps.app.goo.gl/C2X9N7b6e9RpdAx44"
+                        href="https://maps.app.goo.gl/MsdAzCJwb64EB8eP6"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-1.5 px-4.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs transition cursor-pointer shadow shadow-blue-500/10"
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-extrabold rounded-xl text-xs transition cursor-pointer shadow-sm shadow-blue-600/20"
                       >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Buka di Google Maps App</span>
+                        <ExternalLink className="w-4 h-4 shrink-0" />
+                        <span>Buka di Google Maps</span>
                       </a>
+
+                      <a
+                        href="https://www.google.com/maps/dir/?api=1&destination=2.3346565,99.0417933"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-extrabold rounded-xl text-xs transition cursor-pointer shadow-sm shadow-emerald-600/20"
+                      >
+                        <Navigation className="w-4 h-4 shrink-0" />
+                        <span>Petunjuk Arah</span>
+                      </a>
+                    </div>
+
+                    {/* Tombol Salin Alamat & Koordinat */}
+                    <div className="text-center pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const textToCopy = 'HKBP Hinalang Silalahi Lutheran Church, Desa Hinalang Bagasan, Kec. Balige, Kab. Toba, Sumatera Utara 22312, Indonesia (Titik Koordinat: 2.3346565, 99.0417933)';
+                          navigator.clipboard.writeText(textToCopy);
+                          setCopiedLocation(true);
+                          setTimeout(() => setCopiedLocation(false), 2500);
+                        }}
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-[11px] font-bold text-slate-600 transition cursor-pointer shadow-2xs"
+                      >
+                        {copiedLocation ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-700 font-extrabold">Alamat & Koordinat Tersalin!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Salin Alamat & Titik Koordinat</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 )}
@@ -2659,17 +2816,43 @@ export default function MemberView({
           </div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
 
-// ----------------------------------------------------------------------
-// SUB-COMPONENT: PORTABLE MEMORY-SAFE PDF VIEWER & FALLBACK
-// ----------------------------------------------------------------------
-function SafePdfIframe({ pdfUrl, title }: { pdfUrl: string; title?: string }) {
-  return (
-    <div className="w-full h-[650px] md:h-[750px] rounded-xl overflow-hidden shadow-md">
-      <PdfJsViewer pdfUrl={pdfUrl} title={title} />
+      {/* CUSTOM CONFIRMATION DIALOG FOR MEMBER VIEW */}
+      {confirmDialog.isOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm font-sans">
+          <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4 animate-fadeIn">
+            <div className="flex items-center space-x-3 text-red-600">
+              <div className="p-2.5 bg-red-50 border border-red-100 rounded-xl">
+                <AlertCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">{confirmDialog.title}</h3>
+            </div>
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              {confirmDialog.message}
+            </p>
+            <div className="flex items-center justify-end space-x-2 pt-2">
+              <button
+                onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmDialog.onConfirm}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-md shadow-red-500/15"
+              >
+                Ya, Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ALKITAB INDONESIA & BIBEL BATAK TOBA MODAL */}
+      <AlkitabModal
+        isOpen={isAlkitabModalOpen}
+        onClose={() => setIsAlkitabModalOpen(false)}
+        initialQuery={alkitabQuery}
+      />
     </div>
   );
 }

@@ -1,0 +1,5204 @@
+[
+  {
+    "nomorLagu": "1",
+    "judul": "RINGGAS MA HO TONDINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1779272128914-7f89c5fa.webp",
+    "updatedAt": "2026-10-21T08:26:01.719Z"
+  },
+  {
+    "nomorLagu": "2",
+    "judul": "NAENG PUJIONHU HO JAHOWA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472185543-efb28202.webp",
+    "updatedAt": "2026-10-21T08:32:46.301Z"
+  },
+  {
+    "nomorLagu": "3",
+    "judul": "PUJI JAHOWA ALE TONDINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780992401171-38b5f2a7.webp",
+    "updatedAt": "2026-10-21T08:46:57.922Z"
+  },
+  {
+    "nomorLagu": "4",
+    "judul": "SAI PUJI DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780992435859-b361fc2a.webp",
+    "updatedAt": "2026-10-21T08:52:48.220Z"
+  },
+  {
+    "nomorLagu": "5",
+    "judul": "SAI TAPUJI MA JAHOWA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472279966-3fc74e91.webp",
+    "updatedAt": "2026-10-21T09:03:04.296Z"
+  },
+  {
+    "nomorLagu": "6",
+    "judul": "PUJI JAHOWA NA SANGAP",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472316775-61f07e5b.webp",
+    "updatedAt": "2026-07-18T04:28:59.907Z"
+  },
+  {
+    "nomorLagu": "7",
+    "judul": "PUJI HAMU MA ASI NI ROHA NI TUHAN JAHOWA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472335768-8066395f.webp",
+    "updatedAt": "2026-07-18T04:29:07.763Z"
+  },
+  {
+    "nomorLagu": "8",
+    "judul": "JAHOWA, JAHOWA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472391039-8649884b.webp",
+    "updatedAt": "2026-07-18T04:29:17.648Z"
+  },
+  {
+    "nomorLagu": "9",
+    "judul": "HUPUJI HOLONG NI ROHAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472455882-2e1e071d.webp",
+    "updatedAt": "2026-07-18T04:31:17.605Z"
+  },
+  {
+    "nomorLagu": "10",
+    "judul": "HUPUJI HUPASANGAP HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780992497859-ceb8decb.webp",
+    "updatedAt": "2026-07-18T04:31:25.599Z"
+  },
+  {
+    "nomorLagu": "11",
+    "judul": "AHA MA ENDEHONONKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472785221-334a6685.webp",
+    "updatedAt": "2026-07-18T13:04:36.662Z"
+  },
+  {
+    "nomorLagu": "12",
+    "judul": "DIPUJI ROHANGKON DO HO",
+    "notasiUrl": null,
+    "updatedAt": "2026-07-18T13:09:51.933Z"
+  },
+  {
+    "nomorLagu": "13",
+    "judul": "NDA TAMA ENDEHONONKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540203790-67619c51.webp",
+    "updatedAt": "2026-07-18T13:25:02.175Z"
+  },
+  {
+    "nomorLagu": "14",
+    "judul": "PUJI HAMU JAHOWA TUTU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540684469-17b462c6.webp",
+    "updatedAt": "2026-07-18T13:34:59.980Z"
+  },
+  {
+    "nomorLagu": "15",
+    "judul": "AUT NA SARIBU HALI GANDA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541238727-3224618e.webp",
+    "updatedAt": "2026-07-18T13:30:27.630Z"
+  },
+  {
+    "nomorLagu": "16",
+    "judul": "TAPUJI MA TUHANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541486254-a5ff4639.webp",
+    "updatedAt": "2026-07-18T13:34:50.048Z"
+  },
+  {
+    "nomorLagu": "17",
+    "judul": "RAJA NA TUMIMBUL",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541719926-0050bba7.webp",
+    "updatedAt": "2026-07-18T13:58:57.303Z"
+  },
+  {
+    "nomorLagu": "18",
+    "judul": "UNGKAP BAHAL NA UMULI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542051217-28e8e73f.webp",
+    "updatedAt": "2026-07-18T14:01:54.595Z"
+  },
+  {
+    "nomorLagu": "19",
+    "judul": "O JESUS TATAP MA TUSON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542379268-00fb5d29.webp",
+    "updatedAt": "2026-07-18T14:05:16.552Z"
+  },
+  {
+    "nomorLagu": "20",
+    "judul": "O JESUS TUHANNAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780995193453-36234e95.webp",
+    "updatedAt": "2026-07-18T15:15:23.360Z"
+  },
+  {
+    "nomorLagu": "21",
+    "judul": "BEGE MA SUDE HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542996085-e5e559a6.webp",
+    "updatedAt": "2026-10-17T14:38:20.240Z"
+  },
+  {
+    "nomorLagu": "22",
+    "judul": "NUNGA RO DI PARGURUAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543778583-3b60ee4f.webp",
+    "updatedAt": "2026-10-17T14:39:45.766Z"
+  },
+  {
+    "nomorLagu": "23",
+    "judul": "JESUS HAMI RO DISON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545814937-29ce3b6f.webp",
+    "updatedAt": "2026-10-17T14:40:56.162Z"
+  },
+  {
+    "nomorLagu": "24",
+    "judul": "TATAP HAMI ON NA PUNGU DISON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546011230-af1e77c2.webp",
+    "updatedAt": "2026-10-17T14:42:26.937Z"
+  },
+  {
+    "nomorLagu": "25",
+    "judul": "HATAMI ALE TUHANKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546270263-28d72632.webp",
+    "updatedAt": "2026-10-17T14:43:50.439Z"
+  },
+  {
+    "nomorLagu": "26",
+    "judul": "DAME NIMMU ALE JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546570240-4ad6b5ef.webp",
+    "updatedAt": "2026-10-17T14:44:50.505Z"
+  },
+  {
+    "nomorLagu": "27",
+    "judul": "HALELUYA ARI MINGGU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546844945-7414726e.webp",
+    "updatedAt": "2026-10-17T14:46:08.248Z"
+  },
+  {
+    "nomorLagu": "28",
+    "judul": "HATA NI JAHOWA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547389614-fcffa81e.webp",
+    "updatedAt": "2026-10-17T14:47:23.316Z"
+  },
+  {
+    "nomorLagu": "29",
+    "judul": "I MA TINGKI HASONANGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547925273-afbe071d.webp",
+    "updatedAt": "2026-10-17T14:48:12.622Z"
+  },
+  {
+    "nomorLagu": "30",
+    "judul": "JESUS LEHON HATORANGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780998704947-c7c649f1.webp",
+    "updatedAt": "2026-10-17T14:49:16.925Z"
+  },
+  {
+    "nomorLagu": "31",
+    "judul": "ARI NA MARHASONANGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888465505-7414726e.webp",
+    "updatedAt": "2026-06-08T03:14:25.726Z"
+  },
+  {
+    "nomorLagu": "32",
+    "judul": "NANG LAO RUAR MASUK PE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888487328-29ce3b6f.webp",
+    "updatedAt": "2026-10-18T06:10:51.725Z"
+  },
+  {
+    "nomorLagu": "33",
+    "judul": "ANTONG SAI DOK MA AMEN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888597822-29bc63e6.webp",
+    "updatedAt": "2026-06-17T04:31:14.296Z"
+  },
+  {
+    "nomorLagu": "34",
+    "judul": "JESUS DO HAHOLONGANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888646867-29bc63e6.webp",
+    "updatedAt": "2026-06-08T03:17:27.007Z"
+  },
+  {
+    "nomorLagu": "35",
+    "judul": "SUDE HAMI NA DISON MARPUNGU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889151316-0bb95187.webp",
+    "updatedAt": "2026-06-08T03:25:51.459Z"
+  },
+  {
+    "nomorLagu": "36",
+    "judul": "PASUPASU HAMI",
+    "notasiUrl": null,
+    "updatedAt": "2026-05-11T10:13:00.818Z"
+  },
+  {
+    "nomorLagu": "37",
+    "judul": "ASI NI ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889196238-db883745.webp",
+    "updatedAt": "2026-06-08T03:26:36.382Z"
+  },
+  {
+    "nomorLagu": "38",
+    "judul": "PARUAK MA HARBANGAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889216460-b1a6ec81.webp",
+    "updatedAt": "2026-06-08T03:26:56.608Z"
+  },
+  {
+    "nomorLagu": "39",
+    "judul": "BEHA MA PANJALONGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889231876-70027386.webp",
+    "updatedAt": "2026-06-08T03:27:12.019Z"
+  },
+  {
+    "nomorLagu": "40",
+    "judul": "LAS BE MA ROHAMUNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887101588-96757c2c.webp",
+    "updatedAt": "2026-06-08T02:51:41.775Z"
+  },
+  {
+    "nomorLagu": "41",
+    "judul": "PARRIPE NI TUHANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889260452-96757c2c.webp",
+    "updatedAt": "2026-06-08T03:27:40.585Z"
+  },
+  {
+    "nomorLagu": "42",
+    "judul": "HAMU SUDE NAUNG TINORUAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889276569-e8d4e7b7.webp",
+    "updatedAt": "2026-06-08T03:27:56.662Z"
+  },
+  {
+    "nomorLagu": "43",
+    "judul": "PADIRI ROHAMUNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889290976-59636e8c.webp",
+    "updatedAt": "2026-06-08T03:28:11.122Z"
+  },
+  {
+    "nomorLagu": "44",
+    "judul": "HAMUNA NA PORSEA I SAI TOMU HAMU TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889304684-7889187e.webp",
+    "updatedAt": "2026-06-08T03:28:24.816Z"
+  },
+  {
+    "nomorLagu": "45",
+    "judul": "HOSIANNA ANAK NI RAJA DAVID",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889318481-d5146278.webp",
+    "updatedAt": "2026-06-08T03:28:38.647Z"
+  },
+  {
+    "nomorLagu": "46",
+    "judul": "NA SIAN GINJANG DO AU RO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889334019-6f5dc0cf.webp",
+    "updatedAt": "2026-06-08T03:28:54.156Z"
+  },
+  {
+    "nomorLagu": "47",
+    "judul": "DI NA SABORNGIN I DO BINSAR",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889347044-3224618e.webp",
+    "updatedAt": "2026-06-08T03:29:07.282Z"
+  },
+  {
+    "nomorLagu": "48",
+    "judul": "RIA MA HITA SASUDE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889358251-45dec3ef.webp",
+    "updatedAt": "2026-06-08T03:29:18.395Z"
+  },
+  {
+    "nomorLagu": "49",
+    "judul": "SAI RO MA TU BARA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889370205-2fac1a3b.webp",
+    "updatedAt": "2026-06-08T03:29:30.355Z"
+  },
+  {
+    "nomorLagu": "50",
+    "judul": "MARENDE MA HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889410058-d76962d2.webp",
+    "updatedAt": "2026-06-08T03:30:10.226Z"
+  },
+  {
+    "nomorLagu": "51",
+    "judul": "TOLE PUJI MA TUHANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889473993-3dad3acf.webp",
+    "updatedAt": "2026-06-08T03:31:14.131Z"
+  },
+  {
+    "nomorLagu": "52",
+    "judul": "HATUAON DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889487367-297d1c77.webp",
+    "updatedAt": "2026-06-08T03:31:27.513Z"
+  },
+  {
+    "nomorLagu": "53",
+    "judul": "DI BETLEHEM DO TUBU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889502078-faa3d020.webp",
+    "updatedAt": "2026-06-08T03:31:42.221Z"
+  },
+  {
+    "nomorLagu": "54",
+    "judul": "SONANG NI BORNGINNA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889514593-81fba006.webp",
+    "updatedAt": "2026-06-08T03:31:54.732Z"
+  },
+  {
+    "nomorLagu": "55",
+    "judul": "BORNGIN NA BADIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889527941-f7a0c28f.webp",
+    "updatedAt": "2026-06-08T03:32:08.127Z"
+  },
+  {
+    "nomorLagu": "56",
+    "judul": "SAI RO MA HAMUNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063243617-29a452bf.webp",
+    "updatedAt": "2026-06-10T03:47:23.722Z"
+  },
+  {
+    "nomorLagu": "57",
+    "judul": "NUNGA JUMPANG MUSE ARI PESTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889563318-fcc20f05.webp",
+    "updatedAt": "2026-06-08T03:32:43.483Z"
+  },
+  {
+    "nomorLagu": "58",
+    "judul": "MARTUMBUR TUNGKOTUNGKO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889590327-ea21d3ad.webp",
+    "updatedAt": "2026-06-08T03:33:10.476Z"
+  },
+  {
+    "nomorLagu": "59",
+    "judul": "O JESUSHI HUPUJI HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889608153-9e10e4c1.webp",
+    "updatedAt": "2026-06-17T04:29:24.802Z"
+  },
+  {
+    "nomorLagu": "60",
+    "judul": "MAROLOPOLOP HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889633278-164ac611.webp",
+    "updatedAt": "2026-06-08T03:33:53.424Z"
+  },
+  {
+    "nomorLagu": "61",
+    "judul": "NA TAU LAS NI ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063270841-bb859112.webp",
+    "updatedAt": "2026-06-10T03:47:51.002Z"
+  },
+  {
+    "nomorLagu": "62",
+    "judul": "HALALAS NI ROHA GODANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889666379-a6b5ff41.webp",
+    "updatedAt": "2026-06-08T03:34:26.544Z"
+  },
+  {
+    "nomorLagu": "63",
+    "judul": "JESUS HO DO SAI TONGTONG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889681086-76b29bde.webp",
+    "updatedAt": "2026-06-08T03:34:41.256Z"
+  },
+  {
+    "nomorLagu": "64",
+    "judul": "NAUNG MORU DO MUSE SATAON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889695375-81fba006.webp",
+    "updatedAt": "2026-06-08T03:34:55.517Z"
+  },
+  {
+    "nomorLagu": "65",
+    "judul": "MAJUMPANG TAON NAIMBARU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063299640-6c59069f.webp",
+    "updatedAt": "2026-06-10T03:48:19.782Z"
+  },
+  {
+    "nomorLagu": "66",
+    "judul": "DEBATA BAEN DONGANMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889731594-56d73c69.webp",
+    "updatedAt": "2026-06-08T03:35:31.758Z"
+  },
+  {
+    "nomorLagu": "67",
+    "judul": "HAMU ALE DONGANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889743592-a5ff4639.webp",
+    "updatedAt": "2026-06-08T03:35:43.740Z"
+  },
+  {
+    "nomorLagu": "68",
+    "judul": "MASILELEAN ANGKA TAON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889760172-2d375fba.webp",
+    "updatedAt": "2026-06-17T04:20:38.707Z"
+  },
+  {
+    "nomorLagu": "69",
+    "judul": "JESUS SAI URUPI HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889771983-28e8e73f.webp",
+    "updatedAt": "2026-06-08T03:36:12.110Z"
+  },
+  {
+    "nomorLagu": "70",
+    "judul": "NAUNG SALPU TAON NA BURUK I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889788630-25403697.webp",
+    "updatedAt": "2026-06-08T03:36:28.776Z"
+  },
+  {
+    "nomorLagu": "71",
+    "judul": "O RAJA NA SUMURUNG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889806268-70027386.webp",
+    "updatedAt": "2026-06-08T03:36:46.414Z"
+  },
+  {
+    "nomorLagu": "72",
+    "judul": "HEHE MA HAMU PARBEGU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889820924-28e8e73f.webp",
+    "updatedAt": "2026-06-08T03:37:01.057Z"
+  },
+  {
+    "nomorLagu": "73",
+    "judul": "BINTANG NI SI JAKOB",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889847873-71d3738a.webp",
+    "updatedAt": "2026-06-08T03:37:28.015Z"
+  },
+  {
+    "nomorLagu": "74",
+    "judul": "SAI MARLASNIROHA HITA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889872522-ca02f7db.webp",
+    "updatedAt": "2026-06-08T03:37:52.645Z"
+  },
+  {
+    "nomorLagu": "75",
+    "judul": "NAUNG BINSAR DO PANONDANG I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889890195-7889187e.webp",
+    "updatedAt": "2026-06-08T03:38:10.332Z"
+  },
+  {
+    "nomorLagu": "76",
+    "judul": "SADA NAMA SANGKAP NI ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889907679-0bb95187.webp",
+    "updatedAt": "2026-06-08T03:38:27.811Z"
+  },
+  {
+    "nomorLagu": "77",
+    "judul": "HAMU SALUHUT HALAK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889946120-29bc63e6.webp",
+    "updatedAt": "2026-06-08T03:39:06.245Z"
+  },
+  {
+    "nomorLagu": "78",
+    "judul": "O ULU NA SAP MUDAR",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889962167-8a000ea2.webp",
+    "updatedAt": "2026-06-08T03:39:22.308Z"
+  },
+  {
+    "nomorLagu": "79",
+    "judul": "DI NA PONJOT ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063353966-4ffaf1b3.webp",
+    "updatedAt": "2026-06-10T03:49:14.104Z"
+  },
+  {
+    "nomorLagu": "80",
+    "judul": "MAUAS JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890005034-b2036d5b.webp",
+    "updatedAt": "2026-06-08T03:40:05.191Z"
+  },
+  {
+    "nomorLagu": "81",
+    "judul": "JESUS MUAL NI NGOLUNGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890041284-334a6685.webp",
+    "updatedAt": "2026-06-08T03:40:41.422Z"
+  },
+  {
+    "nomorLagu": "82",
+    "judul": "O JESUSKU TU BUGANGMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890053134-5488ffa2.webp",
+    "updatedAt": "2026-06-08T03:40:53.257Z"
+  },
+  {
+    "nomorLagu": "83",
+    "judul": "NA LAO DO BIRUBIRU I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890079290-3495f4da.webp",
+    "updatedAt": "2026-06-08T03:41:19.419Z"
+  },
+  {
+    "nomorLagu": "84",
+    "judul": "AUT NA GINORGA TU ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890101736-03fa46de.webp",
+    "updatedAt": "2026-06-08T03:41:41.868Z"
+  },
+  {
+    "nomorLagu": "85",
+    "judul": "SAI INGOTON NI ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890121985-787524fd.webp",
+    "updatedAt": "2026-06-08T03:42:02.121Z"
+  },
+  {
+    "nomorLagu": "86",
+    "judul": "SILANG NA BADIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890137357-7deba2f2.webp",
+    "updatedAt": "2026-06-08T03:42:17.515Z"
+  },
+  {
+    "nomorLagu": "87",
+    "judul": "HO TINOBUS NI TUHANMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890157108-84129d58.webp",
+    "updatedAt": "2026-06-17T04:16:19.738Z"
+  },
+  {
+    "nomorLagu": "88",
+    "judul": "JESUSHU NAUNG MANOBUS AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890191144-961f407f.webp",
+    "updatedAt": "2026-06-17T04:14:11.585Z"
+  },
+  {
+    "nomorLagu": "89",
+    "judul": "ATE DI DIA SOROPMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063491356-7d46c54c.webp",
+    "updatedAt": "2026-06-10T03:51:31.512Z"
+  },
+  {
+    "nomorLagu": "90",
+    "judul": "SAI TAPUJI DEBATANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890217320-ca02f7db.webp",
+    "updatedAt": "2026-06-17T03:54:18.012Z"
+  },
+  {
+    "nomorLagu": "91",
+    "judul": "HATUAON DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890251920-297d1c77.webp",
+    "updatedAt": "2026-06-08T03:44:12.048Z"
+  },
+  {
+    "nomorLagu": "92",
+    "judul": "PUJI MA NA MANALUHON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890279331-222020f0.webp",
+    "updatedAt": "2026-06-08T03:44:39.473Z"
+  },
+  {
+    "nomorLagu": "93",
+    "judul": "PESTA PASKA HATUAON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890295287-4bea7504.webp",
+    "updatedAt": "2026-06-08T03:44:55.465Z"
+  },
+  {
+    "nomorLagu": "94",
+    "judul": "ALE TONDINGKU NAUNG HEHE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890314436-eb401cf3.webp",
+    "updatedAt": "2026-06-08T03:45:14.588Z"
+  },
+  {
+    "nomorLagu": "95",
+    "judul": "HALELUYA TAENDEHON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890393250-6dac5e61.webp",
+    "updatedAt": "2026-06-17T03:53:33.935Z"
+  },
+  {
+    "nomorLagu": "96",
+    "judul": "NUNGA TALU HAMATEAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890407470-457f8e6c.webp",
+    "updatedAt": "2026-06-08T03:46:47.606Z"
+  },
+  {
+    "nomorLagu": "97",
+    "judul": "INGOTON MA SADARI ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063544308-6c59069f.webp",
+    "updatedAt": "2026-06-17T03:52:56.503Z"
+  },
+  {
+    "nomorLagu": "98",
+    "judul": "NAUNG MANAEK DO HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890430225-af1e77c2.webp",
+    "updatedAt": "2026-06-17T03:52:38.023Z"
+  },
+  {
+    "nomorLagu": "99",
+    "judul": "O ULUBALANG NA GOGO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890447654-7889187e.webp",
+    "updatedAt": "2026-06-17T03:52:15.728Z"
+  },
+  {
+    "nomorLagu": "100",
+    "judul": "MARDONGAN OLOPOLOP MANAEK TUHANTA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780539740737-31400720.webp",
+    "updatedAt": "2026-06-17T03:51:56.436Z"
+  },
+  {
+    "nomorLagu": "101",
+    "judul": "TAITI GOGO IHUT TU HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780539776710-e159e494.webp",
+    "updatedAt": "2026-06-17T03:50:56.379Z"
+  },
+  {
+    "nomorLagu": "102",
+    "judul": "O TONDI PARBADIA BONGOTI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780539817137-7889187e.webp",
+    "updatedAt": "2026-06-04T02:23:37.310Z"
+  },
+  {
+    "nomorLagu": "103",
+    "judul": "O PANGAPUL NA LUMOBI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780539841342-3b60ee4f.webp",
+    "updatedAt": "2026-06-17T03:50:19.705Z"
+  },
+  {
+    "nomorLagu": "104",
+    "judul": "BONGOTI MA ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780539873760-31400720.webp",
+    "updatedAt": "2026-06-04T02:24:33.907Z"
+  },
+  {
+    "nomorLagu": "105",
+    "judul": "ROMA TONDI PORBADIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780539904481-7414726e.webp",
+    "updatedAt": "2026-06-17T03:48:04.119Z"
+  },
+  {
+    "nomorLagu": "106",
+    "judul": "ALE TUHAN AMANAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780539964794-9059f86f.webp",
+    "updatedAt": "2026-06-04T02:26:04.948Z"
+  },
+  {
+    "nomorLagu": "107",
+    "judul": "O TONDI PARBADIA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780539985462-9b7ac64d.webp",
+    "updatedAt": "2026-06-17T03:42:54.924Z"
+  },
+  {
+    "nomorLagu": "108",
+    "judul": "BAEN MA GABAGABA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540024988-fcffa81e.webp",
+    "updatedAt": "2026-06-17T03:40:52.231Z"
+  },
+  {
+    "nomorLagu": "109",
+    "judul": "SAI SONGGOPI HAMI ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540105081-29ce3b6f.webp",
+    "updatedAt": "2026-06-17T03:38:48.439Z"
+  },
+  {
+    "nomorLagu": "110",
+    "judul": "HALELUYA! PINUJI MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472882181-8874f687.webp",
+    "updatedAt": "2026-06-03T07:48:02.347Z"
+  },
+  {
+    "nomorLagu": "111",
+    "judul": "PATIMBUL BE MA SANGAP",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780995306267-6c59069f.webp",
+    "updatedAt": "2026-06-09T08:55:06.425Z"
+  },
+  {
+    "nomorLagu": "112",
+    "judul": "HALELUYA TAPUJI MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472925231-7889187e.webp",
+    "updatedAt": "2026-06-17T03:37:41.533Z"
+  },
+  {
+    "nomorLagu": "113",
+    "judul": "DEBATA SITOLUSADA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472945790-9059f86f.webp",
+    "updatedAt": "2026-06-03T07:49:05.961Z"
+  },
+  {
+    "nomorLagu": "114",
+    "judul": "ALE JAHOWA DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473053203-96fb3354.webp",
+    "updatedAt": "2026-06-17T03:37:13.239Z"
+  },
+  {
+    "nomorLagu": "115",
+    "judul": "TUHAN DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473076553-af1e77c2.webp",
+    "updatedAt": "2026-06-03T07:51:16.717Z"
+  },
+  {
+    "nomorLagu": "116",
+    "judul": "DITOMPA HO DO AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473090970-450f5356.webp",
+    "updatedAt": "2026-07-22T05:54:43.249Z"
+  },
+  {
+    "nomorLagu": "117",
+    "judul": "JAHOWA DEBATANTA DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473112940-7a816d6e.webp",
+    "updatedAt": "2026-06-03T07:51:53.099Z"
+  },
+  {
+    "nomorLagu": "118",
+    "judul": "PAIAN MA DI HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780995798344-36234e95.webp",
+    "updatedAt": "2026-06-09T09:03:18.507Z"
+  },
+  {
+    "nomorLagu": "119",
+    "judul": "MARTUA DO DOHONON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473144702-89ec5adb.webp",
+    "updatedAt": "2026-06-03T07:52:24.867Z"
+  },
+  {
+    "nomorLagu": "120",
+    "judul": "ALE IMMANUEL TATAP HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473188434-6bd981a1.webp",
+    "updatedAt": "2026-06-17T03:36:23.443Z"
+  },
+  {
+    "nomorLagu": "121",
+    "judul": "JESUS RAJA NI HURIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473205172-ee0a018d.webp",
+    "updatedAt": "2026-06-03T07:53:25.323Z"
+  },
+  {
+    "nomorLagu": "122",
+    "judul": "IDA HINADENGGAN NI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473237183-04dea88a.webp",
+    "updatedAt": "2026-06-03T07:53:57.449Z"
+  },
+  {
+    "nomorLagu": "123",
+    "judul": "ALE DONGAN NA SAROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473257915-4ad6b5ef.webp",
+    "updatedAt": "2026-06-03T07:54:18.072Z"
+  },
+  {
+    "nomorLagu": "124",
+    "judul": "DI BORNGIN NA PARPUDI I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473277228-fcec2b13.webp",
+    "updatedAt": "2026-06-03T07:54:37.391Z"
+  },
+  {
+    "nomorLagu": "125",
+    "judul": "MARLASNIROHA HITA ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473292635-6f922b2c.webp",
+    "updatedAt": "2026-06-25T11:48:23.306Z"
+  },
+  {
+    "nomorLagu": "126",
+    "judul": "O HAMUNA ALE DONGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473405479-436580f7.webp",
+    "updatedAt": "2026-06-03T07:56:45.645Z"
+  },
+  {
+    "nomorLagu": "127",
+    "judul": "LAM GOGO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473437108-c4e5ecde.webp",
+    "updatedAt": "2026-06-03T07:57:17.288Z"
+  },
+  {
+    "nomorLagu": "128",
+    "judul": "DITANDA DEBATANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473453718-72e422c9.webp",
+    "updatedAt": "2026-06-03T07:57:33.841Z"
+  },
+  {
+    "nomorLagu": "129",
+    "judul": "HUHALASHON, HURINGKOTI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473553441-0f4bbeac.webp",
+    "updatedAt": "2026-06-03T07:59:13.631Z"
+  },
+  {
+    "nomorLagu": "130",
+    "judul": "PAROHON HARAJAONMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473582332-96fb3354.webp",
+    "updatedAt": "2026-06-03T07:59:42.492Z"
+  },
+  {
+    "nomorLagu": "131",
+    "judul": "BATANG AEK USEHONONKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473600992-b65fa9c9.webp",
+    "updatedAt": "2026-06-03T08:00:01.152Z"
+  },
+  {
+    "nomorLagu": "132",
+    "judul": "ANGGIAT APIMI MA GALAK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540378077-e632ca85.webp",
+    "updatedAt": "2026-06-04T02:32:58.272Z"
+  },
+  {
+    "nomorLagu": "133",
+    "judul": "O TONDI NA MANGGOHI ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540421639-efb28202.webp",
+    "updatedAt": "2026-06-17T03:32:06.278Z"
+  },
+  {
+    "nomorLagu": "134",
+    "judul": "SAI TOROP DOPE PARBEGU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540457200-9059f86f.webp",
+    "updatedAt": "2026-06-17T03:31:47.607Z"
+  },
+  {
+    "nomorLagu": "135",
+    "judul": "MARPUNGU DO DI JOLOMON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540486583-7889187e.webp",
+    "updatedAt": "2026-06-17T03:31:30.588Z"
+  },
+  {
+    "nomorLagu": "136",
+    "judul": "BIDANG DOPE NA HOLOM I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540548365-181fe0ae.webp",
+    "updatedAt": "2026-07-18T07:19:37.878Z"
+  },
+  {
+    "nomorLagu": "137",
+    "judul": "NUNGA RO TU HITA ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540586225-47d36372.webp",
+    "updatedAt": "2026-06-17T03:31:08.797Z"
+  },
+  {
+    "nomorLagu": "138",
+    "judul": "SADA PARSIGANTUNGANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540638230-6dac5e61.webp",
+    "updatedAt": "2026-06-17T03:29:32.715Z"
+  },
+  {
+    "nomorLagu": "139",
+    "judul": "SADA SIPARMAHAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540661934-71d3738a.webp",
+    "updatedAt": "2026-06-17T03:29:10.715Z"
+  },
+  {
+    "nomorLagu": "140",
+    "judul": "GIRGIR MA HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780995851237-7df66fc3.webp",
+    "updatedAt": "2026-06-11T13:05:31.540Z"
+  },
+  {
+    "nomorLagu": "141",
+    "judul": "SAI TIUR MA LANGKAMUNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780540911058-6dac5e61.webp",
+    "updatedAt": "2026-06-04T02:41:51.209Z"
+  },
+  {
+    "nomorLagu": "142",
+    "judul": "PARARAT MA BARITAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541005494-7889187e.webp",
+    "updatedAt": "2026-06-04T02:43:25.635Z"
+  },
+  {
+    "nomorLagu": "143",
+    "judul": "JERUSALEM, JERUSALEM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541024049-7b15082e.webp",
+    "updatedAt": "2026-06-04T02:43:44.191Z"
+  },
+  {
+    "nomorLagu": "144",
+    "judul": "NA HOT PADANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541050424-804a1641.webp",
+    "updatedAt": "2026-06-17T03:28:25.689Z"
+  },
+  {
+    "nomorLagu": "145",
+    "judul": "DANG HAPALANG LAS NI ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541070323-afbe071d.webp",
+    "updatedAt": "2026-06-04T02:44:30.454Z"
+  },
+  {
+    "nomorLagu": "146",
+    "judul": "O JESUS NAENG TARDIDI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780995892389-36234e95.webp",
+    "updatedAt": "2026-06-09T09:04:52.524Z"
+  },
+  {
+    "nomorLagu": "147",
+    "judul": "JESUS HAMI RO DISON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541159763-29ce3b6f.webp",
+    "updatedAt": "2026-06-17T03:28:00.734Z"
+  },
+  {
+    "nomorLagu": "148",
+    "judul": "SIAN SURGO I SURU TONDIMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541174680-af1e77c2.webp",
+    "updatedAt": "2026-06-04T02:46:14.828Z"
+  },
+  {
+    "nomorLagu": "149",
+    "judul": "HO TONGTONG IHUTHONONKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541192979-bba935d3.webp",
+    "updatedAt": "2026-06-04T02:46:33.113Z"
+  },
+  {
+    "nomorLagu": "150",
+    "judul": "NDANG AU NAMPUNA AHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780995925129-475a79a2.webp",
+    "updatedAt": "2026-06-09T09:05:25.293Z"
+  },
+  {
+    "nomorLagu": "151",
+    "judul": "ASI ROHAM O JESUS TUHANHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780995963525-31dc90ba.webp",
+    "updatedAt": "2026-06-17T03:27:32.631Z"
+  },
+  {
+    "nomorLagu": "152",
+    "judul": "JESUS NA MAMORSAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541290261-0557ccee.webp",
+    "updatedAt": "2026-06-04T02:48:10.408Z"
+  },
+  {
+    "nomorLagu": "153",
+    "judul": "O JESUS NAUNG SINEAT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780996004715-629449f4.webp",
+    "updatedAt": "2026-06-09T09:06:44.865Z"
+  },
+  {
+    "nomorLagu": "154",
+    "judul": "SAI PALINGGAS HO TONDINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541324690-c5225535.webp",
+    "updatedAt": "2026-06-04T02:48:44.829Z"
+  },
+  {
+    "nomorLagu": "155",
+    "judul": "TUSON MA HO ALE TONDINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541355544-50c4c175.webp",
+    "updatedAt": "2026-06-04T02:49:15.723Z"
+  },
+  {
+    "nomorLagu": "156",
+    "judul": "JESUS PARMAHAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780996050554-9677a832.webp",
+    "updatedAt": "2026-06-17T03:26:48.072Z"
+  },
+  {
+    "nomorLagu": "157",
+    "judul": "O JESUS NA MARSANGAP I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541421013-7889187e.webp",
+    "updatedAt": "2026-06-17T03:26:20.934Z"
+  },
+  {
+    "nomorLagu": "158",
+    "judul": "JESUS DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541437658-af1e77c2.webp",
+    "updatedAt": "2026-06-17T03:25:45.029Z"
+  },
+  {
+    "nomorLagu": "159",
+    "judul": "MARTUA DONGAN ANGKA NA SABAGAS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541462937-900d6951.webp",
+    "updatedAt": "2026-06-17T03:25:21.692Z"
+  },
+  {
+    "nomorLagu": "160",
+    "judul": "AU DOHOT NA SARIPENGKON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541508484-7889187e.webp",
+    "updatedAt": "2026-06-17T03:25:08.405Z"
+  },
+  {
+    "nomorLagu": "161",
+    "judul": "TANGIHON ANGGUKANGGUKKON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780996080443-f00df4a6.webp",
+    "updatedAt": "2026-07-31T13:11:17.214Z"
+  },
+  {
+    "nomorLagu": "162",
+    "judul": "O DEBATA MANSAI BALGA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541538593-e159e494.webp",
+    "updatedAt": "2026-06-17T03:24:40.424Z"
+  },
+  {
+    "nomorLagu": "163",
+    "judul": "LAOS DIJALO JESUS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541554279-d04b4c70.webp",
+    "updatedAt": "2026-06-17T03:24:27.335Z"
+  },
+  {
+    "nomorLagu": "164",
+    "judul": "O TUHAN JESUS HO RAJANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541576783-43557f1a.webp",
+    "updatedAt": "2026-07-18T14:09:47.416Z"
+  },
+  {
+    "nomorLagu": "165",
+    "judul": "NA BASA DO ROHAM DI AU (BL 19)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541595670-0301ac3b.webp",
+    "updatedAt": "2026-06-04T02:53:15.810Z"
+  },
+  {
+    "nomorLagu": "166",
+    "judul": "AI BEASA DI BALIAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541632020-0f4bbeac.webp",
+    "updatedAt": "2026-06-04T02:53:52.162Z"
+  },
+  {
+    "nomorLagu": "167",
+    "judul": "DIJANGKON JESUS DO PARDOSA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541644234-a977cb3b.webp",
+    "updatedAt": "2026-06-04T02:54:04.369Z"
+  },
+  {
+    "nomorLagu": "168",
+    "judul": "DISESA JESUS DOSA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541661866-f44d4264.webp",
+    "updatedAt": "2026-06-04T02:54:22.009Z"
+  },
+  {
+    "nomorLagu": "169",
+    "judul": "HO SIPANGOLU AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541680871-3c855b83.webp",
+    "updatedAt": "2026-06-06T12:32:51.954Z"
+  },
+  {
+    "nomorLagu": "170",
+    "judul": "IA AEK SANTETEK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780996103934-844ee62f.webp",
+    "updatedAt": "2026-06-09T09:08:24.082Z"
+  },
+  {
+    "nomorLagu": "171",
+    "judul": "TANDAI MA AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780477440028-a1e30fe1.webp",
+    "updatedAt": "2026-06-06T10:51:46.420Z"
+  },
+  {
+    "nomorLagu": "172",
+    "judul": "O JESUS PANONDANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780998812083-eb55365b.webp",
+    "updatedAt": "2026-06-09T09:53:32.260Z"
+  },
+  {
+    "nomorLagu": "173",
+    "judul": "SAI MULAK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541797029-12a416f8.webp",
+    "updatedAt": "2026-06-04T02:56:37.175Z"
+  },
+  {
+    "nomorLagu": "174",
+    "judul": "TOROP DOPE NA SIAT I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541818002-31e52367.webp",
+    "updatedAt": "2026-06-17T03:22:52.692Z"
+  },
+  {
+    "nomorLagu": "175",
+    "judul": "TU DIA HO NA LOJA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541837262-ccd45fb0.webp",
+    "updatedAt": "2026-06-17T03:22:35.839Z"
+  },
+  {
+    "nomorLagu": "176",
+    "judul": "NA MUNGKAP DO SURGO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780998850705-5f5873b6.webp",
+    "updatedAt": "2026-10-16T06:56:07.788Z"
+  },
+  {
+    "nomorLagu": "177",
+    "judul": "NDADA TARHATAON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780998926175-1671986f.webp",
+    "updatedAt": "2026-06-09T09:55:26.567Z"
+  },
+  {
+    "nomorLagu": "178",
+    "judul": "RO MA TU JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780541874402-f7e995fa.webp",
+    "updatedAt": "2026-06-04T02:57:54.545Z"
+  },
+  {
+    "nomorLagu": "179",
+    "judul": "ADONG DO SADA MUAL I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542029674-4c24a8c4.webp",
+    "updatedAt": "2026-06-17T03:21:55.328Z"
+  },
+  {
+    "nomorLagu": "180",
+    "judul": "RO TU JESUS HO NA LOJA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542074869-1febe152.webp",
+    "updatedAt": "2026-06-04T03:01:15.033Z"
+  },
+  {
+    "nomorLagu": "181",
+    "judul": "NDANG NA TARPABOA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780999007167-1671986f.webp",
+    "updatedAt": "2026-06-17T03:20:55.073Z"
+  },
+  {
+    "nomorLagu": "182",
+    "judul": "TU JOLOM O DEBATANGKU-1",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542117911-dd066dff.webp",
+    "updatedAt": "2026-06-17T03:20:29.238Z"
+  },
+  {
+    "nomorLagu": "183",
+    "judul": "NA JUMPANG AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542135190-a23d7c81.webp",
+    "updatedAt": "2026-06-04T03:02:15.332Z"
+  },
+  {
+    "nomorLagu": "184",
+    "judul": "NUNGA TUNG JUMPANG AU OJAHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542209399-3224618e.webp",
+    "updatedAt": "2026-06-17T03:20:18.040Z"
+  },
+  {
+    "nomorLagu": "185",
+    "judul": "HOLAN SADA DEBATANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542240211-1a325734.webp",
+    "updatedAt": "2026-07-31T13:19:30.846Z"
+  },
+  {
+    "nomorLagu": "186",
+    "judul": "JAHOWA DO HAPOSANHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542258539-3622695c.webp",
+    "updatedAt": "2026-06-17T03:19:38.517Z"
+  },
+  {
+    "nomorLagu": "187",
+    "judul": "DENGGAN DO PANOGUM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542290853-e3a74147.webp",
+    "updatedAt": "2026-10-16T06:48:15.028Z"
+  },
+  {
+    "nomorLagu": "188",
+    "judul": "JAHOWA SIPARMAHAN AU-1",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780999080579-ac3cdab7.webp",
+    "updatedAt": "2026-06-17T03:13:28.044Z"
+  },
+  {
+    "nomorLagu": "189",
+    "judul": "O JESUS NA PANGOLU AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542331671-0301ac3b.webp",
+    "updatedAt": "2026-06-04T03:05:31.835Z"
+  },
+  {
+    "nomorLagu": "190",
+    "judul": "LAS ROHANGKU SITUTU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542396160-bc146b8e.webp",
+    "updatedAt": "2026-06-04T03:06:36.301Z"
+  },
+  {
+    "nomorLagu": "191",
+    "judul": "HOSANA DO NILEHON NI TUHANTA JESUS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542412402-e5295d72.webp",
+    "updatedAt": "2026-06-17T03:12:52.665Z"
+  },
+  {
+    "nomorLagu": "192",
+    "judul": "O TUHAN JESUS, RAJA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542438933-80e9a28e.webp",
+    "updatedAt": "2026-06-04T03:07:19.082Z"
+  },
+  {
+    "nomorLagu": "193",
+    "judul": "MARIBAK LANGIT NI LANGITAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542457955-e632ca85.webp",
+    "updatedAt": "2026-06-17T03:12:20.396Z"
+  },
+  {
+    "nomorLagu": "194",
+    "judul": "AUT SO ASI ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542488749-94e97a15.webp",
+    "updatedAt": "2026-06-04T03:08:08.919Z"
+  },
+  {
+    "nomorLagu": "195",
+    "judul": "HOLONG DO ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780999131511-a9ef74ea.webp",
+    "updatedAt": "2026-06-09T09:58:51.681Z"
+  },
+  {
+    "nomorLagu": "196",
+    "judul": "SAI HUJAHA DI PUSTAHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542505044-77815e2b.webp",
+    "updatedAt": "2026-06-04T03:08:25.189Z"
+  },
+  {
+    "nomorLagu": "197",
+    "judul": "NA MARMAHANI HITA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542528672-e19c0a2e.webp",
+    "updatedAt": "2026-06-04T03:08:48.867Z"
+  },
+  {
+    "nomorLagu": "198",
+    "judul": "AUT UNANG HO JAMBARHU ALE JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542563651-9de21745.webp",
+    "updatedAt": "2026-06-17T03:08:53.054Z"
+  },
+  {
+    "nomorLagu": "199",
+    "judul": "SAI INGOT JESUS TUHANMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780999181829-53af8c9f.webp",
+    "updatedAt": "2026-06-17T03:08:17.232Z"
+  },
+  {
+    "nomorLagu": "200",
+    "judul": "DI SURGO DO ALEALENTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542632459-961f407f.webp",
+    "updatedAt": "2026-06-04T03:10:32.620Z"
+  },
+  {
+    "nomorLagu": "201",
+    "judul": "NA MARTUNGKOT SERE AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542683121-fa109883.webp",
+    "updatedAt": "2026-06-04T03:11:23.264Z"
+  },
+  {
+    "nomorLagu": "202",
+    "judul": "HUHAHOLONGI HO GOGONGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542701413-63f35eb2.webp",
+    "updatedAt": "2026-06-17T03:07:10.975Z"
+  },
+  {
+    "nomorLagu": "203",
+    "judul": "HOLONG DO ROHANGKON DI HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542722603-9fff842d.webp",
+    "updatedAt": "2026-06-04T03:12:02.762Z"
+  },
+  {
+    "nomorLagu": "204",
+    "judul": "NDANG TADINGKONONKU HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542871925-d5146278.webp",
+    "updatedAt": "2026-06-04T03:14:32.065Z"
+  },
+  {
+    "nomorLagu": "205",
+    "judul": "ALE JESUS TUHANNAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542891337-1fba9dac.webp",
+    "updatedAt": "2026-10-16T07:06:22.290Z"
+  },
+  {
+    "nomorLagu": "206",
+    "judul": "NA DISON DO AU TUHANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542905802-1fba9dac.webp",
+    "updatedAt": "2026-10-16T07:10:32.123Z"
+  },
+  {
+    "nomorLagu": "207",
+    "judul": "SAI TIOP MA TANGANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780999238794-3f872ad7.webp",
+    "updatedAt": "2026-06-15T08:56:43.412Z"
+  },
+  {
+    "nomorLagu": "208",
+    "judul": "ALE DONGAN NA TARHURUNG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780542940919-4ad6b5ef.webp",
+    "updatedAt": "2026-06-15T08:53:33.594Z"
+  },
+  {
+    "nomorLagu": "209",
+    "judul": "NA SONANG AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780999348385-31dc90ba.webp",
+    "updatedAt": "2026-06-09T10:02:28.521Z"
+  },
+  {
+    "nomorLagu": "210",
+    "judul": "O TUHAN NA MARASI ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543026273-b6fd8cb2.webp",
+    "updatedAt": "2026-07-22T05:56:57.204Z"
+  },
+  {
+    "nomorLagu": "211",
+    "judul": "TUHAN JESUS SIPARMAHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543121522-78ec08ac.webp",
+    "updatedAt": "2026-07-18T07:22:32.877Z"
+  },
+  {
+    "nomorLagu": "212",
+    "judul": "HAHOLONGON NA BADIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543135902-dd066dff.webp",
+    "updatedAt": "2026-06-04T03:18:56.062Z"
+  },
+  {
+    "nomorLagu": "213",
+    "judul": "DUNG SONANG ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543154466-35571e09.webp",
+    "updatedAt": "2026-06-04T03:19:14.608Z"
+  },
+  {
+    "nomorLagu": "214",
+    "judul": "SONANG DI LAMBUNG JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543185308-e23abe39.webp",
+    "updatedAt": "2026-06-04T03:19:45.453Z"
+  },
+  {
+    "nomorLagu": "215",
+    "judul": "NA MARTUA NINNA JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543237663-1fea2819.webp",
+    "updatedAt": "2026-06-04T03:20:37.801Z"
+  },
+  {
+    "nomorLagu": "216",
+    "judul": "GARGAR DOLOK TAPOR BATU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543264909-7c201970.webp",
+    "updatedAt": "2026-06-15T08:34:12.495Z"
+  },
+  {
+    "nomorLagu": "217",
+    "judul": "JAHOWA DO DONGANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543290164-60db951d.webp",
+    "updatedAt": "2026-06-15T08:33:58.350Z"
+  },
+  {
+    "nomorLagu": "218",
+    "judul": "TONG DO TAU HAPOSAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780999418782-4fc6e7f3.webp",
+    "updatedAt": "2026-06-09T10:03:39.130Z"
+  },
+  {
+    "nomorLagu": "219",
+    "judul": "ISE DO ALEALENTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543323418-426f9537.webp",
+    "updatedAt": "2026-06-04T03:22:03.565Z"
+  },
+  {
+    "nomorLagu": "220",
+    "judul": "NDANG JUMPANG HIAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780999476667-4e3bb2ad.webp",
+    "updatedAt": "2026-06-09T10:04:36.814Z"
+  },
+  {
+    "nomorLagu": "221",
+    "judul": "SALELENG JESUSHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063646132-d23d85ca.webp",
+    "updatedAt": "2026-06-15T08:33:30.035Z"
+  },
+  {
+    "nomorLagu": "222",
+    "judul": "TU JOLO NI TUHANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780543852432-208bf63f.webp",
+    "updatedAt": "2026-06-15T08:33:20.066Z"
+  },
+  {
+    "nomorLagu": "223",
+    "judul": "HUSOMBA HO TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545522932-a023a825.webp",
+    "updatedAt": "2026-06-04T03:58:43.090Z"
+  },
+  {
+    "nomorLagu": "224",
+    "judul": "JALO TANGANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545544378-9d08979f.webp",
+    "updatedAt": "2026-06-15T08:33:05.237Z"
+  },
+  {
+    "nomorLagu": "225",
+    "judul": "HO O TUHAN HAHOLONGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545704085-8535036c.webp",
+    "updatedAt": "2026-06-15T08:32:52.907Z"
+  },
+  {
+    "nomorLagu": "226",
+    "judul": "ADONG DO HASONANGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545724299-4ae1a285.webp",
+    "updatedAt": "2026-06-04T04:02:04.464Z"
+  },
+  {
+    "nomorLagu": "227",
+    "judul": "JESUS NGOLU NI TONDINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545742439-d2a8e422.webp",
+    "updatedAt": "2026-06-04T04:02:22.606Z"
+  },
+  {
+    "nomorLagu": "228",
+    "judul": "JESUS HAPOSANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545766145-43dc5185.webp",
+    "updatedAt": "2026-06-15T08:32:22.971Z"
+  },
+  {
+    "nomorLagu": "229",
+    "judul": "SAI MARTUA DO SUDENA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545793938-28d72632.webp",
+    "updatedAt": "2026-06-15T08:32:10.130Z"
+  },
+  {
+    "nomorLagu": "230",
+    "judul": "NA MALUNGUN DO ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545836298-bba935d3.webp",
+    "updatedAt": "2026-06-15T08:31:49.585Z"
+  },
+  {
+    "nomorLagu": "231",
+    "judul": "ON MA NA DI ROHANGKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545854631-04dea88a.webp",
+    "updatedAt": "2026-06-04T04:04:14.770Z"
+  },
+  {
+    "nomorLagu": "232",
+    "judul": "SIAN SUDE PARULIAN NA ARGA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545868939-0dfb97b6.webp",
+    "updatedAt": "2026-08-02T07:49:06.400Z"
+  },
+  {
+    "nomorLagu": "233",
+    "judul": "TURENA I MANODO TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545891864-0fa46014.webp",
+    "updatedAt": "2026-07-18T14:13:10.278Z"
+  },
+  {
+    "nomorLagu": "234",
+    "judul": "DI RUMANG NI PORTIBION",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545908970-00fb5d29.webp",
+    "updatedAt": "2026-06-15T05:02:09.274Z"
+  },
+  {
+    "nomorLagu": "235",
+    "judul": "TUMPALHU NA UMMULI HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545928349-1f29fbed.webp",
+    "updatedAt": "2026-06-15T04:57:42.391Z"
+  },
+  {
+    "nomorLagu": "236",
+    "judul": "JOTJOT DO MARSAK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780455879362-f9e4142b.webp",
+    "updatedAt": "2026-06-03T03:04:39.610Z"
+  },
+  {
+    "nomorLagu": "237",
+    "judul": "JESUS KRISTUS DO MANOBUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545955054-84129d58.webp",
+    "updatedAt": "2026-06-04T04:05:55.206Z"
+  },
+  {
+    "nomorLagu": "238",
+    "judul": "IHUTHON AU SUDE HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545973922-2d375fba.webp",
+    "updatedAt": "2026-08-08T01:00:05.129Z"
+  },
+  {
+    "nomorLagu": "239",
+    "judul": "BINSAN RO ASI NI ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780545986396-2dc3e59b.webp",
+    "updatedAt": "2026-06-04T04:06:26.557Z"
+  },
+  {
+    "nomorLagu": "240",
+    "judul": "O HAMUNA NA PORSEA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546031529-6dac5e61.webp",
+    "updatedAt": "2026-06-15T04:51:43.219Z"
+  },
+  {
+    "nomorLagu": "241",
+    "judul": "ASAL MA IBANA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546045572-315414d3.webp",
+    "updatedAt": "2026-06-04T04:07:25.722Z"
+  },
+  {
+    "nomorLagu": "242",
+    "judul": "RAHIS JALA MAOL TUTU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546067875-8362e08d.webp",
+    "updatedAt": "2026-06-15T04:39:39.702Z"
+  },
+  {
+    "nomorLagu": "243",
+    "judul": "SAI BERENGI PARTONGGOLAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546093449-36477f3d.webp",
+    "updatedAt": "2026-06-04T04:08:13.602Z"
+  },
+  {
+    "nomorLagu": "244",
+    "judul": "HABURJUHON MA MANGALO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546107477-2dc3e59b.webp",
+    "updatedAt": "2026-06-15T04:39:22.428Z"
+  },
+  {
+    "nomorLagu": "245",
+    "judul": "ANGGO DIDONGANI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546128433-315414d3.webp",
+    "updatedAt": "2026-06-15T04:38:54.253Z"
+  },
+  {
+    "nomorLagu": "246",
+    "judul": "JESUS URUPI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546145045-0dfb97b6.webp",
+    "updatedAt": "2026-06-04T04:09:05.184Z"
+  },
+  {
+    "nomorLagu": "247",
+    "judul": "SAI HEHE MA HAMUNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546194159-b237787a.webp",
+    "updatedAt": "2026-06-15T04:38:07.393Z"
+  },
+  {
+    "nomorLagu": "248",
+    "judul": "SALELENG HO DI TANO ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546210721-4add6adf.webp",
+    "updatedAt": "2026-06-15T04:37:37.631Z"
+  },
+  {
+    "nomorLagu": "249",
+    "judul": "NGOT MA HO O TONDINGKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546226978-b42dab3e.webp",
+    "updatedAt": "2026-06-15T04:36:57.419Z"
+  },
+  {
+    "nomorLagu": "250",
+    "judul": "SITOSTOSI NASA IHOT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546307669-28d72632.webp",
+    "updatedAt": "2026-06-15T04:36:28.796Z"
+  },
+  {
+    "nomorLagu": "251",
+    "judul": "NA MONANG I DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063685860-7e85c4d2.webp",
+    "updatedAt": "2026-06-10T03:54:46.029Z"
+  },
+  {
+    "nomorLagu": "252",
+    "judul": "O JESUS SAI DONGANI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063717113-36234e95.webp",
+    "updatedAt": "2026-06-10T03:55:17.266Z"
+  },
+  {
+    "nomorLagu": "253",
+    "judul": "ALE DEBATANGKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546401819-105bed0d.webp",
+    "updatedAt": "2026-06-04T04:13:22.004Z"
+  },
+  {
+    "nomorLagu": "254",
+    "judul": "O JESUS SIPPANGOLU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063757480-4ffaf1b3.webp",
+    "updatedAt": "2026-07-22T05:59:45.899Z"
+  },
+  {
+    "nomorLagu": "255",
+    "judul": "HOLAN SADA DO NA RINGKOT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546428699-187fdbdb.webp",
+    "updatedAt": "2026-06-04T04:13:48.833Z"
+  },
+  {
+    "nomorLagu": "256",
+    "judul": "JESUS KRISTUS I DO RAJA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546464847-42030ce0.webp",
+    "updatedAt": "2026-06-04T04:14:25.009Z"
+  },
+  {
+    "nomorLagu": "257",
+    "judul": "JONOK DEBATANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546484313-0050bba7.webp",
+    "updatedAt": "2026-06-04T04:14:44.463Z"
+  },
+  {
+    "nomorLagu": "258",
+    "judul": "SAI HUTUJU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546517092-632bd3ef.webp",
+    "updatedAt": "2026-06-04T04:15:17.234Z"
+  },
+  {
+    "nomorLagu": "259",
+    "judul": "SAI BETA MA TONDINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546545783-ede6056e.webp",
+    "updatedAt": "2026-06-04T04:15:45.957Z"
+  },
+  {
+    "nomorLagu": "260",
+    "judul": "HOLAN JESUS DO HUBAEN DONGANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546620055-c1e6a643.webp",
+    "updatedAt": "2026-06-15T04:34:32.591Z"
+  },
+  {
+    "nomorLagu": "261",
+    "judul": "BINTANG SIPARTOGI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063802349-0050bba7.webp",
+    "updatedAt": "2026-06-10T03:56:42.517Z"
+  },
+  {
+    "nomorLagu": "262",
+    "judul": "JAHOWA TUHANHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063835813-9677a832.webp",
+    "updatedAt": "2026-06-15T04:33:54.840Z"
+  },
+  {
+    "nomorLagu": "263",
+    "judul": "TUDOS TU GALUMBANG I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546659826-36085847.webp",
+    "updatedAt": "2026-06-04T04:17:39.994Z"
+  },
+  {
+    "nomorLagu": "264",
+    "judul": "SAI TOGU AU TU HASONANGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546679650-f00dad00.webp",
+    "updatedAt": "2026-06-15T04:33:33.603Z"
+  },
+  {
+    "nomorLagu": "265",
+    "judul": "MAULIATE ALE TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546746376-50c4c175.webp",
+    "updatedAt": "2026-06-15T04:33:08.470Z"
+  },
+  {
+    "nomorLagu": "266",
+    "judul": "TU BANUAGINJANG DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546771611-aff63619.webp",
+    "updatedAt": "2026-06-04T04:19:31.757Z"
+  },
+  {
+    "nomorLagu": "267",
+    "judul": "O TUHAN SULINGKIT MA AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546790838-20807ba5.webp",
+    "updatedAt": "2026-06-15T04:31:57.759Z"
+  },
+  {
+    "nomorLagu": "268",
+    "judul": "DEBATANGKU DO DONGANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063876747-2ab8c5b2.webp",
+    "updatedAt": "2026-06-15T04:31:26.915Z"
+  },
+  {
+    "nomorLagu": "269",
+    "judul": "MARDALAN AU SAONARI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546823199-208bf63f.webp",
+    "updatedAt": "2026-06-15T04:31:06.147Z"
+  },
+  {
+    "nomorLagu": "270",
+    "judul": "NGOT AI TORANG DO ARI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546916969-c8882fb9.webp",
+    "updatedAt": "2026-06-04T04:21:57.114Z"
+  },
+  {
+    "nomorLagu": "271",
+    "judul": "BETA, BETA HITA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780546940173-70737367.webp",
+    "updatedAt": "2026-06-04T04:22:20.316Z"
+  },
+  {
+    "nomorLagu": "272",
+    "judul": "SAI TOLE TOLE RO SUDE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547022158-7c4e1a81.webp",
+    "updatedAt": "2026-07-22T06:01:42.873Z"
+  },
+  {
+    "nomorLagu": "273",
+    "judul": "JESUS TUHANKU, RAJAI MA AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547041288-0d3ad5dd.webp",
+    "updatedAt": "2026-06-04T04:24:01.433Z"
+  },
+  {
+    "nomorLagu": "274",
+    "judul": "NDANG JADI HO MARDALAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547063288-b237787a.webp",
+    "updatedAt": "2026-06-15T04:28:54.077Z"
+  },
+  {
+    "nomorLagu": "275",
+    "judul": "O JESUS TUHANHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547089954-4c5412de.webp",
+    "updatedAt": "2026-06-04T04:24:50.119Z"
+  },
+  {
+    "nomorLagu": "276",
+    "judul": "O JESUS SIPARMONANG I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547112425-1f29fbed.webp",
+    "updatedAt": "2026-06-04T04:25:12.565Z"
+  },
+  {
+    "nomorLagu": "277",
+    "judul": "MARSADA ROHA HITA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547142266-96757c2c.webp",
+    "updatedAt": "2026-06-04T04:25:42.429Z"
+  },
+  {
+    "nomorLagu": "278",
+    "judul": "BANGSO NA SUMURUNG I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547267179-3514106c.webp",
+    "updatedAt": "2026-06-04T04:27:47.334Z"
+  },
+  {
+    "nomorLagu": "279",
+    "judul": "PASAHAT MA SUDENA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547301836-aa529bca.webp",
+    "updatedAt": "2026-06-04T04:28:21.985Z"
+  },
+  {
+    "nomorLagu": "280",
+    "judul": "TONGTONG TUTU NA DENGGAN DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547427972-3622695c.webp",
+    "updatedAt": "2026-06-04T04:30:28.122Z"
+  },
+  {
+    "nomorLagu": "281",
+    "judul": "MARTUA DO NA MARHAPOSAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547450968-a977cb3b.webp",
+    "updatedAt": "2026-06-04T04:30:51.128Z"
+  },
+  {
+    "nomorLagu": "282",
+    "judul": "TUNG BEASA AU HOLSOAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547479883-3b60ee4f.webp",
+    "updatedAt": "2026-06-15T04:21:49.867Z"
+  },
+  {
+    "nomorLagu": "283",
+    "judul": "NANG SIPATA PE IDAON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547530534-0317f919.webp",
+    "updatedAt": "2026-06-04T04:32:10.687Z"
+  },
+  {
+    "nomorLagu": "284",
+    "judul": "SONANG DO ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547674285-e85ad67c.webp",
+    "updatedAt": "2026-06-04T04:34:34.453Z"
+  },
+  {
+    "nomorLagu": "285",
+    "judul": "SAI DITONGOS DEBATAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547698450-2dc3e59b.webp",
+    "updatedAt": "2026-06-15T04:13:54.886Z"
+  },
+  {
+    "nomorLagu": "286",
+    "judul": "UNANG MA TANGISHON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063928435-b1ba4f44.webp",
+    "updatedAt": "2026-06-10T03:58:48.578Z"
+  },
+  {
+    "nomorLagu": "287",
+    "judul": "GAOR PE SUDE HUMALIANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547762820-4c9797d1.webp",
+    "updatedAt": "2026-06-04T04:36:02.965Z"
+  },
+  {
+    "nomorLagu": "288",
+    "judul": "NA MARGURU DO LUHUTNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547808724-436580f7.webp",
+    "updatedAt": "2026-06-30T05:08:42.900Z"
+  },
+  {
+    "nomorLagu": "289",
+    "judul": "POS MA HO ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547902270-a3aea087.webp",
+    "updatedAt": "2026-06-04T04:38:22.407Z"
+  },
+  {
+    "nomorLagu": "290",
+    "judul": "AI BEASA TUNG HUMOLSO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780547942373-8535036c.webp",
+    "updatedAt": "2026-06-10T04:01:03.476Z"
+  },
+  {
+    "nomorLagu": "291",
+    "judul": "BINSAR MA, BINSAR MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780632812454-6d84b924.webp",
+    "updatedAt": "2026-06-10T04:03:04.337Z"
+  },
+  {
+    "nomorLagu": "292",
+    "judul": "DUNG RO JESUS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060256705-c9010e82.webp",
+    "updatedAt": "2026-06-10T04:06:49.130Z"
+  },
+  {
+    "nomorLagu": "293",
+    "judul": "HABOT PE ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060275955-99ab83c3.webp",
+    "updatedAt": "2026-06-10T02:57:56.111Z"
+  },
+  {
+    "nomorLagu": "294",
+    "judul": "UNANG SAI HOLSOAN HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780633478666-41e6a4ff.webp",
+    "updatedAt": "2026-06-10T04:35:21.572Z"
+  },
+  {
+    "nomorLagu": "295",
+    "judul": "HOLAN DI SURGO I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780633526399-b9705461.webp",
+    "updatedAt": "2026-06-10T04:39:18.895Z"
+  },
+  {
+    "nomorLagu": "296",
+    "judul": "HOLSO ROHANGKU DITATAP HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780633589188-d1f2a011.webp",
+    "updatedAt": "2026-06-05T04:26:29.373Z"
+  },
+  {
+    "nomorLagu": "297",
+    "judul": "NA MARSAK ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780633676398-a7fbd31a.webp",
+    "updatedAt": "2026-06-10T04:41:42.567Z"
+  },
+  {
+    "nomorLagu": "298",
+    "judul": "DI LAMBUNGMI O JESUSHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780632431084-80e9af2f.webp",
+    "updatedAt": "2026-06-10T04:46:34.818Z"
+  },
+  {
+    "nomorLagu": "299",
+    "judul": "DEBATA DO MANGGOMGOMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780632482317-7414726e.webp",
+    "updatedAt": "2026-06-10T04:50:15.307Z"
+  },
+  {
+    "nomorLagu": "300",
+    "judul": "SAI HEHE MA ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780633768774-a5ff4639.webp",
+    "updatedAt": "2026-06-10T04:53:08.675Z"
+  },
+  {
+    "nomorLagu": "301",
+    "judul": "LAS SITUTU ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780633840483-96757c2c.webp",
+    "updatedAt": "2026-06-10T04:57:23.890Z"
+  },
+  {
+    "nomorLagu": "302",
+    "judul": "BINSAR MA MANOGOT ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780633877928-c98d38c2.webp",
+    "updatedAt": "2026-06-05T04:31:18.084Z"
+  },
+  {
+    "nomorLagu": "303",
+    "judul": "O JESUS SONDANG NI JAHOWA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060443655-efa8bb4d.webp",
+    "updatedAt": "2026-06-10T05:05:22.875Z"
+  },
+  {
+    "nomorLagu": "304",
+    "judul": "NAENG MA PUJIONHU DI MANOGOT ON",
+    "notasiUrl": null,
+    "updatedAt": "2026-06-10T07:10:31.589Z"
+  },
+  {
+    "nomorLagu": "305",
+    "judul": "ALE TONDINGKU HEHE MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060469223-d9a84a30.webp",
+    "updatedAt": "2026-06-10T07:29:30.617Z"
+  },
+  {
+    "nomorLagu": "306",
+    "judul": "HUPUJI HO ALE TUHANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780634150606-a5c26969.webp",
+    "updatedAt": "2026-06-10T08:17:28.000Z"
+  },
+  {
+    "nomorLagu": "307",
+    "judul": "MATA NI ARI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780634232368-793c8c5e.webp",
+    "updatedAt": "2026-06-10T08:22:52.769Z"
+  },
+  {
+    "nomorLagu": "308",
+    "judul": "JUMOLO MA HUPUJI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780634260968-75ddf98a.webp",
+    "updatedAt": "2026-06-10T08:26:40.467Z"
+  },
+  {
+    "nomorLagu": "309",
+    "judul": "RAPHON TUHAN JESUS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780634294704-47d36372.webp",
+    "updatedAt": "2026-06-10T08:31:33.037Z"
+  },
+  {
+    "nomorLagu": "310",
+    "judul": "TAPUJI MA TUHANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780634585807-a5ff4639.webp",
+    "updatedAt": "2026-06-10T08:33:53.577Z"
+  },
+  {
+    "nomorLagu": "311",
+    "judul": "SAI PARMUDUMUDU HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780634668243-c5225535.webp",
+    "updatedAt": "2026-06-10T08:34:46.074Z"
+  },
+  {
+    "nomorLagu": "312",
+    "judul": "PUJI O JOLMA MA BONA NI HANGOLUANMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780644895647-61f07e5b.webp",
+    "updatedAt": "2026-06-10T08:38:03.601Z"
+  },
+  {
+    "nomorLagu": "313",
+    "judul": "HUPUJI HO O TUHANHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645018580-00fb5d29.webp",
+    "updatedAt": "2026-06-05T07:36:58.813Z"
+  },
+  {
+    "nomorLagu": "314",
+    "judul": "NA SALPU DO ARIAN I, HUPUJI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645101240-6088aa8f.webp",
+    "updatedAt": "2026-06-10T08:40:09.049Z"
+  },
+  {
+    "nomorLagu": "315",
+    "judul": "NA SALPU DO ARIAN I, SOLUK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645127751-6088aa8f.webp",
+    "updatedAt": "2026-06-10T08:42:37.508Z"
+  },
+  {
+    "nomorLagu": "316",
+    "judul": "NUNGA LAO MUSE SADARI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645207388-ca02f7db.webp",
+    "updatedAt": "2026-06-10T08:47:57.778Z"
+  },
+  {
+    "nomorLagu": "317",
+    "judul": "LAO MODOM DO LUHUTNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645278991-29bc63e6.webp",
+    "updatedAt": "2026-06-10T08:52:30.279Z"
+  },
+  {
+    "nomorLagu": "318",
+    "judul": "NUNGA LOJA DAGINGHON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645339499-95b9098d.webp",
+    "updatedAt": "2026-06-10T08:54:26.556Z"
+  },
+  {
+    "nomorLagu": "319",
+    "judul": "TUNG SONANG MODOM AHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060523932-46b15e4e.webp",
+    "updatedAt": "2026-06-10T08:55:39.965Z"
+  },
+  {
+    "nomorLagu": "320",
+    "judul": "MAPORUS DO ARIAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645479531-b4a558f1.webp",
+    "updatedAt": "2026-06-10T09:04:19.514Z"
+  },
+  {
+    "nomorLagu": "321",
+    "judul": "MARUJUNG DO SADARI ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645521334-3aa335b7.webp",
+    "updatedAt": "2026-06-11T03:00:12.371Z"
+  },
+  {
+    "nomorLagu": "322",
+    "judul": "O JESUS SIPANGOLU AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645546754-25403697.webp",
+    "updatedAt": "2026-06-11T03:01:37.540Z"
+  },
+  {
+    "nomorLagu": "323",
+    "judul": "SIPARMAHAN BOLON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645629961-e85ad67c.webp",
+    "updatedAt": "2026-06-11T07:10:44.983Z"
+  },
+  {
+    "nomorLagu": "324",
+    "judul": "NA RO MUSE NA HOLOM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645691866-29bc63e6.webp",
+    "updatedAt": "2026-06-11T07:12:54.526Z"
+  },
+  {
+    "nomorLagu": "325",
+    "judul": "BODARI ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645727215-86050b6e.webp",
+    "updatedAt": "2026-06-11T07:19:39.156Z"
+  },
+  {
+    "nomorLagu": "326",
+    "judul": "IA LOJA AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645757095-52515b13.webp",
+    "updatedAt": "2026-06-11T07:21:18.078Z"
+  },
+  {
+    "nomorLagu": "327",
+    "judul": "AUT NA SARIBU HALI GANDA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645812910-3224618e.webp",
+    "updatedAt": "2026-06-11T07:26:56.167Z"
+  },
+  {
+    "nomorLagu": "328",
+    "judul": "NAENG SALPU ARI MINGGU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645853233-27f648f8.webp",
+    "updatedAt": "2026-06-11T07:30:12.215Z"
+  },
+  {
+    "nomorLagu": "329",
+    "judul": "JESUS HINAPOSAN NI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645892000-d04b4c70.webp",
+    "updatedAt": "2026-06-11T07:35:42.076Z"
+  },
+  {
+    "nomorLagu": "330",
+    "judul": "DI TANO ON MARDAGANG AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780645963303-b66cf170.webp",
+    "updatedAt": "2026-06-11T07:41:48.807Z"
+  },
+  {
+    "nomorLagu": "331",
+    "judul": "SAI KRISTUS DO NGOLUNGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060619814-24c48f1b.webp",
+    "updatedAt": "2026-06-11T07:44:58.188Z"
+  },
+  {
+    "nomorLagu": "332",
+    "judul": "BINOTO JONOK NI ADAMHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646014670-70724d9f.webp",
+    "updatedAt": "2026-06-11T07:49:35.670Z"
+  },
+  {
+    "nomorLagu": "333",
+    "judul": "SAI BANUA GINJANG DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646071777-d04b4c70.webp",
+    "updatedAt": "2026-06-11T07:52:56.705Z"
+  },
+  {
+    "nomorLagu": "334",
+    "judul": "NASA JOLMA INGKON MATE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646135102-afbe071d.webp",
+    "updatedAt": "2026-06-11T07:57:18.786Z"
+  },
+  {
+    "nomorLagu": "335",
+    "judul": "LOAS AU, ASA LAO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646158435-6de35f7b.webp",
+    "updatedAt": "2026-06-11T07:59:20.255Z"
+  },
+  {
+    "nomorLagu": "336",
+    "judul": "SONANG MA MODOM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646186054-cccd0369.webp",
+    "updatedAt": "2026-06-11T08:04:11.582Z"
+  },
+  {
+    "nomorLagu": "337",
+    "judul": "MOLO GIOT HO TU GINJANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646213074-2b605b1c.webp",
+    "updatedAt": "2026-06-11T08:16:09.798Z"
+  },
+  {
+    "nomorLagu": "338",
+    "judul": "HEHE DO MUSE PAMATANGHON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646258179-101bc917.webp",
+    "updatedAt": "2026-06-11T08:19:47.729Z"
+  },
+  {
+    "nomorLagu": "339",
+    "judul": "DIINGOT HALAK DAGANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060668301-e3048183.webp",
+    "updatedAt": "2026-06-11T08:22:19.081Z"
+  },
+  {
+    "nomorLagu": "340",
+    "judul": "TIBU MA RO TINGKINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646340347-29bc63e6.webp",
+    "updatedAt": "2026-06-11T08:27:03.573Z"
+  },
+  {
+    "nomorLagu": "341",
+    "judul": "TIBU MA JUMPANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060691432-518f90a4.webp",
+    "updatedAt": "2026-06-11T08:32:52.638Z"
+  },
+  {
+    "nomorLagu": "342",
+    "judul": "NGOT MA HO DIJOU SOARA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646408946-6dac5e61.webp",
+    "updatedAt": "2026-06-11T08:38:11.780Z"
+  },
+  {
+    "nomorLagu": "343",
+    "judul": "JERUSALEM HO HUTA NA TIMBO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646440203-b577ef69.webp",
+    "updatedAt": "2026-06-12T02:52:23.635Z"
+  },
+  {
+    "nomorLagu": "344",
+    "judul": "UNGKAP BAHAL NA UMMULI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646507254-28e8e73f.webp",
+    "updatedAt": "2026-06-12T02:55:58.166Z"
+  },
+  {
+    "nomorLagu": "345",
+    "judul": "DI DIA ADIAN?",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646542104-87f4b88d.webp",
+    "updatedAt": "2026-06-12T02:59:38.923Z"
+  },
+  {
+    "nomorLagu": "346",
+    "judul": "ADONG DOPE PARADIANAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646568614-f00dad00.webp",
+    "updatedAt": "2026-06-12T03:02:52.685Z"
+  },
+  {
+    "nomorLagu": "347",
+    "judul": "SAI MASIPAIDAAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780977048935-56159623.webp",
+    "updatedAt": "2026-06-12T03:04:29.717Z"
+  },
+  {
+    "nomorLagu": "348",
+    "judul": "LOBI TIMBONA DOPE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646626572-e98f28c9.webp",
+    "updatedAt": "2026-06-12T03:06:13.068Z"
+  },
+  {
+    "nomorLagu": "349",
+    "judul": "HATIHA NA SO SALPU BE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646652039-a0bed13f.webp",
+    "updatedAt": "2026-06-12T03:09:58.412Z"
+  },
+  {
+    "nomorLagu": "350",
+    "judul": "HATIHA NA SO SALPU BE 2",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646731264-a0bed13f.webp",
+    "updatedAt": "2026-06-12T03:12:58.792Z"
+  },
+  {
+    "nomorLagu": "351",
+    "judul": "BEHA MA HITA IA DUNG MARUJUNG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646792931-900d6951.webp",
+    "updatedAt": "2026-06-12T03:17:13.711Z"
+  },
+  {
+    "nomorLagu": "352",
+    "judul": "SAI HEHE MA HAMUNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646874561-70027386.webp",
+    "updatedAt": "2026-06-12T03:38:36.911Z"
+  },
+  {
+    "nomorLagu": "353",
+    "judul": "DI SURGO HASONANGAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780646916473-35e7e0f2.webp",
+    "updatedAt": "2026-06-12T03:40:39.061Z"
+  },
+  {
+    "nomorLagu": "354",
+    "judul": "SAI TONG MAIMAIMA DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060740442-e415806f.webp",
+    "updatedAt": "2026-06-12T03:42:52.383Z"
+  },
+  {
+    "nomorLagu": "355",
+    "judul": "MALUNGUN DO ROHANGKINON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647006880-3622695c.webp",
+    "updatedAt": "2026-06-12T03:45:40.981Z"
+  },
+  {
+    "nomorLagu": "356",
+    "judul": "NA MALUNGUN DO ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647039358-13587920.webp",
+    "updatedAt": "2026-06-12T04:15:10.196Z"
+  },
+  {
+    "nomorLagu": "357",
+    "judul": "SONGON URSA NA BINURU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647099709-0f4bbeac.webp",
+    "updatedAt": "2026-06-12T04:19:08.625Z"
+  },
+  {
+    "nomorLagu": "358",
+    "judul": "HAMU SALUHUT HARAJAON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647146856-ab9b8438.webp",
+    "updatedAt": "2026-06-12T04:22:33.991Z"
+  },
+  {
+    "nomorLagu": "359",
+    "judul": "SAI HEHE MA TUHANTA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647181714-0dd5ca87.webp",
+    "updatedAt": "2026-06-12T04:26:52.831Z"
+  },
+  {
+    "nomorLagu": "360",
+    "judul": "TONGTONG LONGANG DO ROHANGKON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647245960-b66cf170.webp",
+    "updatedAt": "2026-06-12T04:30:03.208Z"
+  },
+  {
+    "nomorLagu": "361",
+    "judul": "NA DENGGAN SITUTU DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647316446-41689dec.webp",
+    "updatedAt": "2026-06-12T04:34:03.451Z"
+  },
+  {
+    "nomorLagu": "362",
+    "judul": "ENDEHON ENDE NA IMBARU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647343808-ab9b8438.webp",
+    "updatedAt": "2026-07-18T07:24:55.432Z"
+  },
+  {
+    "nomorLagu": "363",
+    "judul": "MAULIATE DOK HAMUNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647407417-ab9b8438.webp",
+    "updatedAt": "2026-06-12T04:48:16.183Z"
+  },
+  {
+    "nomorLagu": "364",
+    "judul": "SAI HURANAPI DOLOK I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647467616-5d2c8bcc.webp",
+    "updatedAt": "2026-06-12T04:50:28.340Z"
+  },
+  {
+    "nomorLagu": "365",
+    "judul": "HALELUYA! PUJI MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647495030-058cd488.webp",
+    "updatedAt": "2026-06-12T04:51:58.507Z"
+  },
+  {
+    "nomorLagu": "366",
+    "judul": "O ALE JESUS TUHANKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647626424-67d3e874.webp",
+    "updatedAt": "2026-06-12T04:53:10.191Z"
+  },
+  {
+    "nomorLagu": "367",
+    "judul": "DI BANUA GINJANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060779434-08440b89.webp",
+    "updatedAt": "2026-06-12T04:55:30.982Z"
+  },
+  {
+    "nomorLagu": "368",
+    "judul": "TUHAN JESUS, TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647723010-70bb1568.webp",
+    "updatedAt": "2026-06-12T04:57:36.891Z"
+  },
+  {
+    "nomorLagu": "369",
+    "judul": "NA MARHAHA ANGGI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060804836-d59fdcae.webp",
+    "updatedAt": "2026-06-12T04:58:54.265Z"
+  },
+  {
+    "nomorLagu": "370",
+    "judul": "NAENG HAHOLONGANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060831355-63834dd1.webp",
+    "updatedAt": "2026-06-12T05:01:09.272Z"
+  },
+  {
+    "nomorLagu": "371",
+    "judul": "BURJU MA HITA MARDALANI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647850524-8faddd2c.webp",
+    "updatedAt": "2026-06-12T07:47:55.136Z"
+  },
+  {
+    "nomorLagu": "372",
+    "judul": "ROHANGKU SAI HALASHON MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647877430-ff11ed38.webp",
+    "updatedAt": "2026-06-12T07:51:14.316Z"
+  },
+  {
+    "nomorLagu": "373",
+    "judul": "MANGULA HITA JOLMA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647902274-379bba93.webp",
+    "updatedAt": "2026-06-12T07:53:10.195Z"
+  },
+  {
+    "nomorLagu": "374",
+    "judul": "JESUS MANJOU HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780647948980-ee763925.webp",
+    "updatedAt": "2026-07-18T07:30:43.407Z"
+  },
+  {
+    "nomorLagu": "375",
+    "judul": "ADONG DO HASONAGAN 2",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648027444-74d718a2.webp",
+    "updatedAt": "2026-06-12T07:59:57.317Z"
+  },
+  {
+    "nomorLagu": "376",
+    "judul": "ISE NA DI PINTU I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648105982-0b02824f.webp",
+    "updatedAt": "2026-06-12T08:03:55.469Z"
+  },
+  {
+    "nomorLagu": "377",
+    "judul": "RO MA HAMU SUDENA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648225755-5813bc93.webp",
+    "updatedAt": "2026-06-12T08:07:43.068Z"
+  },
+  {
+    "nomorLagu": "378",
+    "judul": "SAI DIJANGKON JESUS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648326184-3c7105bb.webp",
+    "updatedAt": "2026-06-12T08:13:04.817Z"
+  },
+  {
+    "nomorLagu": "379",
+    "judul": "NDANG SADIHARI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648377281-96f8c610.webp",
+    "updatedAt": "2026-06-12T08:19:03.613Z"
+  },
+  {
+    "nomorLagu": "380",
+    "judul": "SO MA JOLO ISE I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648409377-ba6d3b99.webp",
+    "updatedAt": "2026-06-12T08:25:34.680Z"
+  },
+  {
+    "nomorLagu": "381",
+    "judul": "DI DIA JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648622579-1b7c96f6.webp",
+    "updatedAt": "2026-06-12T08:30:59.529Z"
+  },
+  {
+    "nomorLagu": "382",
+    "judul": "SANGGA RODI HARORONA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648643062-bd5b7c9a.webp",
+    "updatedAt": "2026-06-19T03:04:43.276Z"
+  },
+  {
+    "nomorLagu": "383",
+    "judul": "ADONG DO AMA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648714748-ae0d6fa0.webp",
+    "updatedAt": "2026-06-12T08:40:43.197Z"
+  },
+  {
+    "nomorLagu": "384",
+    "judul": "RO MA HAMU RADE DO SASUDE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648771876-31a8bda4.webp",
+    "updatedAt": "2026-06-12T08:42:35.917Z"
+  },
+  {
+    "nomorLagu": "385",
+    "judul": "DIJOUHON JESUS RO HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648872760-df92d930.webp",
+    "updatedAt": "2026-06-12T08:45:20.528Z"
+  },
+  {
+    "nomorLagu": "386",
+    "judul": "O DANGOL NI HAPARIRON I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648905744-a7fb834f.webp",
+    "updatedAt": "2026-06-12T08:48:10.008Z"
+  },
+  {
+    "nomorLagu": "387",
+    "judul": "HATOP MA HO RO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648942791-9abf0f36.webp",
+    "updatedAt": "2026-06-12T08:51:15.702Z"
+  },
+  {
+    "nomorLagu": "388",
+    "judul": "SO MA JOLO JALA PINGKIR",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648970609-d70a74f4.webp",
+    "updatedAt": "2026-06-12T08:58:42.129Z"
+  },
+  {
+    "nomorLagu": "389",
+    "judul": "ALE DONGAN RO TU JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780648991805-528ef226.webp",
+    "updatedAt": "2026-06-12T09:01:33.090Z"
+  },
+  {
+    "nomorLagu": "390",
+    "judul": "NUNGA SAE DOSAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060858027-8d3c95be.webp",
+    "updatedAt": "2026-06-12T09:09:11.062Z"
+  },
+  {
+    "nomorLagu": "391",
+    "judul": "SO TUNG DITULAK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060909480-a9595d0a.webp",
+    "updatedAt": "2026-06-15T02:46:33.116Z"
+  },
+  {
+    "nomorLagu": "392",
+    "judul": "SAI PASIAT TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060928407-78e9aeb4.webp",
+    "updatedAt": "2026-06-15T02:49:06.118Z"
+  },
+  {
+    "nomorLagu": "393",
+    "judul": "LAS NI ROHA BOLON I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060953373-94a471ef.webp",
+    "updatedAt": "2026-06-15T02:51:34.878Z"
+  },
+  {
+    "nomorLagu": "394",
+    "judul": "O JESUS TUHANHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780649234760-e146f63c.webp",
+    "updatedAt": "2026-06-15T02:52:49.518Z"
+  },
+  {
+    "nomorLagu": "395",
+    "judul": "MASUK MA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781060975419-0e8277cd.webp",
+    "updatedAt": "2026-06-15T02:59:19.191Z"
+  },
+  {
+    "nomorLagu": "396",
+    "judul": "NUNGA TALU MUSUMUNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780649317249-457f8e6c.webp",
+    "updatedAt": "2026-06-15T03:04:48.731Z"
+  },
+  {
+    "nomorLagu": "397",
+    "judul": "NDA NUNGA SALPU BORNGIN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061002470-667b6d34.webp",
+    "updatedAt": "2026-06-15T03:09:36.776Z"
+  },
+  {
+    "nomorLagu": "398",
+    "judul": "BEHA NA SO MARDAME",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061034963-6aaeb31b.webp",
+    "updatedAt": "2026-06-15T03:14:18.354Z"
+  },
+  {
+    "nomorLagu": "399",
+    "judul": "UNANG TARLALAP DI HATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061056674-9d273f89.webp",
+    "updatedAt": "2026-06-15T03:16:47.032Z"
+  },
+  {
+    "nomorLagu": "400",
+    "judul": "O HO DI HAMAGOANMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780649583557-c4e72a19.webp",
+    "updatedAt": "2026-06-15T03:18:07.611Z"
+  },
+  {
+    "nomorLagu": "401",
+    "judul": "BOASA SAI TONG DI NA ALANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061114349-b655e9ba.webp",
+    "updatedAt": "2026-06-15T03:20:30.713Z"
+  },
+  {
+    "nomorLagu": "402",
+    "judul": "NDANG NA RO DI ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780649663507-8e1502db.webp",
+    "updatedAt": "2026-06-15T03:24:34.994Z"
+  },
+  {
+    "nomorLagu": "403",
+    "judul": "POS ROHANGKU DI TUHANKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780649737941-ab4afea7.webp",
+    "updatedAt": "2026-06-15T03:25:51.304Z"
+  },
+  {
+    "nomorLagu": "404",
+    "judul": "UNANG HO SAI DI NA HOLOM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061140539-d77997d6.webp",
+    "updatedAt": "2026-06-15T03:27:50.640Z"
+  },
+  {
+    "nomorLagu": "405",
+    "judul": "ADONG SADA MUAL.",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780649917853-d8a172a4.webp",
+    "updatedAt": "2026-06-15T08:05:57.552Z"
+  },
+  {
+    "nomorLagu": "406",
+    "judul": "DI LAMBUNG NI PARSILANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061186417-22b8b40a.webp",
+    "updatedAt": "2026-06-15T08:09:13.379Z"
+  },
+  {
+    "nomorLagu": "407",
+    "judul": "PANOTNOTI MA SILANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061202250-e66242ff.webp",
+    "updatedAt": "2026-06-15T08:13:33.409Z"
+  },
+  {
+    "nomorLagu": "408",
+    "judul": "BORNGINNA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061222670-f4b26ef6.webp",
+    "updatedAt": "2026-06-15T08:16:17.985Z"
+  },
+  {
+    "nomorLagu": "409",
+    "judul": "ANGKA BIRUBIRU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061241497-532db53e.webp",
+    "updatedAt": "2026-06-15T08:23:00.989Z"
+  },
+  {
+    "nomorLagu": "410",
+    "judul": "NA RO MA SAHALAK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061265392-f750e05e.webp",
+    "updatedAt": "2026-06-15T08:47:45.082Z"
+  },
+  {
+    "nomorLagu": "411",
+    "judul": "NANG PE RARA DOSAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061285318-c744821b.webp",
+    "updatedAt": "2026-06-15T08:50:42.646Z"
+  },
+  {
+    "nomorLagu": "412",
+    "judul": "NDI DI DOLOK ADUI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780650071964-6b58083a.webp",
+    "updatedAt": "2026-06-15T08:56:25.524Z"
+  },
+  {
+    "nomorLagu": "413",
+    "judul": "HUTANDA HAPORUSANKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061318396-a06a243b.webp",
+    "updatedAt": "2026-06-15T09:00:16.467Z"
+  },
+  {
+    "nomorLagu": "414",
+    "judul": "INGOT NA TAU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061344551-1e1dea82.webp",
+    "updatedAt": "2026-06-17T06:59:02.674Z"
+  },
+  {
+    "nomorLagu": "415",
+    "judul": "AI NAENG MALUA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061365330-d519832e.webp",
+    "updatedAt": "2026-06-17T07:02:24.789Z"
+  },
+  {
+    "nomorLagu": "416",
+    "judul": "TU JOLOM O DEBATANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780650173541-728d078c.webp",
+    "updatedAt": "2026-06-17T07:04:31.415Z"
+  },
+  {
+    "nomorLagu": "417",
+    "judul": "RADE SITUTU HALUAON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061389904-06b5f377.webp",
+    "updatedAt": "2026-06-17T07:06:10.891Z"
+  },
+  {
+    "nomorLagu": "418",
+    "judul": "SASUDE HADOSAONMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780650261853-1febe152.webp",
+    "updatedAt": "2026-06-17T07:07:13.725Z"
+  },
+  {
+    "nomorLagu": "419",
+    "judul": "HO NA MARSAK ROHA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061413208-58374154.webp",
+    "updatedAt": "2026-06-17T07:09:08.361Z"
+  },
+  {
+    "nomorLagu": "420",
+    "judul": "HUBOAN DO DOSANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061433807-9764fb3b.webp",
+    "updatedAt": "2026-06-17T07:11:23.339Z"
+  },
+  {
+    "nomorLagu": "421",
+    "judul": "MARSOMBA AU DI JOLOMON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061457483-c3cf9799.webp",
+    "updatedAt": "2026-06-17T07:17:09.280Z"
+  },
+  {
+    "nomorLagu": "422",
+    "judul": "NA RO DO AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061472640-a723e014.webp",
+    "updatedAt": "2026-06-17T08:01:37.395Z"
+  },
+  {
+    "nomorLagu": "423",
+    "judul": "NA RO MA BORNGIN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061497041-0c6296a1.webp",
+    "updatedAt": "2026-06-17T08:27:21.045Z"
+  },
+  {
+    "nomorLagu": "424",
+    "judul": "SOARA NI TONDI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061516076-303e1632.webp",
+    "updatedAt": "2026-06-17T08:30:09.925Z"
+  },
+  {
+    "nomorLagu": "425",
+    "judul": "BATU MAMAK DI AU ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061544864-4b15d003.webp",
+    "updatedAt": "2026-06-17T08:43:55.737Z"
+  },
+  {
+    "nomorLagu": "426",
+    "judul": "TUTU NA MATE JESUS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061564388-cc55874c.webp",
+    "updatedAt": "2026-06-17T08:56:56.599Z"
+  },
+  {
+    "nomorLagu": "427",
+    "judul": "MARSEREP MARUNDUK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061577937-321fad07.webp",
+    "updatedAt": "2026-06-17T09:00:48.724Z"
+  },
+  {
+    "nomorLagu": "428",
+    "judul": "HO NA LOJA HO NA SORAT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061603422-4e655bba.webp",
+    "updatedAt": "2026-06-17T09:02:03.462Z"
+  },
+  {
+    "nomorLagu": "429",
+    "judul": "PORTIBI TORUS BINOLUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061622429-5134d0a3.webp",
+    "updatedAt": "2026-06-17T09:04:23.772Z"
+  },
+  {
+    "nomorLagu": "430",
+    "judul": "AI DITANDA HO MUAL I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061637630-921c1216.webp",
+    "updatedAt": "2026-06-17T09:08:18.034Z"
+  },
+  {
+    "nomorLagu": "431",
+    "judul": "ADONG NA JOLO SADA INA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061661591-72b70b87.webp",
+    "updatedAt": "2026-06-17T09:10:36.518Z"
+  },
+  {
+    "nomorLagu": "432",
+    "judul": "SIAN HURUNGAN NI DOSANGKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061681511-c8183e10.webp",
+    "updatedAt": "2026-07-18T07:32:18.400Z"
+  },
+  {
+    "nomorLagu": "433",
+    "judul": "O TUHAN SAI TOPOT AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061705677-a58d3805.webp",
+    "updatedAt": "2026-06-17T09:18:14.559Z"
+  },
+  {
+    "nomorLagu": "434",
+    "judul": "TUHAN JESUS BERENG AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780650581816-5e7ebd00.webp",
+    "updatedAt": "2026-06-17T09:21:55.129Z"
+  },
+  {
+    "nomorLagu": "435",
+    "judul": "MAROLOPOLOP TONDINGKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061736953-aee9449b.webp",
+    "updatedAt": "2026-06-17T09:25:30.343Z"
+  },
+  {
+    "nomorLagu": "436",
+    "judul": "AI ADONG DO TUHANKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780886241259-4490a45d.webp",
+    "updatedAt": "2026-06-17T09:28:50.567Z"
+  },
+  {
+    "nomorLagu": "437",
+    "judul": "TUNG NA MUBA ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780886333774-13f9904f.webp",
+    "updatedAt": "2026-06-17T09:32:20.355Z"
+  },
+  {
+    "nomorLagu": "438",
+    "judul": "BETA SAI TAENDEHON MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780886449360-0207ae01.webp",
+    "updatedAt": "2026-06-17T09:36:31.672Z"
+  },
+  {
+    "nomorLagu": "439",
+    "judul": "LAS NI ROHANGKON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061768903-5441d9d3.webp",
+    "updatedAt": "2026-06-17T09:38:36.549Z"
+  },
+  {
+    "nomorLagu": "440",
+    "judul": "SAI PUJI MA TUHANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061784807-53ff4e7b.webp",
+    "updatedAt": "2026-06-17T09:41:26.526Z"
+  },
+  {
+    "nomorLagu": "441",
+    "judul": "DI AU TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061808490-9cdd71be.webp",
+    "updatedAt": "2026-06-17T09:46:35.717Z"
+  },
+  {
+    "nomorLagu": "442",
+    "judul": "NA JOLO TUNG NA LOJA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887114650-f077d2a7.webp",
+    "updatedAt": "2026-06-17T10:31:28.546Z"
+  },
+  {
+    "nomorLagu": "443",
+    "judul": "DUNG TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887145902-88f77db0.webp",
+    "updatedAt": "2026-06-17T10:36:19.702Z"
+  },
+  {
+    "nomorLagu": "444",
+    "judul": "BONA NI NGOLUNGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887197588-137cf349.webp",
+    "updatedAt": "2026-06-17T10:40:08.351Z"
+  },
+  {
+    "nomorLagu": "445",
+    "judul": "SAI INGOTON NI ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887318654-992bbebf.webp",
+    "updatedAt": "2026-06-17T10:43:36.103Z"
+  },
+  {
+    "nomorLagu": "446",
+    "judul": "HO MA DI AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887345626-46fc4d24.webp",
+    "updatedAt": "2026-06-17T10:45:31.395Z"
+  },
+  {
+    "nomorLagu": "447",
+    "judul": "HO MUAL HANGOLUAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887402707-79f4e68c.webp",
+    "updatedAt": "2026-06-22T03:40:16.124Z"
+  },
+  {
+    "nomorLagu": "448",
+    "judul": "O TUHAN JESUS HO DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887451299-68fa04ba.webp",
+    "updatedAt": "2026-06-22T03:45:02.960Z"
+  },
+  {
+    "nomorLagu": "449",
+    "judul": "SAI SOLHOT TU SILANGMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887526273-09a27b10.webp",
+    "updatedAt": "2026-06-22T03:46:19.133Z"
+  },
+  {
+    "nomorLagu": "450",
+    "judul": "TUNG NA TARAPUL DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887609159-98bb1851.webp",
+    "updatedAt": "2026-06-22T03:48:07.995Z"
+  },
+  {
+    "nomorLagu": "451",
+    "judul": "O TUHANKI DI GOARMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887715168-4fc1de23.webp",
+    "updatedAt": "2026-06-22T03:48:54.204Z"
+  },
+  {
+    "nomorLagu": "452",
+    "judul": "NA RO PANDAONI BOLON I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887797840-1a5b2056.webp",
+    "updatedAt": "2026-06-22T03:50:35.659Z"
+  },
+  {
+    "nomorLagu": "453",
+    "judul": "SADA GOAR NA UMULI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887858761-ba51a623.webp",
+    "updatedAt": "2026-06-22T03:51:38.604Z"
+  },
+  {
+    "nomorLagu": "454",
+    "judul": "O TUHAN JESUS HOLONG DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780887933088-6678a82d.webp",
+    "updatedAt": "2026-06-22T03:53:01.623Z"
+  },
+  {
+    "nomorLagu": "455",
+    "judul": "TUNG NA RINGKOT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888046609-7679cba1.webp",
+    "updatedAt": "2026-06-18T02:53:40.966Z"
+  },
+  {
+    "nomorLagu": "456",
+    "judul": "O TUHANKU, HO JAMBARHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888084274-7b324d10.webp",
+    "updatedAt": "2026-06-18T03:13:33.763Z"
+  },
+  {
+    "nomorLagu": "457",
+    "judul": "BAGAS NI HAHOLONGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888241309-67fab199.webp",
+    "updatedAt": "2026-06-18T03:22:13.830Z"
+  },
+  {
+    "nomorLagu": "458",
+    "judul": "BARITA NA UMULI I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888326049-b0eff38d.webp",
+    "updatedAt": "2026-06-18T03:25:31.188Z"
+  },
+  {
+    "nomorLagu": "459",
+    "judul": "SONANG DO LANGKALANGKANGHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888467890-94109420.webp",
+    "updatedAt": "2026-06-18T03:31:48.469Z"
+  },
+  {
+    "nomorLagu": "460",
+    "judul": "ALA NI TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888573900-b2cffe92.webp",
+    "updatedAt": "2026-06-18T03:33:31.500Z"
+  },
+  {
+    "nomorLagu": "461",
+    "judul": "SONGGOP TU HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888640724-be15688d.webp",
+    "updatedAt": "2026-06-18T03:35:44.406Z"
+  },
+  {
+    "nomorLagu": "462",
+    "judul": "ALE TONDI PARBADIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888696962-eaa73a05.webp",
+    "updatedAt": "2026-06-18T03:37:41.058Z"
+  },
+  {
+    "nomorLagu": "463",
+    "judul": "PASUPASUM TONGOSONMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888940680-c2ad8812.webp",
+    "updatedAt": "2026-06-18T03:41:24.204Z"
+  },
+  {
+    "nomorLagu": "464",
+    "judul": "HUBOAN MA DIRINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780888991022-ae056346.webp",
+    "updatedAt": "2026-06-18T04:25:02.320Z"
+  },
+  {
+    "nomorLagu": "465",
+    "judul": "PASUPASU LEHONONMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889023305-eaa73a05.webp",
+    "updatedAt": "2026-06-18T04:30:32.905Z"
+  },
+  {
+    "nomorLagu": "466",
+    "judul": "NUNGA RO AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889098968-5e8341d0.webp",
+    "updatedAt": "2026-06-18T04:35:14.732Z"
+  },
+  {
+    "nomorLagu": "467",
+    "judul": "ASI NI ROHAM HUPUJI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889136854-59bc894b.webp",
+    "updatedAt": "2026-06-18T04:39:29.959Z"
+  },
+  {
+    "nomorLagu": "468",
+    "judul": "DI GANUP LUAT MIAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061854715-b1ed4ac1.webp",
+    "updatedAt": "2026-06-18T04:41:14.397Z"
+  },
+  {
+    "nomorLagu": "469",
+    "judul": "DI DIA AHU TU DIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889250379-ee64d4cd.webp",
+    "updatedAt": "2026-06-18T04:48:02.509Z"
+  },
+  {
+    "nomorLagu": "470",
+    "judul": "JESUS HO NAMPUNA AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889275974-dc2113d9.webp",
+    "updatedAt": "2026-06-18T04:55:52.133Z"
+  },
+  {
+    "nomorLagu": "471",
+    "judul": "HUPILLIT JESUS DONGANKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889339493-f13fa9c9.webp",
+    "updatedAt": "2026-06-18T05:01:18.620Z"
+  },
+  {
+    "nomorLagu": "472",
+    "judul": "SAI MALUNGUN DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889368154-90a7400d.webp",
+    "updatedAt": "2026-06-18T07:17:14.424Z"
+  },
+  {
+    "nomorLagu": "473",
+    "judul": "ARIARI SAI RAMOTI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889416383-07d6039b.webp",
+    "updatedAt": "2026-06-18T07:24:13.952Z"
+  },
+  {
+    "nomorLagu": "474",
+    "judul": "INGKON JESUS DO DONGANKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889539357-f06f24d5.webp",
+    "updatedAt": "2026-06-18T07:32:28.247Z"
+  },
+  {
+    "nomorLagu": "475",
+    "judul": "HO TONGTONG IHUTHONONHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889621496-78ec08ac.webp",
+    "updatedAt": "2026-06-18T07:43:50.117Z"
+  },
+  {
+    "nomorLagu": "476",
+    "judul": "NDADA AU GURU DI AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889683037-ffe0996b.webp",
+    "updatedAt": "2026-06-18T07:50:09.845Z"
+  },
+  {
+    "nomorLagu": "477",
+    "judul": "MANSAI LAN SIHABIARAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889749858-efb81e76.webp",
+    "updatedAt": "2026-06-18T07:54:47.472Z"
+  },
+  {
+    "nomorLagu": "478",
+    "judul": "DOHOT SIHOL HUPAHERBANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889851508-90a7400d.webp",
+    "updatedAt": "2026-06-18T07:58:39.023Z"
+  },
+  {
+    "nomorLagu": "479",
+    "judul": "JONOK LAM JONOK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889921464-10969a40.webp",
+    "updatedAt": "2026-06-18T08:27:36.719Z"
+  },
+  {
+    "nomorLagu": "480",
+    "judul": "SONGON SADA BATANG AEK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780889969709-8a629dca.webp",
+    "updatedAt": "2026-06-18T08:34:14.523Z"
+  },
+  {
+    "nomorLagu": "481",
+    "judul": "GODANG DOPE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890019894-99abb0d4.webp",
+    "updatedAt": "2026-06-18T08:41:13.357Z"
+  },
+  {
+    "nomorLagu": "482",
+    "judul": "ASA ON MA NA SINTONG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890170974-c91cbd8b.webp",
+    "updatedAt": "2026-06-18T08:43:04.148Z"
+  },
+  {
+    "nomorLagu": "483",
+    "judul": "TUHANTA I DO TUAT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890228909-a64687d1.webp",
+    "updatedAt": "2026-06-18T08:44:56.431Z"
+  },
+  {
+    "nomorLagu": "484",
+    "judul": "O TUHAN AU MA DONGANMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890295779-70f97a31.webp",
+    "updatedAt": "2026-06-18T08:48:49.822Z"
+  },
+  {
+    "nomorLagu": "485",
+    "judul": "DONGANI AU TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781062017541-27f33078.webp",
+    "updatedAt": "2026-06-18T08:51:27.172Z"
+  },
+  {
+    "nomorLagu": "486",
+    "judul": "JESUS RO MA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781062095048-460c7f72.webp",
+    "updatedAt": "2026-06-18T08:53:06.194Z"
+  },
+  {
+    "nomorLagu": "487",
+    "judul": "TUNG HALAK NA MARGOGO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890599834-7a0a641f.webp",
+    "updatedAt": "2026-06-18T08:54:54.253Z"
+  },
+  {
+    "nomorLagu": "488",
+    "judul": "NANG NA BUNI DI ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890679592-67cad34c.webp",
+    "updatedAt": "2026-06-18T08:57:07.484Z"
+  },
+  {
+    "nomorLagu": "489",
+    "judul": "SAI HAPOSI TUHANMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890756922-d8aa04b0.webp",
+    "updatedAt": "2026-06-18T08:59:06.086Z"
+  },
+  {
+    "nomorLagu": "490",
+    "judul": "NANG GUNSANG PE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890807729-40befad1.webp",
+    "updatedAt": "2026-06-18T09:01:39.832Z"
+  },
+  {
+    "nomorLagu": "491",
+    "judul": "O JESUS TUHANNAMI I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890884053-d8888389.webp",
+    "updatedAt": "2026-06-18T09:05:11.324Z"
+  },
+  {
+    "nomorLagu": "492",
+    "judul": "NA MORA TUTU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890954117-391ff8b2.webp",
+    "updatedAt": "2026-06-18T09:10:26.231Z"
+  },
+  {
+    "nomorLagu": "493",
+    "judul": "NAENG MODOM DO SUDENA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891005559-77aa057d.webp",
+    "updatedAt": "2026-06-18T09:13:28.718Z"
+  },
+  {
+    "nomorLagu": "494",
+    "judul": "HOLOM BORNGINNA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891063357-b397479b.webp",
+    "updatedAt": "2026-06-18T09:15:20.699Z"
+  },
+  {
+    "nomorLagu": "495",
+    "judul": "MARINGAN DO DI SURGO I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891140730-25403697.webp",
+    "updatedAt": "2026-06-18T09:18:12.222Z"
+  },
+  {
+    "nomorLagu": "496",
+    "judul": "SION PARADIANANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891187090-83b51f73.webp",
+    "updatedAt": "2026-06-18T09:19:15.234Z"
+  },
+  {
+    "nomorLagu": "497",
+    "judul": "DI NA HUMOLSO ROHANGKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891255796-775e077e.webp",
+    "updatedAt": "2026-06-18T09:21:31.137Z"
+  },
+  {
+    "nomorLagu": "498",
+    "judul": "BUNI PE DALAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891305705-cbcbbd83.webp",
+    "updatedAt": "2026-06-18T09:25:19.576Z"
+  },
+  {
+    "nomorLagu": "499",
+    "judul": "ALE DONGAN SAI TANGIHON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891363021-d735a14a.webp",
+    "updatedAt": "2026-06-18T09:28:26.967Z"
+  },
+  {
+    "nomorLagu": "500",
+    "judul": "TINGGANGHON SUDE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891396994-a7fbd31a.webp",
+    "updatedAt": "2026-06-18T09:30:22.286Z"
+  },
+  {
+    "nomorLagu": "501",
+    "judul": "SAI DITOGUTOGU JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891467835-ca18a424.webp",
+    "updatedAt": "2026-06-19T03:09:22.625Z"
+  },
+  {
+    "nomorLagu": "502",
+    "judul": "JAHOWA SIPARMAHAN AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891569472-29494961.webp",
+    "updatedAt": "2026-06-19T03:12:10.443Z"
+  },
+  {
+    "nomorLagu": "503",
+    "judul": "NA LOJA HO O DONGANKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892258494-aaa4b80a.webp",
+    "updatedAt": "2026-06-19T03:14:25.442Z"
+  },
+  {
+    "nomorLagu": "504",
+    "judul": "DITOGU TUHAN JESUS AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892365279-df159655.webp",
+    "updatedAt": "2026-06-19T03:27:13.346Z"
+  },
+  {
+    "nomorLagu": "505",
+    "judul": "JESUS DO MANOGU AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892448424-33d4f017.webp",
+    "updatedAt": "2026-06-19T03:28:44.290Z"
+  },
+  {
+    "nomorLagu": "506",
+    "judul": "DAME NA GOK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892518041-0c10ba1a.webp",
+    "updatedAt": "2026-06-19T03:30:39.587Z"
+  },
+  {
+    "nomorLagu": "507",
+    "judul": "HABANGSA PARASIAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892619799-6f9944f0.webp",
+    "updatedAt": "2026-06-19T03:31:38.997Z"
+  },
+  {
+    "nomorLagu": "508",
+    "judul": "SAI PATOGU ROHANGKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892742586-61a4c9ba.webp",
+    "updatedAt": "2026-06-19T03:34:28.868Z"
+  },
+  {
+    "nomorLagu": "509",
+    "judul": "LAO MALOS DUHUT I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892813284-f5d5df2b.webp",
+    "updatedAt": "2026-06-19T03:37:28.347Z"
+  },
+  {
+    "nomorLagu": "510",
+    "judul": "SILU SOSO I MA DONGANMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892875257-702c9c4c.webp",
+    "updatedAt": "2026-06-19T03:43:32.655Z"
+  },
+  {
+    "nomorLagu": "511",
+    "judul": "AI TAGAMON IDAONKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780893900933-10c34ec9.webp",
+    "updatedAt": "2026-06-19T03:46:54.783Z"
+  },
+  {
+    "nomorLagu": "512",
+    "judul": "DIDALANI JESUS TANO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780893976308-f5e12504.webp",
+    "updatedAt": "2026-06-19T03:59:05.726Z"
+  },
+  {
+    "nomorLagu": "513",
+    "judul": "BIDANG TUTU SISABION",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894095057-fe371a12.webp",
+    "updatedAt": "2026-06-19T04:02:53.044Z"
+  },
+  {
+    "nomorLagu": "514",
+    "judul": "SAI LULUI DONGAN NA MAGO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894119121-d1f6a67b.webp",
+    "updatedAt": "2026-06-19T04:06:37.361Z"
+  },
+  {
+    "nomorLagu": "515",
+    "judul": "RINGGAS MA TA PABOA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894173266-ba910850.webp",
+    "updatedAt": "2026-06-19T04:10:31.730Z"
+  },
+  {
+    "nomorLagu": "516",
+    "judul": "BEGE JOUJOU NI JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894260341-be2cc6c5.webp",
+    "updatedAt": "2026-06-19T07:46:13.103Z"
+  },
+  {
+    "nomorLagu": "517",
+    "judul": "DI DIA ANGKA JOLMA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894523786-11c58544.webp",
+    "updatedAt": "2026-06-19T07:49:03.700Z"
+  },
+  {
+    "nomorLagu": "518",
+    "judul": "MARSINONDANG DIBAEN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894554074-e9709155.webp",
+    "updatedAt": "2026-06-19T07:54:18.492Z"
+  },
+  {
+    "nomorLagu": "519",
+    "judul": "TARBEGE DO PANJOU NI JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894640639-c7fae585.webp",
+    "updatedAt": "2026-06-19T07:58:54.446Z"
+  },
+  {
+    "nomorLagu": "520",
+    "judul": "PARTANGISAN DO HAPE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894771509-8f77489e.webp",
+    "updatedAt": "2026-06-19T08:01:07.739Z"
+  },
+  {
+    "nomorLagu": "521",
+    "judul": "SAMBULOM, SAMBULOM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894784975-dafe1ad2.webp",
+    "updatedAt": "2026-06-19T08:06:57.274Z"
+  },
+  {
+    "nomorLagu": "522",
+    "judul": "SURGO I SAMBULONTA DO I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894801558-f8c2c043.webp",
+    "updatedAt": "2026-06-19T08:10:02.569Z"
+  },
+  {
+    "nomorLagu": "523",
+    "judul": "ANING ANDIGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894874876-be15688d.webp",
+    "updatedAt": "2026-06-19T08:15:18.347Z"
+  },
+  {
+    "nomorLagu": "524",
+    "judul": "ISE NAENG SAHAT TU SURGO I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894935462-121d5abd.webp",
+    "updatedAt": "2026-06-19T08:21:11.178Z"
+  },
+  {
+    "nomorLagu": "525",
+    "judul": "NA LAHO MA AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894988021-5db0da06.webp",
+    "updatedAt": "2026-06-19T08:24:03.551Z"
+  },
+  {
+    "nomorLagu": "526",
+    "judul": "TONGAM NI HUTA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895060346-2f90147b.webp",
+    "updatedAt": "2026-06-19T08:26:26.984Z"
+  },
+  {
+    "nomorLagu": "527",
+    "judul": "SALUHUT DO HUTADINGKON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895120142-a0ac5886.webp",
+    "updatedAt": "2026-06-19T08:29:37.799Z"
+  },
+  {
+    "nomorLagu": "528",
+    "judul": "TU DIA HO DUNG MATE HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895313231-951415dc.webp",
+    "updatedAt": "2026-06-19T08:39:32.239Z"
+  },
+  {
+    "nomorLagu": "529",
+    "judul": "ANGKA NAUNG MONDING",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895327517-76ccb228.webp",
+    "updatedAt": "2026-06-19T08:44:40.559Z"
+  },
+  {
+    "nomorLagu": "530",
+    "judul": "TU SAMBULO NI TONDINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895347467-183e5891.webp",
+    "updatedAt": "2026-06-19T08:47:21.829Z"
+  },
+  {
+    "nomorLagu": "531",
+    "judul": "SAI ULUHON AU O TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895370497-d241e948.webp",
+    "updatedAt": "2026-06-19T08:52:43.278Z"
+  },
+  {
+    "nomorLagu": "532",
+    "judul": "MOLO MARSINONDANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895380491-dae593e6.webp",
+    "updatedAt": "2026-06-19T08:55:28.538Z"
+  },
+  {
+    "nomorLagu": "533",
+    "judul": "HUTANDA SADA HUTA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895400294-3e062185.webp",
+    "updatedAt": "2026-06-19T08:56:52.688Z"
+  },
+  {
+    "nomorLagu": "534",
+    "judul": "DI GINJANG DI SURGO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895412433-7d5bba35.webp",
+    "updatedAt": "2026-06-19T08:58:40.046Z"
+  },
+  {
+    "nomorLagu": "535",
+    "judul": "HAMATEAN PARHITEAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895479743-426f9537.webp",
+    "updatedAt": "2026-06-19T09:00:34.766Z"
+  },
+  {
+    "nomorLagu": "536",
+    "judul": "DITANGIHON TUHAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895537878-0ca48c84.webp",
+    "updatedAt": "2026-06-19T09:02:07.484Z"
+  },
+  {
+    "nomorLagu": "537",
+    "judul": "HOBAS HO PANABI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895590703-cc419404.webp",
+    "updatedAt": "2026-06-22T04:02:14.356Z"
+  },
+  {
+    "nomorLagu": "538",
+    "judul": "AIK BEHA GIRA MANOGOT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895648817-3779bbbf.webp",
+    "updatedAt": "2026-06-22T04:03:59.057Z"
+  },
+  {
+    "nomorLagu": "539",
+    "judul": "SAI HUTAGAM DO TUHANHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895668435-a2e898c6.webp",
+    "updatedAt": "2026-06-22T04:06:59.424Z"
+  },
+  {
+    "nomorLagu": "540",
+    "judul": "TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895687030-9ef9d14b.webp",
+    "updatedAt": "2026-06-22T04:08:46.226Z"
+  },
+  {
+    "nomorLagu": "541",
+    "judul": "NA MULAK JESUS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902246260-b37a6eb4.webp",
+    "updatedAt": "2026-06-22T04:12:18.911Z"
+  },
+  {
+    "nomorLagu": "542",
+    "judul": "O ALE TUHAN DI DIA HO TOGANG?",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902342729-51e4f6bc.webp",
+    "updatedAt": "2026-06-22T04:27:52.861Z"
+  },
+  {
+    "nomorLagu": "543",
+    "judul": "BUNI BINGKAS NI HOLONG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902399167-3b4b2792.webp",
+    "updatedAt": "2026-06-22T04:31:56.753Z"
+  },
+  {
+    "nomorLagu": "544",
+    "judul": "MOLO RO PANJOU NI TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902455777-0bd6e17c.webp",
+    "updatedAt": "2026-06-22T04:36:00.297Z"
+  },
+  {
+    "nomorLagu": "545",
+    "judul": "NA SAOR DI HITA BE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902497355-e9ff8bd2.webp",
+    "updatedAt": "2026-06-22T04:37:12.505Z"
+  },
+  {
+    "nomorLagu": "546",
+    "judul": "TUNG MARTUA DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902688774-e1cd6114.webp",
+    "updatedAt": "2026-06-22T04:39:03.472Z"
+  },
+  {
+    "nomorLagu": "547",
+    "judul": "LOAS RO TU AU DAKDANAK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902705272-ca3d6dd7.webp",
+    "updatedAt": "2026-06-22T04:41:22.065Z"
+  },
+  {
+    "nomorLagu": "548",
+    "judul": "DAKDANAK NA BADIA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902719766-f72a4a66.webp",
+    "updatedAt": "2026-06-22T04:45:28.283Z"
+  },
+  {
+    "nomorLagu": "549",
+    "judul": "HOLAN DAKDANAK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902732047-5a51119b.webp",
+    "updatedAt": "2026-06-22T04:47:50.686Z"
+  },
+  {
+    "nomorLagu": "550",
+    "judul": "TANGANKU NA METMET",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902745597-02453642.webp",
+    "updatedAt": "2026-06-22T04:50:31.226Z"
+  },
+  {
+    "nomorLagu": "551",
+    "judul": "ITAPUJI MA TUHANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902812650-f013ba75.webp",
+    "updatedAt": "2026-06-22T04:51:37.222Z"
+  },
+  {
+    "nomorLagu": "552",
+    "judul": "NA LAO TU NA DAO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902825196-fbf5abaa.webp",
+    "updatedAt": "2026-06-22T04:52:10.316Z"
+  },
+  {
+    "nomorLagu": "553",
+    "judul": "LAS ROHAM DI DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902872324-a2665a7d.webp",
+    "updatedAt": "2026-06-22T04:52:40.355Z"
+  },
+  {
+    "nomorLagu": "554",
+    "judul": "PUJI HAMU SAI PASANGAP TUTU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902894800-d67be120.webp",
+    "updatedAt": "2026-06-22T04:53:04.304Z"
+  },
+  {
+    "nomorLagu": "555",
+    "judul": "TUHANKU DI AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902930047-c28b4d3a.webp",
+    "updatedAt": "2026-06-22T04:53:22.039Z"
+  },
+  {
+    "nomorLagu": "556",
+    "judul": "DAMEM LEHON DI HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780902963699-362a1374.webp",
+    "updatedAt": "2026-06-22T04:53:52.741Z"
+  },
+  {
+    "nomorLagu": "557",
+    "judul": "DAO DUMENGGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903039073-bbc52a10.webp",
+    "updatedAt": "2026-06-22T04:55:10.924Z"
+  },
+  {
+    "nomorLagu": "558",
+    "judul": "DEBATA AMA DI SURGO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903097613-2cc98b02.webp",
+    "updatedAt": "2026-06-22T04:59:11.963Z"
+  },
+  {
+    "nomorLagu": "559",
+    "judul": "DEBATA NA SONGKAL JALA NA BADIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903204652-760e35c3.webp",
+    "updatedAt": "2026-06-22T05:05:01.258Z"
+  },
+  {
+    "nomorLagu": "560",
+    "judul": "ENDEHON AMEN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903220069-6182f6fc.webp",
+    "updatedAt": "2026-06-22T05:09:48.055Z"
+  },
+  {
+    "nomorLagu": "561",
+    "judul": "ENDEHON DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903230435-9fc31c08.webp",
+    "updatedAt": "2026-06-22T07:35:58.498Z"
+  },
+  {
+    "nomorLagu": "562",
+    "judul": "HAMUNA ALE JOLMA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903462872-7c43fa80.webp",
+    "updatedAt": "2026-06-22T07:37:39.385Z"
+  },
+  {
+    "nomorLagu": "563",
+    "judul": "ITA PUJI DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903494901-603b8168.webp",
+    "updatedAt": "2026-06-22T07:39:17.403Z"
+  },
+  {
+    "nomorLagu": "564",
+    "judul": "LAS MA ROHANTA DI TUHANTA DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903519348-11bf5f35.webp",
+    "updatedAt": "2026-06-22T07:40:39.369Z"
+  },
+  {
+    "nomorLagu": "565",
+    "judul": "LAS ROHANGKU LAO MAMUJI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903541315-0b2aa7e9.webp",
+    "updatedAt": "2026-06-22T07:48:39.019Z"
+  },
+  {
+    "nomorLagu": "566",
+    "judul": "NA BADIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903567974-23a543b3.webp",
+    "updatedAt": "2026-06-22T07:49:03.680Z"
+  },
+  {
+    "nomorLagu": "567",
+    "judul": "NA MORA DO TUHANTA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903627219-c39c17c6.webp",
+    "updatedAt": "2026-06-22T08:00:56.740Z"
+  },
+  {
+    "nomorLagu": "568",
+    "judul": "NASA SOARA INGKON DO (2)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903767841-4c3cd540.webp",
+    "updatedAt": "2026-06-22T08:06:21.110Z"
+  },
+  {
+    "nomorLagu": "568a",
+    "judul": "NASA SOARA INGKON DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780906658764-ff34667b.webp",
+    "updatedAt": "2026-06-22T08:07:32.877Z"
+  },
+  {
+    "nomorLagu": "569",
+    "judul": "O DEBATA TUNG LONGANG DO ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904008975-a86d4f70.webp",
+    "updatedAt": "2026-06-22T08:16:05.737Z"
+  },
+  {
+    "nomorLagu": "570",
+    "judul": "O JESUS TUHANHI HUPUJI HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904032841-6cc6cdd4.webp",
+    "updatedAt": "2026-06-22T08:17:37.555Z"
+  },
+  {
+    "nomorLagu": "571",
+    "judul": "PARANGAN PARDISURGO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904045301-2391d7f1.webp",
+    "updatedAt": "2026-06-22T08:24:50.857Z"
+  },
+  {
+    "nomorLagu": "572",
+    "judul": "PUJI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904064814-351c3819.webp",
+    "updatedAt": "2026-06-22T08:25:21.214Z"
+  },
+  {
+    "nomorLagu": "573",
+    "judul": "PUJI JESUS SIPALUA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904621378-3f0ecd45.webp",
+    "updatedAt": "2026-06-22T08:28:01.699Z"
+  },
+  {
+    "nomorLagu": "574",
+    "judul": "PUJI MA DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904698631-96bdce76.webp",
+    "updatedAt": "2026-06-22T08:29:12.602Z"
+  },
+  {
+    "nomorLagu": "575",
+    "judul": "PUJI MA DEBATA NA SONGKAL",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781498079737-85be335c.webp",
+    "updatedAt": "2026-06-22T08:30:31.012Z"
+  },
+  {
+    "nomorLagu": "576",
+    "judul": "PUJI MA DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904830998-947b51b6.webp",
+    "updatedAt": "2026-06-22T08:32:59.986Z"
+  },
+  {
+    "nomorLagu": "577",
+    "judul": "PUJI TUHAN DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904864304-0c388619.webp",
+    "updatedAt": "2026-06-22T08:33:57.077Z"
+  },
+  {
+    "nomorLagu": "578",
+    "judul": "PUJI TUHAN DI HOLONGNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904990558-67e5a459.webp",
+    "updatedAt": "2026-06-22T08:35:12.227Z"
+  },
+  {
+    "nomorLagu": "579",
+    "judul": "PUJI TUHAN HALELUYA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780905070156-c3ff02f7.webp",
+    "updatedAt": "2026-06-08T07:51:10.310Z"
+  },
+  {
+    "nomorLagu": "580",
+    "judul": "RO DO AU TUHAN TU HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780905121912-7e176441.webp",
+    "updatedAt": "2026-06-08T07:52:02.080Z"
+  },
+  {
+    "nomorLagu": "581",
+    "judul": "SANGAP DI JAHOWA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781065378052-bbc89862.webp",
+    "updatedAt": "2026-06-10T04:22:58.256Z"
+  },
+  {
+    "nomorLagu": "582",
+    "judul": "SANGAP MA DI DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781065155768-8d5a6773.webp",
+    "updatedAt": "2026-06-10T04:19:15.921Z"
+  },
+  {
+    "nomorLagu": "583",
+    "judul": "SANGAP MA DI DEBATANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781497794883-77952cfd.webp",
+    "updatedAt": "2026-06-15T04:29:55.064Z"
+  },
+  {
+    "nomorLagu": "584",
+    "judul": "SALUHUT BANGSO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781065945563-a24ab2d6.webp",
+    "updatedAt": "2026-07-18T14:17:28.761Z"
+  },
+  {
+    "nomorLagu": "585",
+    "judul": "SOMBA MA JAHOWA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781064942716-87887418.webp",
+    "updatedAt": "2026-06-10T04:15:42.890Z"
+  },
+  {
+    "nomorLagu": "586",
+    "judul": "SOMBAONKU HO O JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066040553-b6efd03a.webp",
+    "updatedAt": "2026-06-10T04:34:00.892Z"
+  },
+  {
+    "nomorLagu": "587",
+    "judul": "TAENDEHON LAS NI ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066134541-0fcb5112.webp",
+    "updatedAt": "2026-10-16T15:57:43.830Z"
+  },
+  {
+    "nomorLagu": "588",
+    "judul": "TASOMBA TONGTONG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066181481-fbb6fa90.webp",
+    "updatedAt": "2026-07-18T14:18:16.683Z"
+  },
+  {
+    "nomorLagu": "589",
+    "judul": "TUHAN SAI RO MA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066244442-16c947cc.webp",
+    "updatedAt": "2026-06-10T04:37:24.630Z"
+  },
+  {
+    "nomorLagu": "590",
+    "judul": "ADVENT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066295150-7ad42c7a.webp",
+    "updatedAt": "2026-06-10T04:38:15.314Z"
+  },
+  {
+    "nomorLagu": "591",
+    "judul": "BORU SION",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066374028-0d4d1031.webp",
+    "updatedAt": "2026-06-10T04:39:34.180Z"
+  },
+  {
+    "nomorLagu": "592",
+    "judul": "HOSIANNA DI ANAK NI RAJA DAUD",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066425917-8cd549c6.webp",
+    "updatedAt": "2026-06-10T04:40:26.073Z"
+  },
+  {
+    "nomorLagu": "593",
+    "judul": "NA HINIRIM NA SAI LAON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066549236-d6148aab.webp",
+    "updatedAt": "2026-06-10T04:42:29.578Z"
+  },
+  {
+    "nomorLagu": "594",
+    "judul": "SAI RO MA HO IMMANUEL",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066612290-dc490ddb.webp",
+    "updatedAt": "2026-06-10T04:43:32.465Z"
+  },
+  {
+    "nomorLagu": "595",
+    "judul": "AI ISE POSO-POSO ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066718147-57fe5775.webp",
+    "updatedAt": "2026-06-10T04:45:18.286Z"
+  },
+  {
+    "nomorLagu": "596",
+    "judul": "AI SONGON ON DO HOLONG NI DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066756572-bedef667.webp",
+    "updatedAt": "2026-06-10T04:45:56.860Z"
+  },
+  {
+    "nomorLagu": "597",
+    "judul": "BARITAHON DI DOLOK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781512323349-96e0b6e1.webp",
+    "updatedAt": "2026-06-15T08:32:03.553Z"
+  },
+  {
+    "nomorLagu": "597b",
+    "judul": "BARITAHON DI DOLOK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781512440136-70a08b93.webp",
+    "updatedAt": "2026-06-15T08:34:00.306Z"
+  },
+  {
+    "nomorLagu": "598",
+    "judul": "BEGE ENDE NI SURUAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781066838814-32f086aa.webp",
+    "updatedAt": "2026-06-10T04:47:18.960Z"
+  },
+  {
+    "nomorLagu": "599",
+    "judul": "DITADINGKON HABANGSANA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781064732568-2a6141f6.webp",
+    "updatedAt": "2026-06-10T04:12:12.717Z"
+  },
+  {
+    "nomorLagu": "600",
+    "judul": "DIBORNGIN SASADA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781064075130-0fee158f.webp",
+    "updatedAt": "2026-06-10T04:01:15.285Z"
+  },
+  {
+    "nomorLagu": "601",
+    "judul": "DI HUTA NI RAJA DAUD",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780909135941-2043ff1f.webp",
+    "updatedAt": "2026-06-08T08:58:56.048Z"
+  },
+  {
+    "nomorLagu": "602",
+    "judul": "DI NATAL NA PARJOLO I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781063916777-d34dbd4a.webp",
+    "updatedAt": "2026-06-10T03:58:36.947Z"
+  },
+  {
+    "nomorLagu": "603",
+    "judul": "DIPANGGAGATAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781505330439-34304516.webp",
+    "updatedAt": "2026-06-15T06:35:30.615Z"
+  },
+  {
+    "nomorLagu": "603b",
+    "judul": "DI PANGGAGATAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781505439507-a37f3db6.webp",
+    "updatedAt": "2026-06-15T06:37:19.652Z"
+  },
+  {
+    "nomorLagu": "604",
+    "judul": "GANUP ARI NATAL",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780909075117-e3bc13f5.webp",
+    "updatedAt": "2026-06-08T08:57:55.248Z"
+  },
+  {
+    "nomorLagu": "605",
+    "judul": "LAS MA ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781064318372-12cb477c.webp",
+    "updatedAt": "2026-06-10T04:05:18.534Z"
+  },
+  {
+    "nomorLagu": "606",
+    "judul": "NUNGA SORANG MESIAS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781064147531-e22ef199.webp",
+    "updatedAt": "2026-06-10T04:02:27.696Z"
+  },
+  {
+    "nomorLagu": "607",
+    "judul": "NUNGA TUBU KRISTUS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780909167390-0299487d.webp",
+    "updatedAt": "2026-06-08T08:59:27.522Z"
+  },
+  {
+    "nomorLagu": "608",
+    "judul": "O BETLEHEM NA METMET I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781064433110-ace80fd3.webp",
+    "updatedAt": "2026-06-10T04:07:13.298Z"
+  },
+  {
+    "nomorLagu": "609",
+    "judul": "O JESUS NA METMET",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781064487483-7942b0c1.webp",
+    "updatedAt": "2026-06-10T04:08:07.635Z"
+  },
+  {
+    "nomorLagu": "610",
+    "judul": "PASANGAP MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1781061587698-a2e216c3.webp",
+    "updatedAt": "2026-06-10T03:19:47.859Z"
+  },
+  {
+    "nomorLagu": "611",
+    "judul": "PEAK TUHANTA DI PANGGAGATAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780993443670-92cb0ffb.webp",
+    "updatedAt": "2026-06-09T08:24:03.832Z"
+  },
+  {
+    "nomorLagu": "612",
+    "judul": "SAI PAHERBANG MA HABONGMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780993503807-45d45d6c.webp",
+    "updatedAt": "2026-06-09T08:25:03.959Z"
+  },
+  {
+    "nomorLagu": "613",
+    "judul": "RO MA HO O JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780993646974-d0d7b88a.webp",
+    "updatedAt": "2026-06-09T08:27:27.132Z"
+  },
+  {
+    "nomorLagu": "614",
+    "judul": "RO MA HO TU AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780993590140-fb15a307.webp",
+    "updatedAt": "2026-06-09T08:26:30.315Z"
+  },
+  {
+    "nomorLagu": "615",
+    "judul": "TARBEGE SURUSURUAN MARENDE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780993325067-fed10ac9.webp",
+    "updatedAt": "2026-06-09T08:22:05.256Z"
+  },
+  {
+    "nomorLagu": "616",
+    "judul": "ULI NA I DIBORNGIN NA BADIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780993213022-96e17ab9.webp",
+    "updatedAt": "2026-06-09T08:20:13.182Z"
+  },
+  {
+    "nomorLagu": "617",
+    "judul": "SIAN PURBA DO HAMI RO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780993055226-d6593c8c.webp",
+    "updatedAt": "2026-06-09T08:17:35.403Z"
+  },
+  {
+    "nomorLagu": "618",
+    "judul": "DI DIA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780992949611-0758594b.webp",
+    "updatedAt": "2026-06-09T08:15:49.804Z"
+  },
+  {
+    "nomorLagu": "619",
+    "judul": "DI GOLGOTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780991640170-dcd4a75e.webp",
+    "updatedAt": "2026-06-09T07:54:00.352Z"
+  },
+  {
+    "nomorLagu": "620",
+    "judul": "HOLONGMI ALE TUHANKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780991423101-02664949.webp",
+    "updatedAt": "2026-06-09T07:50:23.269Z"
+  },
+  {
+    "nomorLagu": "621",
+    "judul": "MABUGANG HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780991201042-9f74a2d7.webp",
+    "updatedAt": "2026-06-09T07:46:41.213Z"
+  },
+  {
+    "nomorLagu": "622",
+    "judul": "MANSAI NALNAL DI ANGKA PARTINGKIAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780991088772-dae0919a.webp",
+    "updatedAt": "2026-06-09T07:44:48.961Z"
+  },
+  {
+    "nomorLagu": "623",
+    "judul": "TARSILANG HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780990903950-10ce4a08.webp",
+    "updatedAt": "2026-06-09T07:41:44.133Z"
+  },
+  {
+    "nomorLagu": "624",
+    "judul": "HALELUYA, HALELUYA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780990774513-e3b0a353.webp",
+    "updatedAt": "2026-06-09T07:39:34.712Z"
+  },
+  {
+    "nomorLagu": "625",
+    "judul": "HOLOM SOGOT MANOGOT I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780990600672-24741427.webp",
+    "updatedAt": "2026-06-09T07:36:40.832Z"
+  },
+  {
+    "nomorLagu": "626",
+    "judul": "HOLOM TANOMAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780908247115-e33034b7.webp",
+    "updatedAt": "2026-06-08T08:44:07.265Z"
+  },
+  {
+    "nomorLagu": "627",
+    "judul": "JESUS NAUNG HEHE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780908072491-182c763c.webp",
+    "updatedAt": "2026-06-08T08:41:12.616Z"
+  },
+  {
+    "nomorLagu": "628",
+    "judul": "LANGIT NANG TANO TIUR SASUDE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780907902229-70a5c89f.webp",
+    "updatedAt": "2026-06-08T08:38:22.365Z"
+  },
+  {
+    "nomorLagu": "629",
+    "judul": "LAO DO AU TU TANOMAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780907404094-62bbe41b.webp",
+    "updatedAt": "2026-06-08T08:30:04.260Z"
+  },
+  {
+    "nomorLagu": "630",
+    "judul": "MARLAS NI ROHA HITA ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780907151961-f276a699.webp",
+    "updatedAt": "2026-06-08T08:25:52.112Z"
+  },
+  {
+    "nomorLagu": "631",
+    "judul": "NAUNG HEHE DO TUHANTA (KANON)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780907018948-76046aed.webp",
+    "updatedAt": "2026-06-08T08:23:39.088Z"
+  },
+  {
+    "nomorLagu": "632",
+    "judul": "NUNGA HEHE KRISTUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780906969244-26dbfaa1.webp",
+    "updatedAt": "2026-06-08T08:22:49.485Z"
+  },
+  {
+    "nomorLagu": "633",
+    "judul": "NUNGA HEHE KRISTUS I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780906797543-9c892d4e.webp",
+    "updatedAt": "2026-06-08T08:19:57.701Z"
+  },
+  {
+    "nomorLagu": "634",
+    "judul": "NUNGA HEHE TUHAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780906584314-54ba25f4.webp",
+    "updatedAt": "2026-06-08T08:16:24.463Z"
+  },
+  {
+    "nomorLagu": "635",
+    "judul": "RO TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780905931370-20a8b757.webp",
+    "updatedAt": "2026-06-08T08:05:31.508Z"
+  },
+  {
+    "nomorLagu": "636",
+    "judul": "JESUS DO RAJA BOLON I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780904064924-3d2af6ec.webp",
+    "updatedAt": "2026-06-08T07:34:25.128Z"
+  },
+  {
+    "nomorLagu": "637",
+    "judul": "PATIMBUL MA HUASO NI GOAR NI JESUS I (2)",
+    "notasiUrl": null,
+    "updatedAt": "2026-05-11T10:13:21.682Z"
+  },
+  {
+    "nomorLagu": "638",
+    "judul": "PATIMBUL TUHAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903843796-4e65cfb3.webp",
+    "updatedAt": "2026-06-08T07:30:43.986Z"
+  },
+  {
+    "nomorLagu": "639",
+    "judul": "BUNGA NI GARA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903548667-118d937f.webp",
+    "updatedAt": "2026-06-08T07:25:48.827Z"
+  },
+  {
+    "nomorLagu": "640",
+    "judul": "HAHOLONGAN SIAN GINJANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780903326557-da996125.webp",
+    "updatedAt": "2026-06-08T07:22:06.741Z"
+  },
+  {
+    "nomorLagu": "641",
+    "judul": "O TONDI PORBADIA I",
+    "notasiUrl": null,
+    "updatedAt": "2026-05-11T10:13:21.819Z"
+  },
+  {
+    "nomorLagu": "642",
+    "judul": "O TONDI PORBADIA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895346494-2b3648d4.webp",
+    "updatedAt": "2026-06-08T05:09:06.686Z"
+  },
+  {
+    "nomorLagu": "643",
+    "judul": "RO HO TONDI PORBADIA",
+    "notasiUrl": null,
+    "updatedAt": "2026-05-11T10:13:21.887Z"
+  },
+  {
+    "nomorLagu": "644",
+    "judul": "RO Ma Ho Parasiroha",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895234564-2c50ad40.webp",
+    "updatedAt": "2026-06-08T05:07:14.718Z"
+  },
+  {
+    "nomorLagu": "645",
+    "judul": "Sai Gohi Roha Tondingki",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895114839-8ca46998.webp",
+    "updatedAt": "2026-06-08T05:05:14.985Z"
+  },
+  {
+    "nomorLagu": "646",
+    "judul": "SAI GOHI ROHA TONDINGKI (2)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780895024715-3ee6480c.webp",
+    "updatedAt": "2026-06-08T05:03:44.862Z"
+  },
+  {
+    "nomorLagu": "647",
+    "judul": "DI DEBATA AMANTA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894973666-15b6e244.webp",
+    "updatedAt": "2026-06-08T05:02:53.827Z"
+  },
+  {
+    "nomorLagu": "648",
+    "judul": "SANGAP DI DEBATA AMA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894948119-fd6499ca.webp",
+    "updatedAt": "2026-07-18T07:37:37.583Z"
+  },
+  {
+    "nomorLagu": "649",
+    "judul": "DIPASADA AMA I.",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894857706-0a55b1b1.webp",
+    "updatedAt": "2026-06-08T05:00:57.861Z"
+  },
+  {
+    "nomorLagu": "650",
+    "judul": "DIPASADA HOLONGNA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894763976-14e53239.webp",
+    "updatedAt": "2026-07-18T14:29:59.626Z"
+  },
+  {
+    "nomorLagu": "651",
+    "judul": "HURIA NA HUHAHOLONGI HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894685794-84c9b2f2.webp",
+    "updatedAt": "2026-06-08T04:58:05.942Z"
+  },
+  {
+    "nomorLagu": "652",
+    "judul": "IHOT MA HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780894352748-c43e89f2.webp",
+    "updatedAt": "2026-06-08T04:52:32.894Z"
+  },
+  {
+    "nomorLagu": "653",
+    "judul": "JUBILEUM NI HURIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892734454-c81d6643.webp",
+    "updatedAt": "2026-06-08T04:25:34.616Z"
+  },
+  {
+    "nomorLagu": "654",
+    "judul": "MARPUNGU SUDE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892574948-c57cda34.webp",
+    "updatedAt": "2026-06-08T04:22:55.093Z"
+  },
+  {
+    "nomorLagu": "655",
+    "judul": "OJAHAN NI HURIA.",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892366526-230283d9.webp",
+    "updatedAt": "2026-06-08T04:19:26.637Z"
+  },
+  {
+    "nomorLagu": "656",
+    "judul": "PARHAHAMARANGGION",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892229910-976c8962.webp",
+    "updatedAt": "2026-06-08T04:17:10.062Z"
+  },
+  {
+    "nomorLagu": "657",
+    "judul": "ULI NA I HURIAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780892032592-2c394fff.webp",
+    "updatedAt": "2026-06-08T04:13:52.723Z"
+  },
+  {
+    "nomorLagu": "658",
+    "judul": "TU PORTIBION NA RUNDUT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891734455-db72837f.webp",
+    "updatedAt": "2026-07-18T07:51:23.571Z"
+  },
+  {
+    "nomorLagu": "659",
+    "judul": "ANGKA PARBEGU NA DI HAHOLOMON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891486971-9b5a78ab.webp",
+    "updatedAt": "2026-06-08T04:04:47.129Z"
+  },
+  {
+    "nomorLagu": "660",
+    "judul": "BEGE MA TUHAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780891325938-77dab4ea.webp",
+    "updatedAt": "2026-06-08T04:02:06.105Z"
+  },
+  {
+    "nomorLagu": "661",
+    "judul": "BETA HITA ALE ANGKA DONGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890937030-58112778.webp",
+    "updatedAt": "2026-06-08T03:55:37.203Z"
+  },
+  {
+    "nomorLagu": "662",
+    "judul": "BOAN SINONDANGMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780890237790-72c778db.webp",
+    "updatedAt": "2026-06-08T03:43:57.931Z"
+  },
+  {
+    "nomorLagu": "663",
+    "judul": "BOTO MA SUDE HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780885512866-030aa0ff.webp",
+    "updatedAt": "2026-06-08T02:25:13.040Z"
+  },
+  {
+    "nomorLagu": "664",
+    "judul": "DIDOK TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471593779-7609424e.webp",
+    "updatedAt": "2026-06-03T07:26:33.976Z"
+  },
+  {
+    "nomorLagu": "665",
+    "judul": "HEHE HO MARSINONDANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471566805-3e7b111e.webp",
+    "updatedAt": "2026-06-03T07:26:06.962Z"
+  },
+  {
+    "nomorLagu": "666",
+    "judul": "INGKON BOANONTA BARITA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471547807-94b0de58.webp",
+    "updatedAt": "2026-07-18T14:31:39.298Z"
+  },
+  {
+    "nomorLagu": "667",
+    "judul": "ISE MA ANGKA PANABI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472027987-1862d7d0.webp",
+    "updatedAt": "2026-06-03T07:33:48.132Z"
+  },
+  {
+    "nomorLagu": "668",
+    "judul": "PARROHAI MA AU TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471503763-d3fa8433.webp",
+    "updatedAt": "2026-06-03T07:25:03.926Z"
+  },
+  {
+    "nomorLagu": "669",
+    "judul": "RINGGAS AU PABOAHON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471484060-47fbb499.webp",
+    "updatedAt": "2026-06-03T07:24:44.243Z"
+  },
+  {
+    "nomorLagu": "670",
+    "judul": "TARBEGE SOARA NA JOUJOU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471456648-c6af5e58.webp",
+    "updatedAt": "2026-06-03T07:24:16.831Z"
+  },
+  {
+    "nomorLagu": "671",
+    "judul": "TOROP DOPE NA LILU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471422368-512b642b.webp",
+    "updatedAt": "2026-06-03T07:23:42.554Z"
+  },
+  {
+    "nomorLagu": "672",
+    "judul": "TUNG GODANG SITUTU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471343726-bc0e7761.webp",
+    "updatedAt": "2026-07-18T08:04:58.764Z"
+  },
+  {
+    "nomorLagu": "673",
+    "judul": "ADONG SADA MUAL I.",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471270166-88d3e891.webp",
+    "updatedAt": "2026-06-03T07:21:10.327Z"
+  },
+  {
+    "nomorLagu": "674",
+    "judul": "DIHAHOLONGI DO HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471240239-24a2a04c.webp",
+    "updatedAt": "2026-06-03T07:20:40.418Z"
+  },
+  {
+    "nomorLagu": "675",
+    "judul": "HAMU SUDE NA SORAT I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471203416-5b450dab.webp",
+    "updatedAt": "2026-07-28T03:36:22.968Z"
+  },
+  {
+    "nomorLagu": "676",
+    "judul": "SADA LANGKA PARHOLANGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780471171836-e05c9e67.webp",
+    "updatedAt": "2026-06-03T07:19:32.146Z"
+  },
+  {
+    "nomorLagu": "677",
+    "judul": "MANSAI LAMBOK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463561449-849049d0.webp",
+    "updatedAt": "2026-06-03T05:12:41.588Z"
+  },
+  {
+    "nomorLagu": "678",
+    "judul": "PAUBA ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463524221-2ffece53.webp",
+    "updatedAt": "2026-06-03T05:12:04.382Z"
+  },
+  {
+    "nomorLagu": "679",
+    "judul": "TUNG DANGOL DO HO O JOLMA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463496640-258814a4.webp",
+    "updatedAt": "2026-06-03T05:11:36.784Z"
+  },
+  {
+    "nomorLagu": "680",
+    "judul": "SAI TOGIHON AU MULAK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463463888-5bfb8db3.webp",
+    "updatedAt": "2026-06-03T05:11:04.027Z"
+  },
+  {
+    "nomorLagu": "681",
+    "judul": "ALE AMANG ASI ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463439927-b17210d7.webp",
+    "updatedAt": "2026-06-03T05:10:40.080Z"
+  },
+  {
+    "nomorLagu": "682",
+    "judul": "ALE TUHAN ASI ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463410836-497eea9d.webp",
+    "updatedAt": "2026-06-03T05:10:11.007Z"
+  },
+  {
+    "nomorLagu": "683",
+    "judul": "DI ADOPANMU JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463364781-adcf571d.webp",
+    "updatedAt": "2026-06-14T10:35:30.195Z"
+  },
+  {
+    "nomorLagu": "684",
+    "judul": "LEA SITUTU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463339911-e05ea3e3.webp",
+    "updatedAt": "2026-06-03T05:09:00.096Z"
+  },
+  {
+    "nomorLagu": "685",
+    "judul": "PAHEHE AU ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463307690-bf8e14f9.webp",
+    "updatedAt": "2026-06-03T05:08:27.855Z"
+  },
+  {
+    "nomorLagu": "686",
+    "judul": "RAMUN DO AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463282081-3c3e9034.webp",
+    "updatedAt": "2026-06-03T05:08:02.248Z"
+  },
+  {
+    "nomorLagu": "687",
+    "judul": "SILANGMI O TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463257889-c8d2f2d8.webp",
+    "updatedAt": "2026-06-03T05:07:38.048Z"
+  },
+  {
+    "nomorLagu": "688",
+    "judul": "TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1782096472546-4c773002.webp",
+    "updatedAt": "2026-06-22T02:47:52.696Z"
+  },
+  {
+    "nomorLagu": "689",
+    "judul": "DIHOLONG ROHANA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463208007-f2db2a7f.webp",
+    "updatedAt": "2026-06-03T05:06:48.235Z"
+  },
+  {
+    "nomorLagu": "690",
+    "judul": "HIBUL ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463178931-fe0f8431.webp",
+    "updatedAt": "2026-06-03T05:06:19.202Z"
+  },
+  {
+    "nomorLagu": "691",
+    "judul": "HUPASAHAT MA TU JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463158502-051cb9ce.webp",
+    "updatedAt": "2026-06-03T05:05:58.648Z"
+  },
+  {
+    "nomorLagu": "692",
+    "judul": "HUPASAHAT TU TANGANMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463132652-507d1a99.webp",
+    "updatedAt": "2026-06-03T05:05:32.822Z"
+  },
+  {
+    "nomorLagu": "693",
+    "judul": "JESUS DO TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463107815-886ed9e3.webp",
+    "updatedAt": "2026-06-03T05:05:07.975Z"
+  },
+  {
+    "nomorLagu": "694",
+    "judul": "JESUS HO NAMPUNA AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463058058-bcdf6d90.webp",
+    "updatedAt": "2026-06-03T05:04:18.217Z"
+  },
+  {
+    "nomorLagu": "695",
+    "judul": "JESUS TUHANKU DI HO MA AU ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780463027701-12f10691.webp",
+    "updatedAt": "2026-06-03T05:03:47.855Z"
+  },
+  {
+    "nomorLagu": "696",
+    "judul": "LAM HOLONG ROHANGKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462832014-b4dc5932.webp",
+    "updatedAt": "2026-06-03T05:00:32.173Z"
+  },
+  {
+    "nomorLagu": "697",
+    "judul": "MOLO HO DO HUIHOTHON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462799175-087af7f0.webp",
+    "updatedAt": "2026-06-03T04:59:59.397Z"
+  },
+  {
+    "nomorLagu": "698",
+    "judul": "SAI IHUTHONONKU JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462761257-031c7efa.webp",
+    "updatedAt": "2026-06-03T04:59:21.432Z"
+  },
+  {
+    "nomorLagu": "699",
+    "judul": "SINGKOP DO ASI NI ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462727472-f3917118.webp",
+    "updatedAt": "2026-06-03T04:58:47.628Z"
+  },
+  {
+    "nomorLagu": "700",
+    "judul": "TOGU AU O TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462698655-56bc615a.webp",
+    "updatedAt": "2026-06-03T04:58:18.968Z"
+  },
+  {
+    "nomorLagu": "701",
+    "judul": "TU HO DO AU MARPADAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462667892-c79835ba.webp",
+    "updatedAt": "2026-06-03T04:57:48.038Z"
+  },
+  {
+    "nomorLagu": "702",
+    "judul": "PANGAN MA ROTI ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462644118-197dee5b.webp",
+    "updatedAt": "2026-06-03T04:57:24.292Z"
+  },
+  {
+    "nomorLagu": "703",
+    "judul": "RAP MA HITA LAO MANGANHON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462616568-7fb9e81a.webp",
+    "updatedAt": "2026-06-03T04:56:56.720Z"
+  },
+  {
+    "nomorLagu": "704",
+    "judul": "BASA DO HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462586359-7de75636.webp",
+    "updatedAt": "2026-06-03T04:56:26.523Z"
+  },
+  {
+    "nomorLagu": "705",
+    "judul": "GOAR NI TUHAN JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462563356-19b1d6f7.webp",
+    "updatedAt": "2026-07-31T13:07:35.224Z"
+  },
+  {
+    "nomorLagu": "706",
+    "judul": "GODANG NI PASU-PASU I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462532203-4f6ba3c7.webp",
+    "updatedAt": "2026-06-03T04:55:32.360Z"
+  },
+  {
+    "nomorLagu": "707",
+    "judul": "HAGOGOON DOHOT APUL-APUL",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462495611-2b11e9b8.webp",
+    "updatedAt": "2026-06-03T04:54:55.770Z"
+  },
+  {
+    "nomorLagu": "708",
+    "judul": "JESUS HO DO SIPALUA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462433746-98bc4e3e.webp",
+    "updatedAt": "2026-06-03T04:53:53.901Z"
+  },
+  {
+    "nomorLagu": "709",
+    "judul": "JESUS MANGASI I AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462407832-0efe23c8.webp",
+    "updatedAt": "2026-06-03T04:53:28.018Z"
+  },
+  {
+    "nomorLagu": "710",
+    "judul": "MAROLOP-OLOP DO AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462382668-52fd817c.webp",
+    "updatedAt": "2026-06-03T04:53:02.863Z"
+  },
+  {
+    "nomorLagu": "711",
+    "judul": "SONGON URSA NA BINURU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462348997-f0cf6e19.webp",
+    "updatedAt": "2026-06-03T04:52:29.153Z"
+  },
+  {
+    "nomorLagu": "712",
+    "judul": "TOGU AU ALE JAHOWA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462290336-02da86ef.webp",
+    "updatedAt": "2026-06-03T04:51:30.499Z"
+  },
+  {
+    "nomorLagu": "713",
+    "judul": "TOGU AU O TUHANKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462253784-68d5fc4c.webp",
+    "updatedAt": "2026-06-03T04:50:53.948Z"
+  },
+  {
+    "nomorLagu": "714",
+    "judul": "TUHAN NA MARMAHAN HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462127380-2b8d6c04.webp",
+    "updatedAt": "2026-06-08T06:02:45.957Z"
+  },
+  {
+    "nomorLagu": "715",
+    "judul": "BALGA DO HOLONGMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462086626-226299bc.webp",
+    "updatedAt": "2026-06-06T13:51:34.841Z"
+  },
+  {
+    "nomorLagu": "716",
+    "judul": "DI NA MAMOLUS SANDOK NGOLUON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780462050781-97d71807.webp",
+    "updatedAt": "2026-07-18T14:34:23.544Z"
+  },
+  {
+    "nomorLagu": "717",
+    "judul": "DI NA HUTATAP SILANG I.",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461942840-c676d9c0.webp",
+    "updatedAt": "2026-06-03T04:45:43.001Z"
+  },
+  {
+    "nomorLagu": "718",
+    "judul": "HUBEGE JESUS MANJOU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461910401-5c5ff68d.webp",
+    "updatedAt": "2026-06-03T04:45:10.564Z"
+  },
+  {
+    "nomorLagu": "719",
+    "judul": "HUBEGE SOARAM O JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461842128-18fa11ec.webp",
+    "updatedAt": "2026-10-16T07:02:56.285Z"
+  },
+  {
+    "nomorLagu": "720",
+    "judul": "NAENG MARSINONDANG NGOLUNGKU.",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461801344-30a4d517.webp",
+    "updatedAt": "2026-06-03T04:43:21.482Z"
+  },
+  {
+    "nomorLagu": "721",
+    "judul": "O DEBATA URASI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461772276-cad7441f.webp",
+    "updatedAt": "2026-06-03T04:42:52.418Z"
+  },
+  {
+    "nomorLagu": "722",
+    "judul": "TU JOLOMI TUHANKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461744736-e071b6b6.webp",
+    "updatedAt": "2026-06-06T10:06:59.527Z"
+  },
+  {
+    "nomorLagu": "723",
+    "judul": "TU JOLOM O TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461718499-0b6eb904.webp",
+    "updatedAt": "2026-06-06T15:50:30.249Z"
+  },
+  {
+    "nomorLagu": "724",
+    "judul": "TUHAN BAEN MA NGOLUNGKON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461694494-69eea9de.webp",
+    "updatedAt": "2026-06-03T04:41:34.695Z"
+  },
+  {
+    "nomorLagu": "725",
+    "judul": "AI SITIRUON DO HULEHON TU HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461667534-e6cd107a.webp",
+    "updatedAt": "2026-06-03T04:41:07.686Z"
+  },
+  {
+    "nomorLagu": "726",
+    "judul": "HAMU JINOU NI TUHANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461641538-b556cb20.webp",
+    "updatedAt": "2026-06-03T04:40:41.690Z"
+  },
+  {
+    "nomorLagu": "727",
+    "judul": "HUPILLIT ASA MARPARBUE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461614477-524f6bb2.webp",
+    "updatedAt": "2026-10-16T13:46:44.655Z"
+  },
+  {
+    "nomorLagu": "728",
+    "judul": "HUSURU HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461535856-26b88535.webp",
+    "updatedAt": "2026-06-03T04:38:56.078Z"
+  },
+  {
+    "nomorLagu": "729",
+    "judul": "LAHO MA HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461508402-f63674d2.webp",
+    "updatedAt": "2026-06-03T04:38:28.567Z"
+  },
+  {
+    "nomorLagu": "730",
+    "judul": "SAI PATAU MA AU TUHAN.",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461474846-c7fb8dd1.webp",
+    "updatedAt": "2026-10-01T12:17:43.193Z"
+  },
+  {
+    "nomorLagu": "731",
+    "judul": "BENGET MA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461450570-0d4ca1d2.webp",
+    "updatedAt": "2026-06-03T04:37:30.731Z"
+  },
+  {
+    "nomorLagu": "732",
+    "judul": "DI LAS NI ROHA NANG SITAONON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461422670-f450ad14.webp",
+    "updatedAt": "2026-06-03T04:37:02.924Z"
+  },
+  {
+    "nomorLagu": "733",
+    "judul": "DULO MA AU ON O TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461396233-51ed4aa9.webp",
+    "updatedAt": "2026-06-03T04:36:36.411Z"
+  },
+  {
+    "nomorLagu": "734",
+    "judul": "GOLAP SITUTU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461366870-cf65d8e9.webp",
+    "updatedAt": "2026-06-03T04:36:07.308Z"
+  },
+  {
+    "nomorLagu": "735",
+    "judul": "HOHOM MA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461337463-f6d21dfd.webp",
+    "updatedAt": "2026-06-03T04:35:37.685Z"
+  },
+  {
+    "nomorLagu": "736",
+    "judul": "JESUS HAPOSANKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461271202-ba8232cb.webp",
+    "updatedAt": "2026-06-03T04:34:31.551Z"
+  },
+  {
+    "nomorLagu": "737",
+    "judul": "JESUS PANGAMUDI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461193645-117c0059.webp",
+    "updatedAt": "2026-06-03T04:33:13.806Z"
+  },
+  {
+    "nomorLagu": "738",
+    "judul": "LAM JONOK ROHANGKI (2)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461166488-b2d81073.webp",
+    "updatedAt": "2026-06-03T04:32:46.743Z"
+  },
+  {
+    "nomorLagu": "739",
+    "judul": "LUGAHON MA SOLUMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461146719-9c6c9abe.webp",
+    "updatedAt": "2026-06-03T04:32:26.890Z"
+  },
+  {
+    "nomorLagu": "740",
+    "judul": "NANG PUR PE HABAHABA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461121088-d4a14d22.webp",
+    "updatedAt": "2026-08-08T00:55:46.116Z"
+  },
+  {
+    "nomorLagu": "741",
+    "judul": "NANG RO PE HABA-HABA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461101362-311fbef4.webp",
+    "updatedAt": "2026-06-03T04:31:41.540Z"
+  },
+  {
+    "nomorLagu": "742",
+    "judul": "NDANG HOLAN SIPALUA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780461065332-a50a924f.webp",
+    "updatedAt": "2026-06-03T04:31:05.500Z"
+  },
+  {
+    "nomorLagu": "743",
+    "judul": "O TUHAN TOGU-TOGU MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472357549-9262ee15.webp",
+    "updatedAt": "2026-06-03T07:39:17.705Z"
+  },
+  {
+    "nomorLagu": "744",
+    "judul": "RAP DOHOT AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460649585-d433e477.webp",
+    "updatedAt": "2026-06-03T04:24:09.773Z"
+  },
+  {
+    "nomorLagu": "745",
+    "judul": "RO PE HABAHABA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460617934-0bc789a0.webp",
+    "updatedAt": "2026-06-03T04:23:38.118Z"
+  },
+  {
+    "nomorLagu": "746",
+    "judul": "SABAM MA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460599314-404156d0.webp",
+    "updatedAt": "2026-06-03T04:23:19.511Z"
+  },
+  {
+    "nomorLagu": "747",
+    "judul": "SAI HUNANGKOHI DOLOK I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460573598-5f30cbc5.webp",
+    "updatedAt": "2026-06-03T04:22:53.802Z"
+  },
+  {
+    "nomorLagu": "748",
+    "judul": "SONANG MA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460550624-c8eab904.webp",
+    "updatedAt": "2026-06-03T04:22:30.804Z"
+  },
+  {
+    "nomorLagu": "749",
+    "judul": "SONGON SORHA NI PODATI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460519632-3855c6e3.webp",
+    "updatedAt": "2026-06-03T04:21:59.823Z"
+  },
+  {
+    "nomorLagu": "750",
+    "judul": "TU TONDINGKON O JESUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460495595-451f2afc.webp",
+    "updatedAt": "2026-06-03T04:21:35.801Z"
+  },
+  {
+    "nomorLagu": "751",
+    "judul": "TUHAN NA SUN GOGO I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460458349-36a4243e.webp",
+    "updatedAt": "2026-06-03T04:20:58.622Z"
+  },
+  {
+    "nomorLagu": "752",
+    "judul": "TUHAN, PATULUS MA SANGKAPMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460415117-78450f1a.webp",
+    "updatedAt": "2026-06-03T04:20:15.333Z"
+  },
+  {
+    "nomorLagu": "753",
+    "judul": "DI PARDALANAN JESUS DI JOLONGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472439302-fe0e143d.webp",
+    "updatedAt": "2026-06-03T07:40:39.488Z"
+  },
+  {
+    "nomorLagu": "754",
+    "judul": "GOK LAS NI ROHA DO AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460357434-ebf4d313.webp",
+    "updatedAt": "2026-06-03T04:19:17.608Z"
+  },
+  {
+    "nomorLagu": "755",
+    "judul": "HAPOSAN HO TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460328898-896b4d49.webp",
+    "updatedAt": "2026-07-31T13:16:56.936Z"
+  },
+  {
+    "nomorLagu": "756",
+    "judul": "HUBOTO DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460297960-45f844ea.webp",
+    "updatedAt": "2026-06-03T04:18:18.149Z"
+  },
+  {
+    "nomorLagu": "757",
+    "judul": "ISE DO NA NAENG MARTUA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460255755-c4c57540.webp",
+    "updatedAt": "2026-06-03T04:17:36.002Z"
+  },
+  {
+    "nomorLagu": "758",
+    "judul": "JAHOWA PANGURUPI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460232534-5b78e4c1.webp",
+    "updatedAt": "2026-06-03T04:17:12.726Z"
+  },
+  {
+    "nomorLagu": "759",
+    "judul": "JAHOWA SIPARMAHAN AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460207292-41113b19.webp",
+    "updatedAt": "2026-06-03T04:16:47.458Z"
+  },
+  {
+    "nomorLagu": "760",
+    "judul": "JESUS DO ALE-ALENGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780460174608-9af49402.webp",
+    "updatedAt": "2026-06-03T04:16:14.785Z"
+  },
+  {
+    "nomorLagu": "761",
+    "judul": "MARTUA NA PORSEA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459713408-4fb69f7b.webp",
+    "updatedAt": "2026-06-03T04:08:33.675Z"
+  },
+  {
+    "nomorLagu": "762",
+    "judul": "MASIHOL DO ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459684840-a45a398a.webp",
+    "updatedAt": "2026-06-03T04:08:05.023Z"
+  },
+  {
+    "nomorLagu": "763",
+    "judul": "MOLO JESUS DONGANMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459624292-d59becc6.webp",
+    "updatedAt": "2026-06-03T04:07:04.477Z"
+  },
+  {
+    "nomorLagu": "764",
+    "judul": "MOLO SO MAR-TUHAN HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472502378-404d5e33.webp",
+    "updatedAt": "2026-06-03T07:41:42.532Z"
+  },
+  {
+    "nomorLagu": "765",
+    "judul": "NANG PE MUNSAT ANGKA DOLOK",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472162538-0efb7e49.webp",
+    "updatedAt": "2026-07-22T06:07:12.473Z"
+  },
+  {
+    "nomorLagu": "766",
+    "judul": "PADAN NA ULI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472576712-d3c1a5b8.webp",
+    "updatedAt": "2026-07-18T14:35:05.291Z"
+  },
+  {
+    "nomorLagu": "767",
+    "judul": "SONGON AEK NA MABAOR",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459508119-fcc07121.webp",
+    "updatedAt": "2026-06-03T04:05:08.319Z"
+  },
+  {
+    "nomorLagu": "768",
+    "judul": "SUNGKUN-SUNGKUN DO ROHANGKI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459489094-f2af8327.webp",
+    "updatedAt": "2026-06-03T04:04:49.265Z"
+  },
+  {
+    "nomorLagu": "769",
+    "judul": "TU DEBATA DO PANGHIRIMON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459384897-fcb914cc.webp",
+    "updatedAt": "2026-08-08T00:58:02.061Z"
+  },
+  {
+    "nomorLagu": "770",
+    "judul": "TU DEBATAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459368538-94baeaa6.webp",
+    "updatedAt": "2026-06-03T04:02:48.744Z"
+  },
+  {
+    "nomorLagu": "771",
+    "judul": "TUDOSHON PIDONG NA HABANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459350884-429a8d26.webp",
+    "updatedAt": "2026-06-03T04:02:31.070Z"
+  },
+  {
+    "nomorLagu": "772",
+    "judul": "TUHANKU DO PATURE DALANHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459328396-5af170bf.webp",
+    "updatedAt": "2026-06-03T04:02:08.598Z"
+  },
+  {
+    "nomorLagu": "773",
+    "judul": "TUHAN MATA NI ARINGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459314805-380f6dad.webp",
+    "updatedAt": "2026-06-03T04:01:54.998Z"
+  },
+  {
+    "nomorLagu": "774",
+    "judul": "TUNG MABAOR SIAN HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459252565-07893618.webp",
+    "updatedAt": "2026-06-03T04:00:52.910Z"
+  },
+  {
+    "nomorLagu": "775",
+    "judul": "UNANG HOLSOAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459230197-f1688da1.webp",
+    "updatedAt": "2026-06-03T04:00:30.393Z"
+  },
+  {
+    "nomorLagu": "776",
+    "judul": "UNANG HOLSOAN HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459215621-849c941c.webp",
+    "updatedAt": "2026-06-03T04:00:15.943Z"
+  },
+  {
+    "nomorLagu": "777",
+    "judul": "UNANG SAI HOLSOAN HO.",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459202877-aff5ac8f.webp",
+    "updatedAt": "2026-06-03T04:00:03.094Z"
+  },
+  {
+    "nomorLagu": "778",
+    "judul": "AI ISE DO TUMOMPA ANGKA BUNGA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459180781-b40cef95.webp",
+    "updatedAt": "2026-06-03T03:59:40.974Z"
+  },
+  {
+    "nomorLagu": "779",
+    "judul": "AMPORIK NA METMET",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459158252-8064bf60.webp",
+    "updatedAt": "2026-06-03T03:59:18.420Z"
+  },
+  {
+    "nomorLagu": "780",
+    "judul": "PIGA MA TOROP NI BINTANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459084775-bf658c94.webp",
+    "updatedAt": "2026-06-03T03:58:04.958Z"
+  },
+  {
+    "nomorLagu": "781",
+    "judul": "SAI HALASHON NA TINOMPA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459069215-481507e2.webp",
+    "updatedAt": "2026-06-03T03:57:49.617Z"
+  },
+  {
+    "nomorLagu": "782",
+    "judul": "TUHAN DEBATANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780459017014-4df5e35a.webp",
+    "updatedAt": "2026-06-03T03:56:57.241Z"
+  },
+  {
+    "nomorLagu": "783",
+    "judul": "TUHAN SITOMPA SALUHUT",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458995100-e4d3c788.webp",
+    "updatedAt": "2026-06-03T03:56:35.346Z"
+  },
+  {
+    "nomorLagu": "784",
+    "judul": "AHA DO NAUNG HUBAEN TUHAN,",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458972832-ebdbed36.webp",
+    "updatedAt": "2026-06-03T03:56:12.990Z"
+  },
+  {
+    "nomorLagu": "785",
+    "judul": "ALO PANGUNJUNAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472651900-b70940c0.webp",
+    "updatedAt": "2026-06-03T07:44:12.045Z"
+  },
+  {
+    "nomorLagu": "786",
+    "judul": "DIGOMGOMANMI O TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458932364-25b3477c.webp",
+    "updatedAt": "2026-07-18T14:36:23.459Z"
+  },
+  {
+    "nomorLagu": "787",
+    "judul": "INGKON MONANG HITA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458918584-29bac898.webp",
+    "updatedAt": "2026-07-18T14:45:27.406Z"
+  },
+  {
+    "nomorLagu": "788",
+    "judul": "LAS MA ROHAMU MANGKIRIM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472697283-e109a5d3.webp",
+    "updatedAt": "2026-06-03T07:44:57.441Z"
+  },
+  {
+    "nomorLagu": "789",
+    "judul": "LULUI HAMU HARAJAON NI DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472773557-8d69f8fd.webp",
+    "updatedAt": "2026-06-11T12:22:48.269Z"
+  },
+  {
+    "nomorLagu": "790",
+    "judul": "MARLAS ROHA MA HAMU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458858051-291761cf.webp",
+    "updatedAt": "2026-06-03T03:54:18.211Z"
+  },
+  {
+    "nomorLagu": "791",
+    "judul": "O HAMU PARANGAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458834977-c3a9c937.webp",
+    "updatedAt": "2026-06-03T03:53:55.216Z"
+  },
+  {
+    "nomorLagu": "792",
+    "judul": "PASU-PASU HAMI O TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458817561-345716b1.webp",
+    "updatedAt": "2026-06-09T02:06:26.944Z"
+  },
+  {
+    "nomorLagu": "793",
+    "judul": "POS MA ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458802311-f38057ad.webp",
+    "updatedAt": "2026-06-03T03:53:22.536Z"
+  },
+  {
+    "nomorLagu": "794",
+    "judul": "RO MA HO TUHAN (1)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458785497-1039c839.webp",
+    "updatedAt": "2026-06-03T03:53:05.658Z"
+  },
+  {
+    "nomorLagu": "795",
+    "judul": "RO MA HO TUHAN (2)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458771323-eb940efe.webp",
+    "updatedAt": "2026-06-03T03:52:51.607Z"
+  },
+  {
+    "nomorLagu": "796",
+    "judul": "ASI NI ROHAM DO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473319773-5276d0a0.webp",
+    "updatedAt": "2026-06-03T07:55:19.927Z"
+  },
+  {
+    "nomorLagu": "797",
+    "judul": "JESUS PARMAHAN I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458737579-ef194f47.webp",
+    "updatedAt": "2026-06-03T03:52:17.731Z"
+  },
+  {
+    "nomorLagu": "798",
+    "judul": "NATORAS BEGE HATA ON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458722214-ce404819.webp",
+    "updatedAt": "2026-06-03T03:52:02.366Z"
+  },
+  {
+    "nomorLagu": "799",
+    "judul": "MARS NHKBP",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458699148-dc41819b.webp",
+    "updatedAt": "2026-06-03T03:51:39.320Z"
+  },
+  {
+    "nomorLagu": "800",
+    "judul": "PABOA TU DAKDANAK I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458680332-7e126b28.webp",
+    "updatedAt": "2026-06-03T03:51:20.538Z"
+  },
+  {
+    "nomorLagu": "801",
+    "judul": "O DAKDANAK, SOMBA DEBATANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458660583-41a1cc38.webp",
+    "updatedAt": "2026-06-03T03:51:00.783Z"
+  },
+  {
+    "nomorLagu": "802",
+    "judul": "PANGKE TINGKIM SAONARI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458641688-cc3da8cb.webp",
+    "updatedAt": "2026-06-03T03:50:41.886Z"
+  },
+  {
+    "nomorLagu": "803",
+    "judul": "PELEHON HAPISTARAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458627522-19a054e2.webp",
+    "updatedAt": "2026-07-22T06:09:05.128Z"
+  },
+  {
+    "nomorLagu": "804",
+    "judul": "RIPE NAMARLAS NI ROHA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458612393-e5ff54a4.webp",
+    "updatedAt": "2026-06-03T03:50:12.586Z"
+  },
+  {
+    "nomorLagu": "805",
+    "judul": "MOLO ADONG TINGKI PAJUMPANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458593645-ffefd617.webp",
+    "updatedAt": "2026-06-03T03:49:53.807Z"
+  },
+  {
+    "nomorLagu": "806",
+    "judul": "AHA PE MASA DINGOLUMON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458577679-ba196887.webp",
+    "updatedAt": "2026-06-03T03:49:37.838Z"
+  },
+  {
+    "nomorLagu": "807",
+    "judul": "DEBATA MA MANDONGANI HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458565178-c064d53c.webp",
+    "updatedAt": "2026-06-03T03:49:25.336Z"
+  },
+  {
+    "nomorLagu": "808",
+    "judul": "HORAS MA HITA SUDE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458548715-6317c9c4.webp",
+    "updatedAt": "2026-06-03T03:49:08.881Z"
+  },
+  {
+    "nomorLagu": "809",
+    "judul": "MOLO SAUT MA HO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458534926-21c3e665.webp",
+    "updatedAt": "2026-06-03T03:48:55.076Z"
+  },
+  {
+    "nomorLagu": "810",
+    "judul": "SAI DAME MA DI HAMUNA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458518159-24209653.webp",
+    "updatedAt": "2026-06-03T03:48:38.307Z"
+  },
+  {
+    "nomorLagu": "811",
+    "judul": "DI AU MA HO TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458499805-1ddcb645.webp",
+    "updatedAt": "2026-06-03T03:48:19.980Z"
+  },
+  {
+    "nomorLagu": "812",
+    "judul": "O TONDINGKU BETA MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458446193-350d857a.webp",
+    "updatedAt": "2026-06-03T03:47:26.406Z"
+  },
+  {
+    "nomorLagu": "813",
+    "judul": "PANGIDO HAMU MA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472901418-3a124e44.webp",
+    "updatedAt": "2026-06-03T07:48:21.578Z"
+  },
+  {
+    "nomorLagu": "814",
+    "judul": "SAI AJARI AU TUHANKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458420085-5131fff1.webp",
+    "updatedAt": "2026-06-03T03:47:00.252Z"
+  },
+  {
+    "nomorLagu": "815",
+    "judul": "ULI DO TINGKI NA HOHOM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458406472-7120b17a.webp",
+    "updatedAt": "2026-06-03T03:46:46.822Z"
+  },
+  {
+    "nomorLagu": "816",
+    "judul": "DUNG SALPU BORNGIN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458387206-3e6fbb4d.webp",
+    "updatedAt": "2026-06-03T03:46:27.363Z"
+  },
+  {
+    "nomorLagu": "817",
+    "judul": "LAMBOK SONDANG NI BULAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458366861-93aedd8a.webp",
+    "updatedAt": "2026-06-03T03:46:07.377Z"
+  },
+  {
+    "nomorLagu": "818",
+    "judul": "LONGANG AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458352778-df0444e9.webp",
+    "updatedAt": "2026-06-03T03:45:52.936Z"
+  },
+  {
+    "nomorLagu": "819",
+    "judul": "NAUNG BINSAR PANONDANG",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458336589-fa525e87.webp",
+    "updatedAt": "2026-06-03T03:45:36.795Z"
+  },
+  {
+    "nomorLagu": "820",
+    "judul": "PANGKE MA TINGKIM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780472973644-32bedefd.webp",
+    "updatedAt": "2026-06-03T07:49:33.798Z"
+  },
+  {
+    "nomorLagu": "821",
+    "judul": "RAP MA HITA ALE TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473056097-5e08910e.webp",
+    "updatedAt": "2026-06-03T07:50:56.221Z"
+  },
+  {
+    "nomorLagu": "822",
+    "judul": "SADARION",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458207858-049c230d.webp",
+    "updatedAt": "2026-06-03T03:43:28.025Z"
+  },
+  {
+    "nomorLagu": "823",
+    "judul": "SALPU ARI BORNGIN RO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458190249-574254f2.webp",
+    "updatedAt": "2026-06-03T03:43:10.415Z"
+  },
+  {
+    "nomorLagu": "824",
+    "judul": "TUHAN DONGANI HAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458153248-61491cf4.webp",
+    "updatedAt": "2026-06-03T03:42:33.424Z"
+  },
+  {
+    "nomorLagu": "825",
+    "judul": "BUKU NA BADIA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457980401-d785fcf6.webp",
+    "updatedAt": "2026-06-03T03:39:40.610Z"
+  },
+  {
+    "nomorLagu": "826",
+    "judul": "GOHI AU TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780458129397-41399144.webp",
+    "updatedAt": "2026-07-31T13:24:01.685Z"
+  },
+  {
+    "nomorLagu": "827",
+    "judul": "MARBUNGARAN HATA I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457944825-43f6438b.webp",
+    "updatedAt": "2026-06-03T03:39:05.019Z"
+  },
+  {
+    "nomorLagu": "828",
+    "judul": "PANGKULINGI AHU ALE TUHANHI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457922204-50787ace.webp",
+    "updatedAt": "2026-06-03T03:38:42.369Z"
+  },
+  {
+    "nomorLagu": "829",
+    "judul": "PATIK NA IMBARU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457864042-95c3e2e5.webp",
+    "updatedAt": "2026-06-03T03:37:44.210Z"
+  },
+  {
+    "nomorLagu": "830",
+    "judul": "SAI PAHOHOM MA ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457773879-58e209bc.webp",
+    "updatedAt": "2026-06-03T03:36:14.070Z"
+  },
+  {
+    "nomorLagu": "831",
+    "judul": "TUNG JOTJOT AU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457720685-439d6429.webp",
+    "updatedAt": "2026-06-03T03:35:20.872Z"
+  },
+  {
+    "nomorLagu": "832",
+    "judul": "PINTU NA SASADA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457686450-88b7533c.webp",
+    "updatedAt": "2026-06-03T03:34:46.653Z"
+  },
+  {
+    "nomorLagu": "833",
+    "judul": "DI NA MASIPAIDAAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457667260-dcb80fd9.webp",
+    "updatedAt": "2026-06-03T03:34:27.450Z"
+  },
+  {
+    "nomorLagu": "834",
+    "judul": "NA MASIHOL DO ROHANGKU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457647285-2c060db1.webp",
+    "updatedAt": "2026-06-03T03:34:07.512Z"
+  },
+  {
+    "nomorLagu": "835",
+    "judul": "NUNGA LAO, NUNGA LAO",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457605775-2c060db1.webp",
+    "updatedAt": "2026-06-03T03:33:25.981Z"
+  },
+  {
+    "nomorLagu": "836",
+    "judul": "NUNGA LOJA AU O TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457579042-7844d0ad.webp",
+    "updatedAt": "2026-06-03T03:32:59.221Z"
+  },
+  {
+    "nomorLagu": "837",
+    "judul": "SADA HUTA NA MANSAI ULI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457557266-7ddea0b6.webp",
+    "updatedAt": "2026-06-03T03:32:37.431Z"
+  },
+  {
+    "nomorLagu": "838",
+    "judul": "UNANG SUNGKUN BE TU AHU",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457517314-816648ab.webp",
+    "updatedAt": "2026-06-03T03:31:57.481Z"
+  },
+  {
+    "nomorLagu": "839",
+    "judul": "ULI NI TINGKI I",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457497791-37af26a9.webp",
+    "updatedAt": "2026-06-03T03:31:37.955Z"
+  },
+  {
+    "nomorLagu": "840",
+    "judul": "ALE AMANAMI",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457245902-78bb9ee0.webp",
+    "updatedAt": "2026-06-03T03:27:26.120Z"
+  },
+  {
+    "nomorLagu": "841",
+    "judul": "AI HO DO NAMPUNA HARAJAON",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457182119-fd9cb83c.webp",
+    "updatedAt": "2026-06-03T03:26:22.312Z"
+  },
+  {
+    "nomorLagu": "842",
+    "judul": "AMEN (2X)",
+    "notasiUrl": null,
+    "updatedAt": "2026-05-11T10:13:28.800Z"
+  },
+  {
+    "nomorLagu": "843",
+    "judul": "AMEN (2X)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780457151295-537e2d33.webp",
+    "updatedAt": "2026-06-03T03:25:51.537Z"
+  },
+  {
+    "nomorLagu": "844",
+    "judul": "AMEN (3X)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780473452275-730f633a.webp",
+    "updatedAt": "2026-06-03T07:57:32.421Z"
+  },
+  {
+    "nomorLagu": "845",
+    "judul": "AMEN (3X) HKBP",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456668541-89f47481.webp",
+    "updatedAt": "2026-06-03T03:17:48.812Z"
+  },
+  {
+    "nomorLagu": "846",
+    "judul": "AMEN (4X)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456609209-6d02fef6.webp",
+    "updatedAt": "2026-06-03T03:16:49.405Z"
+  },
+  {
+    "nomorLagu": "847",
+    "judul": "DEBATA AMANTA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456569013-862f59a7.webp",
+    "updatedAt": "2026-06-03T03:16:09.240Z"
+  },
+  {
+    "nomorLagu": "848",
+    "judul": "DISON ADONG HUBOAN TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456512703-f16d7df3.webp",
+    "updatedAt": "2026-06-03T03:15:12.874Z"
+  },
+  {
+    "nomorLagu": "849",
+    "judul": "DOK MAULIATE",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456449856-c2cae149.webp",
+    "updatedAt": "2026-06-12T03:55:34.664Z"
+  },
+  {
+    "nomorLagu": "850",
+    "judul": "ENDEHON MA HALELUYA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456371878-6567d563.webp",
+    "updatedAt": "2026-06-03T03:12:52.039Z"
+  },
+  {
+    "nomorLagu": "851",
+    "judul": "HALELUYA (3X)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456348016-c9753a39.webp",
+    "updatedAt": "2026-06-03T03:12:28.205Z"
+  },
+  {
+    "nomorLagu": "852",
+    "judul": "HALELUYA (3X) HKBP",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456332176-7ce3c30a.webp",
+    "updatedAt": "2026-06-03T03:12:12.592Z"
+  },
+  {
+    "nomorLagu": "853",
+    "judul": "HALELUYA (12X)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456280645-4aeb8dca.webp",
+    "updatedAt": "2026-06-03T03:11:20.900Z"
+  },
+  {
+    "nomorLagu": "854",
+    "judul": "HALELUYA PUJI TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456225435-83cbba9d.webp",
+    "updatedAt": "2026-06-03T03:10:25.627Z"
+  },
+  {
+    "nomorLagu": "855",
+    "judul": "HUBOAN PELEAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456198137-e6e97374.webp",
+    "updatedAt": "2026-06-03T03:09:58.326Z"
+  },
+  {
+    "nomorLagu": "856",
+    "judul": "HUPASAHAT HUSOMBAHON PELEAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456177980-9063b6c9.webp",
+    "updatedAt": "2026-06-03T03:09:38.152Z"
+  },
+  {
+    "nomorLagu": "857",
+    "judul": "HUSOMBA HO TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456148569-4cc51bf1.webp",
+    "updatedAt": "2026-06-03T03:09:08.774Z"
+  },
+  {
+    "nomorLagu": "858",
+    "judul": "JESUS KRISTUS",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456103251-98d39ae3.webp",
+    "updatedAt": "2026-06-03T03:08:23.525Z"
+  },
+  {
+    "nomorLagu": "859",
+    "judul": "MAULIATE MA TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780456018231-bd304533.webp",
+    "updatedAt": "2026-06-03T03:06:58.412Z"
+  },
+  {
+    "nomorLagu": "860",
+    "judul": "MAULIATE, PUJI TUHAN",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780455911840-b5c5a85e.webp",
+    "updatedAt": "2026-06-03T03:05:12.003Z"
+  },
+  {
+    "nomorLagu": "861",
+    "judul": "TUHAN ASI ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780455879470-eabcb1a3.webp",
+    "updatedAt": "2026-06-03T03:04:39.614Z"
+  },
+  {
+    "nomorLagu": "862",
+    "judul": "TUHAN JESUS KRISTUS ASI MA ROHAM",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780455845540-ce818653.webp",
+    "updatedAt": "2026-06-03T03:04:05.712Z"
+  },
+  {
+    "nomorLagu": "863",
+    "judul": "SANGAP DI DEBATA",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780455708643-dd363dbb.webp",
+    "updatedAt": "2026-06-03T03:01:48.839Z"
+  },
+  {
+    "nomorLagu": "864",
+    "judul": "OIKUMENE (ENDE UEM*)",
+    "notasiUrl": "https://api.hkbp.or.id/api/v1/media/notasi/be/1780389659706-d6f73e13.webp",
+    "updatedAt": "2026-06-02T08:41:00.052Z"
+  }
+]

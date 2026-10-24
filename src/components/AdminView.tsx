@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { PdfJsViewer } from './PdfJsViewer';
 import * as XLSX from 'xlsx';
 import { fetchDbFromServer, saveDbKey } from '../services/dbClient';
 import {
@@ -54,10 +53,14 @@ import {
   Loader2,
   AlertTriangle,
   Eye,
-  EyeOff
+  EyeOff,
+  Music
 } from 'lucide-react';
-import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, TransaksiTipe, LiturgiSection, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, AdminCredentials, TentangGerejaItem, WeeklyAttendanceTrend } from '../types';
+import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, TransaksiTipe, LiturgiSection, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, AdminCredentials, TentangGerejaItem, WeeklyAttendanceTrend, PartangianganMode } from '../types';
 import { INITIAL_ATTENDANCE_TRENDS } from '../data/mockData';
+import { BukuSong, INITIAL_BUKU_NYANYIAN_DB, parseSongFromLabel, findSongAndFormatLyrics, parseVerseRange, normalizeSongImport, fetchOfficialSongFromHkbp, BUKU_ENDE_CATALOG, BUKU_NYANYIAN_CATALOG } from '../data/bukuNyanyianData';
+import { fetchSongFromApi, fetchBatchFromApi } from '../services/bukuEndeService';
+import { fetchAndFormatScriptureFromLabel, parseAlkitabReference, ALKITAB_BOOKS_CATALOG, fetchDualAlkitabChapter } from '../services/alkitabService';
 
 interface AdminViewProps {
   liturgiMinggu: Liturgi[];
@@ -93,9 +96,11 @@ interface AdminViewProps {
   jadwalIbadah: JadwalIbadah;
   tentangGerejaList: TentangGerejaItem[];
   parhaladoList: ParhaladoMember[];
+  partangianganMode?: PartangianganMode;
   onUpdateJadwalIbadah: (data: JadwalIbadah) => void;
   onUpdateTentangGerejaList: (data: TentangGerejaItem[]) => void;
   onUpdateParhaladoList: (data: ParhaladoMember[]) => void;
+  onUpdatePartangianganMode?: (mode: PartangianganMode) => void;
   onUpdateAttendanceTrends?: (data: WeeklyAttendanceTrend[]) => void;
 }
 
@@ -131,13 +136,29 @@ export default function AdminView({
   jadwalIbadah,
   tentangGerejaList,
   parhaladoList,
+  partangianganMode = 'normal',
   onUpdateJadwalIbadah,
   onUpdateTentangGerejaList,
   onUpdateParhaladoList,
+  onUpdatePartangianganMode,
   onUpdateAttendanceTrends
 }: AdminViewProps) {
-  // Sidebar Sub-navigation for Desktop Admin Panels
-  const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'liturgi' | 'petugas' | 'warta' | 'keuangan' | 'jemaat' | 'arsip_pdf' | 'jadwal' | 'sejarah' | 'parhalado' | 'database_akun'>('dashboard');
+  // Sidebar Sub-navigation for Desktop Admin Panels with refresh persistence
+  const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'liturgi' | 'petugas' | 'warta' | 'keuangan' | 'jemaat' | 'arsip_pdf' | 'jadwal' | 'sejarah' | 'parhalado' | 'database_akun' | 'buku_nyanyian'>(() => {
+    const urlTab = new URLSearchParams(window.location.search).get('admin_tab');
+    const valid = ['dashboard', 'liturgi', 'petugas', 'warta', 'keuangan', 'jemaat', 'arsip_pdf', 'jadwal', 'sejarah', 'parhalado', 'database_akun', 'buku_nyanyian'];
+    if (urlTab && valid.includes(urlTab)) return urlTab as any;
+    const local = localStorage.getItem('hkbp_admin_subtab');
+    if (local && valid.includes(local)) return local as any;
+    return 'dashboard';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('hkbp_admin_subtab', activeSubTab);
+    const url = new URL(window.location.href);
+    url.searchParams.set('admin_tab', activeSubTab);
+    window.history.replaceState({}, '', url.toString());
+  }, [activeSubTab]);
 
   // Get logged admin info
   const [loggedAdmin, setLoggedAdmin] = useState<{ username: string; email: string; namaGereja?: string; status?: string } | null>(null);
@@ -238,6 +259,22 @@ export default function AdminView({
               ];
               saveDbKey('hkbp_arsip_pdf', defaultArsip).catch(e => console.error(e));
             }
+
+            const songMap = new Map<string, BukuSong>();
+            if (db.hkbp_buku_nyanyian_db && Array.isArray(db.hkbp_buku_nyanyian_db)) {
+              db.hkbp_buku_nyanyian_db.forEach((s: any) => {
+                if (s && s.id) songMap.set(s.id, s);
+              });
+            }
+            // Official songs from https://hkbp.or.id/buku-ende take precedence
+            INITIAL_BUKU_NYANYIAN_DB.forEach(s => songMap.set(s.id, s));
+            const mergedDb = Array.from(songMap.values()).sort((a, b) => {
+              if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+              return a.nomor - b.nomor;
+            });
+            setBukuNyanyianDb(mergedDb);
+            localStorage.setItem('hkbp_buku_nyanyian_db', JSON.stringify(mergedDb));
+            saveDbKey('hkbp_buku_nyanyian_db', mergedDb).catch(e => console.error(e));
           }
         })
         .catch(err => console.error('Failed to load registered admins/PDFs:', err));
@@ -683,8 +720,6 @@ export default function AdminView({
   const [archiveCategoryFilter, setArchiveCategoryFilter] = useState<string>('all');
   const [isAddingArsip, setIsAddingArsip] = useState(false);
   
-  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
-  const [previewPdfTitle, setPreviewPdfTitle] = useState('');
 
   // Safe Confirm Dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -716,6 +751,175 @@ export default function AdminView({
   const saveArsipPdfs = (data: any[]) => {
     setArsipPdfs(data);
     saveDbKey('hkbp_arsip_pdf', data).catch(err => console.error('Failed to sync arsip PDF:', err));
+  };
+
+  // ----------------------------------------------------
+  // STATE FOR DATABASE BUKU NYANYIAN (BE & BN)
+  // ----------------------------------------------------
+  const [bukuNyanyianDb, setBukuNyanyianDb] = useState<BukuSong[]>(() => {
+    const local = localStorage.getItem('hkbp_buku_nyanyian_db');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const map = new Map<string, BukuSong>();
+          parsed.forEach((s: any) => {
+            if (s && s.id) map.set(s.id, s);
+          });
+          // Official songs from https://hkbp.or.id/buku-ende take precedence
+          INITIAL_BUKU_NYANYIAN_DB.forEach(s => map.set(s.id, s));
+          return Array.from(map.values()).sort((a, b) => {
+            if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+            return a.nomor - b.nomor;
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return INITIAL_BUKU_NYANYIAN_DB;
+  });
+
+  const saveBukuNyanyianDb = (data: BukuSong[]) => {
+    setBukuNyanyianDb(data);
+    localStorage.setItem('hkbp_buku_nyanyian_db', JSON.stringify(data));
+    saveDbKey('hkbp_buku_nyanyian_db', data).catch(err => console.error('Failed to sync Buku Nyanyian:', err));
+  };
+
+  // Helper Modal: Quick Picker for Step Row
+  const [songPickerStepIndex, setSongPickerStepIndex] = useState<number | null>(null);
+  const [songPickerKategori, setSongPickerKategori] = useState<'BE' | 'BN' | 'KJ'>('BE');
+  const [songPickerNomor, setSongPickerNomor] = useState<string>('10');
+  const [songPickerAyat, setSongPickerAyat] = useState<string>('1-2');
+
+  // Modal: Add New Song to Catalog
+  const [isAddSongModalOpen, setIsAddSongModalOpen] = useState(false);
+  const [newSongKategori, setNewSongKategori] = useState<'BE' | 'BN' | 'KJ'>('BE');
+  const [newSongNomor, setNewSongNomor] = useState<string>('');
+  const [newSongJudul, setNewSongJudul] = useState<string>('');
+  const [newSongRawLyrics, setNewSongRawLyrics] = useState<string>('');
+
+  // Subtab Catalog Search & Filter
+  const [songCatalogSearch, setSongCatalogSearch] = useState<string>('');
+  const [songCatalogFilter, setSongCatalogFilter] = useState<'ALL' | 'BE' | 'BN' | 'KJ'>('ALL');
+  const [expandedSongId, setExpandedSongId] = useState<string | null>(null);
+  const [testSongVerseRange, setTestSongVerseRange] = useState<{[key: string]: string}>({});
+
+  // Modal: Import / Provide Song Database
+  const [isImportDbModalOpen, setIsImportDbModalOpen] = useState(false);
+  const [importDbJsonText, setImportDbJsonText] = useState('');
+  const [importDbMode, setImportDbMode] = useState<'merge' | 'replace'>('merge');
+
+  // Modal: Sync from Portal Resmi HKBP (Buku Ende, Buku Nyanyian & Kidung Jemaat)
+  const [isSyncApiModalOpen, setIsSyncApiModalOpen] = useState(false);
+  const [syncBook, setSyncBook] = useState<'BE' | 'BN' | 'KJ'>('BE');
+  const [syncStart, setSyncStart] = useState('1');
+  const [syncEnd, setSyncEnd] = useState('50');
+  const [isSyncingApi, setIsSyncingApi] = useState(false);
+  const [syncProgress, setSyncProgress] = useState<string>('');
+
+  // Modal: Scripture Picker ("Pilih Kitab & Ayat Alkitab")
+  const [scripturePickerTarget, setScripturePickerTarget] = useState<{
+    type: 'epistel' | 'khotbah' | 'step';
+    index?: number;
+  } | null>(null);
+  const [pickerBookId, setPickerBookId] = useState<string>('40'); // default Matius / Mateus
+  const [pickerChapter, setPickerChapter] = useState<number>(1);
+  const [pickerVerseRange, setPickerVerseRange] = useState<string>('1-5');
+  const [pickerLangMode, setPickerLangMode] = useState<'indo' | 'batak'>('indo');
+  const [pickerPreviewText, setPickerPreviewText] = useState<string>('');
+  const [isFetchingPickerPreview, setIsFetchingPickerPreview] = useState<boolean>(false);
+
+  const handleUpdateScripturePickerPreview = async (
+    bId: string,
+    chap: number,
+    vRange: string,
+    langMode: 'indo' | 'batak' = pickerLangMode
+  ) => {
+    const selectedBook = ALKITAB_BOOKS_CATALOG.find(b => b.id === bId) || ALKITAB_BOOKS_CATALOG[39];
+    setIsFetchingPickerPreview(true);
+    const langLabel = langMode === 'indo' ? 'Bahasa Indonesia' : 'Bahasa Batak';
+    setPickerPreviewText(`Mengambil teks Alkitab (${langLabel})...`);
+    
+    try {
+      const labelQuery = `${selectedBook.indonesia} ${chap}:${vRange}`;
+      const res = await fetchAndFormatScriptureFromLabel(labelQuery, langMode);
+      if (res.found && res.formattedText) {
+        setPickerPreviewText(res.formattedText);
+      } else {
+        const dualVerses = await fetchDualAlkitabChapter(selectedBook, chap);
+        if (dualVerses.length > 0) {
+          const indoLines = dualVerses.map(v => `${v.verse}. ${v.textIndo}`).join('\n');
+          const batakLines = dualVerses.map(v => `${v.verse}. ${v.textBatak}`).join('\n');
+          setPickerPreviewText(langMode === 'batak' ? batakLines : indoLines);
+        } else {
+          setPickerPreviewText('⚠️ Tidak ditemukan ayat Alkitab untuk pasal ini.');
+        }
+      }
+    } catch (err) {
+      setPickerPreviewText('⚠️ Terjadi kesalahan saat mengambil ayat Alkitab.');
+    } finally {
+      setIsFetchingPickerPreview(false);
+    }
+  };
+
+  const handleApplyScriptureFromPicker = () => {
+    if (!scripturePickerTarget) return;
+
+    const selectedBook = ALKITAB_BOOKS_CATALOG.find(b => b.id === pickerBookId) || ALKITAB_BOOKS_CATALOG[39];
+    const referenceLabel = pickerLangMode === 'batak'
+      ? `${selectedBook.batak} ${pickerChapter}:${pickerVerseRange}`
+      : `${selectedBook.indonesia} ${pickerChapter}:${pickerVerseRange}`;
+
+    if (scripturePickerTarget.type === 'epistel') {
+      setLitRef(referenceLabel);
+      const stepIdx = litSteps.findIndex(s => s.label.toLowerCase().includes('epistel'));
+      if (stepIdx !== -1) {
+        const updated = [...litSteps];
+        updated[stepIdx] = { ...updated[stepIdx], isi: pickerPreviewText };
+        setLitSteps(updated);
+      } else {
+        setLitSteps(prev => [
+          ...prev,
+          { id: `step-epistel-${Date.now()}`, label: `Epistel: ${referenceLabel}`, isi: pickerPreviewText, pembaca: 'Parhalado' }
+        ]);
+      }
+      setSavedSuccessMessage(`✓ Epistel: ${referenceLabel}`);
+      setTimeout(() => setSavedSuccessMessage(''), 3000);
+    } else if (scripturePickerTarget.type === 'khotbah') {
+      setLitBacaan(referenceLabel);
+      const stepIdx = litSteps.findIndex(s => s.label.toLowerCase().includes('khotbah') || s.label.toLowerCase().includes('jamita'));
+      if (stepIdx !== -1) {
+        const updated = [...litSteps];
+        updated[stepIdx] = { ...updated[stepIdx], isi: pickerPreviewText };
+        setLitSteps(updated);
+      } else {
+        setLitSteps(prev => [
+          ...prev,
+          { id: `step-khotbah-${Date.now()}`, label: `Khotbah: ${referenceLabel}`, isi: pickerPreviewText, pembaca: 'Pendeta' }
+        ]);
+      }
+      setSavedSuccessMessage(`✓ Khotbah: ${referenceLabel}`);
+      setTimeout(() => setSavedSuccessMessage(''), 3000);
+    } else if (scripturePickerTarget.type === 'step' && scripturePickerTarget.index !== undefined) {
+      const idx = scripturePickerTarget.index;
+      const updated = [...litSteps];
+      const existingLabel = updated[idx]?.label || '';
+      const prefixMatch = existingLabel.match(/^(\d+[\.\s]*)?([^:]+[\:]\s*)?/);
+      let newLabel = referenceLabel;
+      if (prefixMatch && prefixMatch[0] && prefixMatch[0].trim().length > 0) {
+        const prefix = prefixMatch[0].trim();
+        if (prefix.match(/^\d+[\.\s]*/)) {
+          newLabel = `${prefix} ${referenceLabel}`;
+        }
+      }
+      updated[idx] = { ...updated[idx], label: newLabel, isi: pickerPreviewText };
+      setLitSteps(updated);
+      setSavedSuccessMessage(`✓ Baris ${idx + 1} diisi: ${referenceLabel}`);
+      setTimeout(() => setSavedSuccessMessage(''), 3000);
+    }
+
+    setScripturePickerTarget(null);
   };
 
   // ----------------------------------------------------
@@ -780,13 +984,24 @@ export default function AdminView({
     setTempSteps(updated);
   };
 
-  const handleCellChange = (rowIndex: number, colKey: 'shift1' | 'shift2' | 'sekolahMinggu', value: string) => {
+  const handleCellChange = (rowIndex: number, colKey: 'tugas' | 'shift1' | 'shift2' | 'sekolahMinggu', value: string) => {
     const updated = [...tempPetugasMinggu];
     updated[rowIndex] = {
       ...updated[rowIndex],
       [colKey]: value
     };
     setTempPetugasMinggu(updated);
+  };
+
+  const handleAddPetugasMingguRow = () => {
+    setTempPetugasMinggu(prev => [
+      ...prev,
+      { tugas: 'Tugas Baru', shift1: '', shift2: '', sekolahMinggu: '' }
+    ]);
+  };
+
+  const handleDeletePetugasMingguRow = (index: number) => {
+    setTempPetugasMinggu(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSavePetugasMinggu = () => {
@@ -823,6 +1038,17 @@ export default function AdminView({
       [field]: (field === 'hari' || field === 'lunggu') ? value : (Number(value) || 0)
     };
     setTempPartangianganAttendance(updated);
+  };
+
+  const handleAddPartangianganAttendanceRow = () => {
+    setTempPartangianganAttendance(prev => [
+      ...prev,
+      { hari: 'Selasa', lunggu: 'Lunggu Baru', ama: 0, ina: 0, sm: 0, rena: 0, parhalado: 0 }
+    ]);
+  };
+
+  const handleDeletePartangianganAttendanceRow = (index: number) => {
+    setTempPartangianganAttendance(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSavePartangianganAttendance = () => {
@@ -1007,6 +1233,13 @@ export default function AdminView({
     setLitUploadedPdfSize(null);
   };
 
+  const handleApplyPartangianganToMain = (lit: Liturgi) => {
+    const filtered = liturgiPartangiangan.filter(item => item.id !== lit.id);
+    const updated = [lit, ...filtered];
+    onUpdateLiturgiPartangiangan(updated);
+    showToast(`✓ Acara "${lit.judul}" sekarang aktif di Halaman Utama!`);
+  };
+
   const handleSaveLiturgy = () => {
     const list = litType === 'minggu' ? [...liturgiMinggu] : [...liturgiPartangiangan];
     const newLiturgy: Liturgi = {
@@ -1017,23 +1250,26 @@ export default function AdminView({
       ayatReferensi: litRef || undefined,
       ayatBacaan: litBacaan || undefined,
       teksLiturgi: litSteps,
-      isPdfMode: litPdfMode,
-      pdfUrl: litPdfUrl || null,
-      uploadedPdfName: litUploadedPdfName,
-      uploadedPdfSize: litUploadedPdfSize
+      isPdfMode: false,
+      pdfUrl: null,
+      uploadedPdfName: null,
+      uploadedPdfSize: null
     };
 
+    let updatedList: Liturgi[];
     if (editingLiturgyId === 'new') {
-      list.push(newLiturgy);
+      // Prepend so newly created acara is at index 0 and immediately live on main page
+      updatedList = [newLiturgy, ...list];
     } else {
-      const idx = list.findIndex((l) => l.id === editingLiturgyId);
-      if (idx !== -1) list[idx] = newLiturgy;
+      const filtered = list.filter((l) => l.id !== editingLiturgyId);
+      // Promote edited acara to index 0 so changes are immediately live on main page
+      updatedList = [newLiturgy, ...filtered];
     }
 
     if (litType === 'minggu') {
-      onUpdateLiturgiMinggu(list);
+      onUpdateLiturgiMinggu(updatedList);
     } else {
-      onUpdateLiturgiPartangiangan(list);
+      onUpdateLiturgiPartangiangan(updatedList);
     }
 
     // Automatically store in arsipPdfs (Arsip Berkas)
@@ -1067,7 +1303,7 @@ export default function AdminView({
     saveArsipPdfs(updatedArsip);
 
     setEditingLiturgyId(null);
-    showToast('Liturgi Berhasil Disimpan & Diarsipkan!');
+    showToast('✓ Acara Berhasil Disimpan & Langsung Diterapkan ke Halaman Utama!');
   };
 
   const handleDeleteLiturgy = (id: string, tipe: 'minggu' | 'partangiangan') => {
@@ -1110,6 +1346,354 @@ export default function AdminView({
     const updated = [...litSteps];
     updated.splice(index, 1);
     setLitSteps(updated);
+  };
+
+  // ----------------------------------------------------
+  // AUTO-READ & AUTO-FILL NYANYIAN DARI PORTAL RESMI HKBP (https://hkbp.or.id/buku-ende)
+  // ----------------------------------------------------
+  const handleAutoFillSongLyrics = async (index: number, labelValue?: string, forceOverwrite = false) => {
+    const targetLabel = labelValue !== undefined ? labelValue : litSteps[index]?.label;
+    if (!targetLabel) return;
+
+    const parsed = parseSongFromLabel(targetLabel);
+    if (!parsed) return;
+
+    let result = findSongAndFormatLyrics(bukuNyanyianDb, parsed.kategori, parsed.nomor, parsed.ayatNumbers, parsed.verseString);
+
+    // If not found in local catalog or lyrics missing, fetch on demand from official HKBP API (https://hkbp.or.id)
+    if ((!result.found || !result.lyrics) && (parsed.kategori === 'BE' || parsed.kategori === 'BN' || parsed.kategori === 'KJ')) {
+      try {
+        const fetchedSong = await fetchOfficialSongFromHkbp(parsed.nomor, parsed.kategori);
+        if (fetchedSong && fetchedSong.ayatList && fetchedSong.ayatList.length > 0) {
+          const updatedDb = [...bukuNyanyianDb.filter(s => !(s.kategori === parsed.kategori && s.nomor === fetchedSong.nomor)), fetchedSong].sort((a, b) => {
+            if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+            return a.nomor - b.nomor;
+          });
+          saveBukuNyanyianDb(updatedDb);
+          result = findSongAndFormatLyrics(updatedDb, parsed.kategori, parsed.nomor, parsed.ayatNumbers, parsed.verseString);
+        }
+      } catch (e) {
+        console.error('Failed to auto-fetch from official HKBP portal:', e);
+      }
+    }
+
+    if (result.found && result.lyrics) {
+      const updated = [...litSteps];
+      const currentStep = updated[index];
+      const currentIsi = currentStep?.isi || '';
+
+      const isPlaceholder = !currentIsi.trim() || 
+        currentIsi.includes('Ketik isi liturgi') || 
+        currentIsi.includes('Lirik Lagu Ende...');
+
+      const isSongLyrics = /^\s*\d+\./.test(currentIsi) || currentIsi.includes('\n2.') || currentIsi.includes('\n3.');
+
+      if (forceOverwrite || isPlaceholder || isSongLyrics) {
+        updated[index] = {
+          ...currentStep,
+          isi: result.lyrics
+        };
+        setLitSteps(updated);
+        showToast(`✓ Lirik resmi ${result.formattedLabel} dari hkbp.or.id otomatis diisi!`);
+      }
+    }
+  };
+
+  // ----------------------------------------------------
+  // AUTO-READ & AUTO-FILL ALKITAB & BIBEL DARI CDN HKBP (https://hkbp.or.id/alkitab)
+  // ----------------------------------------------------
+  const handleAutoFillScriptureVerse = async (index: number, labelValue?: string, forceOverwrite = false) => {
+    const targetLabel = labelValue !== undefined ? labelValue : litSteps[index]?.label;
+    if (!targetLabel) return;
+
+    const res = await fetchAndFormatScriptureFromLabel(targetLabel);
+    if (res.found && res.formattedText) {
+      const updated = [...litSteps];
+      const currentStep = updated[index];
+      const currentIsi = currentStep?.isi || '';
+
+      const isPlaceholder = !currentIsi.trim() || 
+        currentIsi.includes('Ketik isi liturgi') || 
+        currentIsi.includes('Lirik Lagu Ende...');
+
+      const isScriptureText = currentIsi.includes('[Bahasa Indonesia') || currentIsi.includes('[Biblia Bahasa Batak');
+
+      if (forceOverwrite || isPlaceholder || isScriptureText) {
+        updated[index] = {
+          ...currentStep,
+          isi: res.formattedText
+        };
+        setLitSteps(updated);
+        showToast(`✓ Nats Alkitab ${res.referenceLabel} dari hkbp.or.id/alkitab otomatis diisi!`);
+      }
+    } else {
+      showToast(`⚠️ Nats Alkitab tidak ditemukan untuk "${targetLabel}"`);
+    }
+  };
+
+  const handleAutoDetectAndFillStep = async (index: number, labelValue?: string) => {
+    const targetLabel = labelValue !== undefined ? labelValue : litSteps[index]?.label;
+    if (!targetLabel) return;
+
+    // Check if it matches a song reference (BE/BN/KJ)
+    const parsedSong = parseSongFromLabel(targetLabel);
+    if (parsedSong) {
+      await handleAutoFillSongLyrics(index, targetLabel, true);
+      return;
+    }
+
+    // Check if it matches a Bible scripture reference
+    const parsedBible = parseAlkitabReference(targetLabel);
+    if (parsedBible) {
+      await handleAutoFillScriptureVerse(index, targetLabel, true);
+      return;
+    }
+  };
+
+  const handleApplySongFromPicker = async () => {
+    if (songPickerStepIndex === null) return;
+    const nomorNum = parseInt(songPickerNomor, 10);
+    if (isNaN(nomorNum) || nomorNum <= 0) {
+      alert('Mohon masukkan nomor lagu yang valid!');
+      return;
+    }
+
+    const ayatNumbers = parseVerseRange(songPickerAyat);
+    let result = findSongAndFormatLyrics(bukuNyanyianDb, songPickerKategori, nomorNum, ayatNumbers, songPickerAyat);
+
+    // Auto fetch from official HKBP API if not yet in catalog
+    if ((!result.found || !result.lyrics) && (songPickerKategori === 'BE' || songPickerKategori === 'BN' || songPickerKategori === 'KJ')) {
+      try {
+        const fetchedSong = await fetchOfficialSongFromHkbp(nomorNum, songPickerKategori);
+        if (fetchedSong && fetchedSong.ayatList && fetchedSong.ayatList.length > 0) {
+          const updatedDb = [...bukuNyanyianDb.filter(s => !(s.kategori === songPickerKategori && s.nomor === fetchedSong.nomor)), fetchedSong].sort((a, b) => {
+            if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+            return a.nomor - b.nomor;
+          });
+          saveBukuNyanyianDb(updatedDb);
+          result = findSongAndFormatLyrics(updatedDb, songPickerKategori, nomorNum, ayatNumbers, songPickerAyat);
+        }
+      } catch (e) {
+        console.error('Failed to fetch from official HKBP portal:', e);
+      }
+    }
+
+    const updated = [...litSteps];
+    const currentStep = updated[songPickerStepIndex];
+
+    let prefix = '';
+    const matchPrefix = currentStep?.label?.match(/^(\d+[\s.]+\w+[\s.]+)/i);
+    if (matchPrefix) {
+      prefix = matchPrefix[1];
+    } else {
+      prefix = `${String(songPickerStepIndex + 1).padStart(2, '0')}. Marende `;
+    }
+
+    let versePart = '';
+    if (songPickerAyat && songPickerAyat.trim()) {
+      versePart = ` : ${songPickerAyat.trim()}`;
+    } else if (ayatNumbers.length === 1) {
+      versePart = ` : ${ayatNumbers[0]}`;
+    } else if (ayatNumbers.length > 1) {
+      versePart = ` : ${ayatNumbers.join(' + ')}`;
+    }
+
+    const songTitle = result.found ? ` "${result.title}"` : '';
+    const newLabel = `${prefix}${songPickerKategori} No. ${nomorNum}${versePart}${songTitle}`;
+
+    updated[songPickerStepIndex] = {
+      ...currentStep,
+      label: newLabel,
+      isi: result.found ? result.lyrics : currentStep.isi
+    };
+
+    setLitSteps(updated);
+    setSongPickerStepIndex(null);
+
+    if (result.found) {
+      showToast(`Lirik ${songPickerKategori} No. ${nomorNum} berhasil diisi otomatis!`);
+    } else {
+      showToast(`Nomor ${songPickerKategori} ${nomorNum} belum ada di DB lokal. Anda dapat menambahkannya.`);
+    }
+  };
+
+  const handleSaveNewSongToDb = () => {
+    const nomorNum = parseInt(newSongNomor, 10);
+    if (isNaN(nomorNum) || nomorNum <= 0) {
+      alert('Mohon masukkan nomor lagu yang valid!');
+      return;
+    }
+    if (!newSongJudul.trim()) {
+      alert('Mohon masukkan judul lagu!');
+      return;
+    }
+    if (!newSongRawLyrics.trim()) {
+      alert('Mohon masukkan bait / lirik lagu!');
+      return;
+    }
+
+    const blocks = newSongRawLyrics.trim().split(/\n\s*\n/);
+    const ayatList: { ayat: number; teks: string }[] = [];
+
+    blocks.forEach((block, idx) => {
+      const trimmedBlock = block.trim();
+      const numMatch = trimmedBlock.match(/^(\d+)[\.\)]\s*([\s\S]+)/);
+      if (numMatch) {
+        ayatList.push({
+          ayat: parseInt(numMatch[1], 10),
+          teks: numMatch[2].trim()
+        });
+      } else {
+        ayatList.push({
+          ayat: idx + 1,
+          teks: trimmedBlock
+        });
+      }
+    });
+
+    const songId = `${newSongKategori}-${nomorNum}`;
+    const newSong: BukuSong = {
+      id: songId,
+      kategori: newSongKategori,
+      nomor: nomorNum,
+      judul: newSongJudul.trim(),
+      ayatList
+    };
+
+    const existingIdx = bukuNyanyianDb.findIndex(s => s.id === songId);
+    let updated: BukuSong[] = [];
+    if (existingIdx !== -1) {
+      updated = [...bukuNyanyianDb];
+      updated[existingIdx] = newSong;
+    } else {
+      updated = [...bukuNyanyianDb, newSong].sort((a, b) => {
+        if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+        return a.nomor - b.nomor;
+      });
+    }
+
+    saveBukuNyanyianDb(updated);
+    setIsAddSongModalOpen(false);
+    showToast(`Lagu ${newSongKategori} No. ${nomorNum} "${newSongJudul}" berhasil disimpan!`);
+
+    if (songPickerStepIndex !== null) {
+      const ayatNumbers = parseVerseRange(songPickerAyat);
+      const res = findSongAndFormatLyrics([newSong], newSongKategori, nomorNum, ayatNumbers);
+      const st = [...litSteps];
+      st[songPickerStepIndex] = {
+        ...st[songPickerStepIndex],
+        label: `${String(songPickerStepIndex + 1).padStart(2, '0')}. Marende ${newSongKategori} No. ${nomorNum} "${newSongJudul}"`,
+        isi: res.lyrics
+      };
+      setLitSteps(st);
+      setSongPickerStepIndex(null);
+    }
+  };
+
+  const handleDeleteSongFromDb = (songId: string) => {
+    triggerConfirm(
+      'Hapus Lagu dari Database',
+      'Apakah Anda yakin ingin menghapus lagu ini dari database buku nyanyian?',
+      () => {
+        const updated = bukuNyanyianDb.filter(s => s.id !== songId);
+        saveBukuNyanyianDb(updated);
+        showToast('Lagu berhasil dihapus dari database.');
+      }
+    );
+  };
+
+  const handleProcessImportDb = () => {
+    if (!importDbJsonText.trim()) {
+      alert('Mohon masukkan atau tempel format data JSON database lagu.');
+      return;
+    }
+    const songs = normalizeSongImport(importDbJsonText);
+    if (songs.length === 0) {
+      alert('Tidak ada lagu yang valid dikenali. Pastikan struktur data JSON berisi kategori, nomor, judul, dan ayatList atau lirik.');
+      return;
+    }
+
+    let finalDb: BukuSong[] = [];
+    if (importDbMode === 'replace') {
+      finalDb = songs;
+    } else {
+      const map = new Map<string, BukuSong>();
+      bukuNyanyianDb.forEach(s => map.set(s.id, s));
+      songs.forEach(s => map.set(s.id, s));
+      finalDb = Array.from(map.values()).sort((a, b) => {
+        if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+        return a.nomor - b.nomor;
+      });
+    }
+
+    saveBukuNyanyianDb(finalDb);
+    setIsImportDbModalOpen(false);
+    setImportDbJsonText('');
+    showToast(`Berhasil menyimpan ${songs.length} lagu ke database buku nyanyian!`);
+  };
+
+  const handleExportDb = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bukuNyanyianDb, null, 2));
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", `database_buku_nyanyian_hkbp_${new Date().toISOString().split('T')[0]}.json`);
+    dlAnchorElem.click();
+    showToast('Database buku nyanyian berhasil diekspor!');
+  };
+
+  const handleResetToDefaultDb = () => {
+    triggerConfirm(
+      'Reset ke Katalog Standar HKBP',
+      'Apakah Anda yakin ingin mengatur ulang database ke katalog bawaan awal?',
+      () => {
+        saveBukuNyanyianDb(INITIAL_BUKU_NYANYIAN_DB);
+        showToast('Database buku nyanyian diatur ulang ke standar HKBP.');
+      }
+    );
+  };
+
+  const handleSyncFromApi = async () => {
+    const s = parseInt(syncStart, 10);
+    const e = parseInt(syncEnd, 10);
+    const maxVal = syncBook === 'BN' ? 865 : syncBook === 'KJ' ? 478 : 867;
+    const bookTitle = syncBook === 'BN' ? 'Buku Nyanyian (BN)' : syncBook === 'KJ' ? 'Kidung Jemaat (KJ)' : 'Buku Ende (BE)';
+    const bookPath = syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende';
+
+    if (isNaN(s) || isNaN(e) || s <= 0 || e < s || e > maxVal) {
+      alert(`Mohon masukkan rentang nomor lagu yang valid antara 1 hingga ${maxVal}.`);
+      return;
+    }
+
+    setIsSyncingApi(true);
+    setSyncProgress(`Mengambil lagu ${bookTitle} No. ${s} sampai ${e} dari portal resmi HKBP (hkbp.or.id/${bookPath})...`);
+
+    try {
+      const fetchedSongs = await fetchBatchFromApi(s, e, syncBook);
+      if (fetchedSongs.length === 0) {
+        alert(`Gagal mengambil lagu dari portal resmi HKBP (hkbp.or.id/${bookPath}). Pastikan server terhubung ke internet.`);
+        setIsSyncingApi(false);
+        return;
+      }
+
+      // Merge with existing
+      const map = new Map<string, BukuSong>();
+      bukuNyanyianDb.forEach(song => map.set(song.id, song));
+      fetchedSongs.forEach(song => map.set(song.id, song));
+
+      const updated = Array.from(map.values()).sort((a, b) => {
+        if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+        return a.nomor - b.nomor;
+      });
+
+      saveBukuNyanyianDb(updated);
+      showToast(`✓ Berhasil menyinkronkan ${fetchedSongs.length} lagu ${syncBook} dari hkbp.or.id!`);
+      setIsSyncApiModalOpen(false);
+    } catch (err: any) {
+      alert(`Terjadi kesalahan saat sinkronisasi: ${err.message}`);
+    } finally {
+      setIsSyncingApi(false);
+      setSyncProgress('');
+    }
   };
 
   // ----------------------------------------------------
@@ -1992,6 +2576,7 @@ export default function AdminView({
               {activeSubTab === 'sejarah' && 'Manajemen Tentang Gereja'}
               {activeSubTab === 'parhalado' && 'Manajemen Daftar Parhalado Huria'}
               {activeSubTab === 'database_akun' && 'Sistem Manajemen & Database Akun Pengguna'}
+              {activeSubTab === 'buku_nyanyian' && 'Database Buku Nyanyian & Kidung HKBP'}
             </h1>
             <p className="text-xs text-slate-500 mt-1.5 font-medium">
               {activeSubTab === 'dashboard' && 'Pantau grafik perkembangan dan statistik tingkat kehadiran jemaat dalam kebaktian Minggu dan Partangiangan Sektor selama 4 minggu terakhir.'}
@@ -2005,6 +2590,7 @@ export default function AdminView({
               {activeSubTab === 'sejarah' && 'Kelola konten informasi, profil, visi & misi, serta unggah dokumentasi gambar tentang HKBP Hinalang Silalahi.'}
               {activeSubTab === 'parhalado' && 'Tambah, ubah, atau hapus susunan nama pelayan parhalado beserta nomor telepon/WA.'}
               {activeSubTab === 'database_akun' && 'Kelola database otentikasi akun jemaat (ruas) dan pengurus (parhalado).'}
+              {activeSubTab === 'buku_nyanyian' && 'Katalog lagu Buku Ende HKBP. Terintegrasi langsung dengan portal resmi https://hkbp.or.id/buku-ende untuk pengisian nomor, ayat, dan lirik asli otentik secara otomatis.'}
             </p>
           </div>
         </div>
@@ -2446,165 +3032,211 @@ export default function AdminView({
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">Epistel</label>
-                    <input
-                      type="text"
-                      value={litRef}
-                      onChange={(e) => setLitRef(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all"
-                      placeholder="Contoh: Mateus 5 : 13 - 16"
-                    />
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={litRef}
+                        onChange={(e) => setLitRef(e.target.value)}
+                        onBlur={async (e) => {
+                          const val = e.target.value;
+                          if (!val.trim()) return;
+                          const res = await fetchAndFormatScriptureFromLabel(val);
+                          if (res.found && res.formattedText) {
+                            const stepIdx = litSteps.findIndex(s => s.label.toLowerCase().includes('epistel'));
+                            if (stepIdx !== -1) {
+                              const updated = [...litSteps];
+                              updated[stepIdx] = { ...updated[stepIdx], isi: res.formattedText };
+                              setLitSteps(updated);
+                              showToast(`✓ Teks Epistel (${res.referenceLabel}) otomatis diisi ke baris acara!`);
+                            }
+                          }
+                        }}
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                        placeholder="Contoh: Mateus 5 : 13 - 16 atau Yohanes 3:16"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const parsed = parseAlkitabReference(litRef);
+                          const bId = parsed?.book?.id || '40';
+                          const chap = parsed?.chapter || 1;
+                          const vRange = parsed?.startVerse ? `${parsed.startVerse}${parsed.endVerse && parsed.endVerse > parsed.startVerse ? '-' + parsed.endVerse : ''}` : '1-5';
+
+                          setPickerBookId(bId);
+                          setPickerChapter(chap);
+                          setPickerVerseRange(vRange);
+                          setScripturePickerTarget({ type: 'epistel' });
+                          handleUpdateScripturePickerPreview(bId, chap, vRange);
+                        }}
+                        className="px-3 py-2.5 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1"
+                        title="Pilih Kitab, Pasal, dan Ayat Alkitab untuk Epistel"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-blue-200" />
+                        <span>📖 Pilih Kitab</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Khotbah</label>
-                    <input
-                      type="text"
-                      value={litBacaan}
-                      onChange={(e) => setLitBacaan(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all"
-                      placeholder="Contoh: Johanes 3 : 16"
-                    />
-                  </div>
-
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                    <span className="text-[10px] text-blue-700 font-extrabold uppercase tracking-wider block">File PDF Digital Kebaktian Minggu</span>
-                    <div className="space-y-2">
-                      {litUploadedPdfName ? (
-                        <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-2.5">
-                          <div className="flex items-center space-x-2">
-                            <FileText className="w-5 h-5 text-amber-600" />
-                            <div>
-                              <p className="text-xs font-bold text-slate-900 max-w-[200px] truncate">{litUploadedPdfName}</p>
-                              <p className="text-[10px] text-slate-500">{litUploadedPdfSize || 'Format PDF'}</p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setLitUploadedPdfName(null);
-                              setLitUploadedPdfSize(null);
-                              setLitPdfUrl('');
-                              setLitPdfMode(false);
-                            }}
-                            className="p-1 hover:bg-slate-200 text-red-600 hover:text-red-700 rounded cursor-pointer"
-                            title="Hapus File"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center border border-dashed border-slate-300 rounded-lg p-5 hover:border-blue-500/40 hover:bg-slate-100 transition">
-                          <Upload className="w-6 h-6 text-slate-400 mb-2" />
-                          <span className="text-xs font-bold text-slate-700">Unggah berkas PDF Tata Ibadah</span>
-                          <span className="text-[10px] text-slate-500 mt-1 mb-3">Format berkas .pdf (Opsional)</span>
-                          
-                          <button
-                            type="button"
-                            onClick={() => {
-                              document.getElementById('pdf-upload-input-minggu')?.click();
-                            }}
-                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer flex items-center space-x-1.5 animate-pulse"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            <span>Pilih Berkas PDF</span>
-                          </button>
-                          
-                          <input
-                            id="pdf-upload-input-minggu"
-                            type="file"
-                            accept=".pdf"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const name = file.name;
-                                const size = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
-                                const reader = new FileReader();
-                                reader.onload = (event) => {
-                                  if (event.target?.result) {
-                                    setLitUploadedPdfName(name);
-                                    setLitUploadedPdfSize(size);
-                                    setLitPdfUrl(event.target.result as string);
-                                    setLitPdfMode(true);
-                                  }
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Khotbah / Jamita</label>
                     <div className="flex items-center space-x-2">
                       <input
-                        type="checkbox"
-                        id="form-pdf-mode"
-                        checked={litPdfMode}
-                        onChange={(e) => setLitPdfMode(e.target.checked)}
-                        className="rounded bg-white border-slate-300 text-blue-600 focus:ring-0 w-3.5 h-3.5 cursor-pointer"
+                        type="text"
+                        value={litBacaan}
+                        onChange={(e) => setLitBacaan(e.target.value)}
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                        placeholder="Contoh: Johanes 3 : 16 atau 1 Musa 1:1-3"
                       />
-                      <label htmlFor="form-pdf-mode" className="text-slate-700 text-xs font-semibold cursor-pointer select-none">
-                        Tampilkan dalam Mode PDF langsung (Tanpa Teks)
-                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const parsed = parseAlkitabReference(litBacaan);
+                          const bId = parsed?.book?.id || '40';
+                          const chap = parsed?.chapter || 1;
+                          const vRange = parsed?.startVerse ? `${parsed.startVerse}${parsed.endVerse && parsed.endVerse > parsed.startVerse ? '-' + parsed.endVerse : ''}` : '1-5';
+
+                          setPickerBookId(bId);
+                          setPickerChapter(chap);
+                          setPickerVerseRange(vRange);
+                          setScripturePickerTarget({ type: 'khotbah' });
+                          handleUpdateScripturePickerPreview(bId, chap, vRange);
+                        }}
+                        className="px-3 py-2.5 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1"
+                        title="Pilih Kitab, Pasal, dan Ayat Alkitab untuk Khotbah"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-blue-200" />
+                        <span>📖 Pilih Kitab</span>
+                      </button>
                     </div>
                   </div>
-                </div>
+
+                  </div>
 
                 {/* STEPS LIST EDITING */}
                 <div className="space-y-4 pt-4 border-t border-slate-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">Susunan Acara Minggu</h4>
-                      <p className="text-[10px] text-slate-500 mt-0.5">liturgi, nyanyian, votum, epistel, khotbah, dll.</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Ketik judul acara/lagu/nats Alkitab di kolom, teks/lirik akan terisi otomatis!</p>
                     </div>
-                    <button
-                      onClick={addStepRow}
-                      className="px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Tambah Baris Acara</span>
-                    </button>
                   </div>
 
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                  <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2">
                     {litSteps.map((step, index) => (
-                      <div key={step.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2 relative">
+                      <div key={step.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
                         <div>
-                          <label className="block text-[10px] text-slate-500 font-semibold mb-0.5">Judul</label>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                              <span className="w-5 h-5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                                {index + 1}
+                              </span>
+                              <label className="text-[11px] text-slate-700 font-bold">Acara</label>
+                              
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const parsed = parseSongFromLabel(step.label);
+                                  setSongPickerStepIndex(index);
+                                  if (parsed) {
+                                    setSongPickerKategori(parsed.kategori);
+                                    setSongPickerNomor(String(parsed.nomor));
+                                    setSongPickerAyat(parsed.verseString || '1-2');
+                                  } else {
+                                    setSongPickerNomor('10');
+                                    setSongPickerAyat('1-2');
+                                  }
+                                }}
+                                className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[10px] font-bold flex items-center space-x-1 cursor-pointer transition"
+                                title="Pilih nomor & ayat lagu dari Buku Ende / Buku Nyanyian"
+                              >
+                                <Music className="w-3 h-3 text-blue-600" />
+                                <span>Pilih Lagu</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const parsed = parseAlkitabReference(step.label);
+                                  const bId = parsed?.book?.id || '40';
+                                  const chap = parsed?.chapter || 1;
+                                  const vRange = parsed?.startVerse ? `${parsed.startVerse}${parsed.endVerse && parsed.endVerse > parsed.startVerse ? '-' + parsed.endVerse : ''}` : '1-5';
+
+                                  setPickerBookId(bId);
+                                  setPickerChapter(chap);
+                                  setPickerVerseRange(vRange);
+                                  setScripturePickerTarget({ type: 'step', index });
+                                  handleUpdateScripturePickerPreview(bId, chap, vRange);
+                                }}
+                                className="px-2 py-1 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 rounded text-[10px] font-extrabold flex items-center space-x-1 cursor-pointer transition shadow-2xs"
+                                title="Pilih Kitab, Pasal, dan Ayat Alkitab"
+                              >
+                                <BookOpen className="w-3 h-3 text-blue-200" />
+                                <span>📖 Pilih Kitab</span>
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => deleteStepRow(index)}
+                              className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
+                              title="Hapus Baris Acara Ini"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                           <input
                             type="text"
                             value={step.label}
                             onChange={(e) => updateStepRow(index, 'label', e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 font-medium"
-                            placeholder="Contoh: 01. Marende BE No. 10..."
+                            onBlur={(e) => handleAutoDetectAndFillStep(index, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAutoDetectAndFillStep(index, (e.target as HTMLInputElement).value);
+                              }
+                            }}
+                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-blue-500"
+                            placeholder="Ketik lagu/nats (contoh: 'BE No. 10:1-2', 'Yohanes 3:16', '1 Musa 1:1-3', 'Psalmen 23:1-6')..."
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] text-slate-500 font-semibold mb-0.5">Isi Teks </label>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-[10px] text-slate-500 font-semibold">Isi Acara</label>
+                          </div>
                           <textarea
-                            rows={3}
+                            rows={Math.max(2, (step.isi || '').split('\n').length)}
                             value={step.isi}
                             onChange={(e) => updateStepRow(index, 'isi', e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono"
-                            placeholder="Ketik isi liturgi, doa repsonsif, atau lirik ayat lagu koor di sini..."
+                            onInput={(e) => {
+                              const target = e.target as HTMLTextAreaElement;
+                              target.style.height = 'auto';
+                              target.style.height = `${target.scrollHeight}px`;
+                            }}
+                            ref={(el) => {
+                              if (el) {
+                                el.style.height = 'auto';
+                                el.style.height = `${el.scrollHeight}px`;
+                              }
+                            }}
+                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono outline-none focus:border-blue-500 leading-relaxed overflow-hidden resize-none"
+                            placeholder="Isi lirik lagu atau ayat Alkitab (Bahasa Indonesia & Batak Toba) akan otomatis terisi saat memasukkan judul di atas..."
                           />
                         </div>
-
-                        <button
-                          onClick={() => deleteStepRow(index)}
-                          className="absolute top-1 right-2 p-1.5 text-slate-400 hover:text-red-600 rounded transition cursor-pointer"
-                          title="Hapus Baris Ini"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end space-x-3 pt-5 border-t border-slate-200">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={addStepRow}
+                    className="w-full sm:w-auto px-4 py-2.5 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Tambah Baris Acara</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       const mainSunday = liturgiMinggu[0] || { id: 'liturgi-minggu-1' };
@@ -2616,18 +3248,19 @@ export default function AdminView({
                         ayatReferensi: litRef || undefined,
                         ayatBacaan: litBacaan || undefined,
                         teksLiturgi: litSteps,
-                        isPdfMode: litPdfMode,
-                        pdfUrl: litPdfUrl || null,
-                        uploadedPdfName: litUploadedPdfName,
-                        uploadedPdfSize: litUploadedPdfSize
+                        isPdfMode: false,
+                        pdfUrl: null,
+                        uploadedPdfName: null,
+                        uploadedPdfSize: null
                       };
-                      onUpdateLiturgiMinggu([updatedSunday]);
-                      showToast('Tata Ibadah Minggu Berhasil Disimpan!');
+                      const rest = liturgiMinggu.length > 0 ? liturgiMinggu.slice(1) : [];
+                      onUpdateLiturgiMinggu([updatedSunday, ...rest]);
+                      showToast('✓ Acara Ibadah Minggu Berhasil Disimpan & Diterapkan ke Halaman Utama!');
                     }}
                     className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-xl transition flex items-center justify-center space-x-2 cursor-pointer shadow shadow-blue-500/20"
                   >
                     <Save className="w-4 h-4" />
-                    <span>Simpan Perubahan </span>
+                    <span>Simpan Perubahan</span>
                   </button>
                 </div>
               </div>
@@ -2636,33 +3269,54 @@ export default function AdminView({
               !editingLiturgyId ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {liturgiPartangiangan.map((lit) => (
+                    {liturgiPartangiangan.map((lit, pIdx) => (
                       <div key={lit.id} className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between hover:border-slate-300 hover:shadow-md transition shadow-sm font-sans">
                         <div>
                           <div className="flex items-center justify-between mb-3 text-sans">
-                            <span className="text-[9px] bg-blue-50 border border-blue-200 text-blue-700 font-extrabold px-2 py-0.5 rounded tracking-wide uppercase">
-                              Partangiangan
-                            </span>
+                            <div className="flex items-center space-x-1.5 flex-wrap gap-1">
+                              <span className="text-[9px] bg-blue-50 border border-blue-200 text-blue-700 font-extrabold px-2 py-0.5 rounded tracking-wide uppercase">
+                                Partangiangan
+                              </span>
+                              {pIdx === 0 && (
+                                <span className="text-[9px] bg-emerald-50 border border-emerald-300 text-emerald-800 font-extrabold px-2 py-0.5 rounded tracking-wide flex items-center space-x-1 shadow-2xs">
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                  <span>Aktif di Halaman Utama</span>
+                                </span>
+                              )}
+                            </div>
                             <span className="text-[10px] text-slate-500 font-mono font-medium">{lit.tanggal}</span>
                           </div>
                           <h4 className="text-sm font-bold text-slate-900 leading-tight">{lit.judul}</h4>
                         </div>
 
-                        <div className="flex items-center space-x-2 mt-5 pt-4 border-t border-slate-200">
-                          <button
-                            onClick={() => startEditLiturgy(lit, 'partangiangan')}
-                            className="flex-1 bg-gradient-to-r from-blue-700 to-blue-600 hover:brightness-105 text-white font-bold text-xs py-2 px-3 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-sm shadow-blue-500/10"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                            <span>Ubah Acara</span>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteLiturgy(lit.id, 'partangiangan')}
-                            className="p-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg transition shrink-0 cursor-pointer"
-                            title="Hapus Liturgi"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                        <div className="space-y-2 mt-5 pt-4 border-t border-slate-200">
+                          {pIdx > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => handleApplyPartangianganToMain(lit)}
+                              className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-black text-xs py-1.5 px-3 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer"
+                              title="Terapkan acara ini agar langsung tampil di Halaman Utama"
+                            >
+                              <Check className="w-3.5 h-3.5 text-emerald-700" />
+                              <span>Terapkan ke Halaman Utama</span>
+                            </button>
+                          )}
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => startEditLiturgy(lit, 'partangiangan')}
+                              className="flex-1 bg-gradient-to-r from-blue-700 to-blue-600 hover:brightness-105 text-white font-bold text-xs py-2 px-3 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-sm shadow-blue-500/10"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                              <span>Ubah Acara</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteLiturgy(lit.id, 'partangiangan')}
+                              className="p-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg transition shrink-0 cursor-pointer"
+                              title="Hapus Liturgi"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -2717,174 +3371,209 @@ export default function AdminView({
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1.5">Epistel</label>
-                      <input
-                        type="text"
-                        value={litRef}
-                        onChange={(e) => setLitRef(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all"
-                        placeholder="Contoh: Mateus 5 : 13 - 16"
-                      />
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={litRef}
+                          onChange={(e) => setLitRef(e.target.value)}
+                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                          placeholder="Contoh: Mateus 5 : 13 - 16"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const parsed = parseAlkitabReference(litRef);
+                            const bId = parsed?.book?.id || '40';
+                            const chap = parsed?.chapter || 1;
+                            const vRange = parsed?.startVerse ? `${parsed.startVerse}${parsed.endVerse && parsed.endVerse > parsed.startVerse ? '-' + parsed.endVerse : ''}` : '1-5';
+
+                            setPickerBookId(bId);
+                            setPickerChapter(chap);
+                            setPickerVerseRange(vRange);
+                            setScripturePickerTarget({ type: 'epistel' });
+                            handleUpdateScripturePickerPreview(bId, chap, vRange);
+                          }}
+                          className="px-3 py-2.5 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1"
+                          title="Pilih Kitab, Pasal, dan Ayat Alkitab untuk Epistel"
+                        >
+                          <BookOpen className="w-3.5 h-3.5 text-blue-200" />
+                          <span>📖 Pilih Kitab</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1.5">Khotbah</label>
-                      <input
-                        type="text"
-                        value={litBacaan}
-                        onChange={(e) => setLitBacaan(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all"
-                        placeholder="Contoh: Johanes 3 : 16"
-                      />
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={litBacaan}
+                          onChange={(e) => setLitBacaan(e.target.value)}
+                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                          placeholder="Contoh: Johanes 3 : 16"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const parsed = parseAlkitabReference(litBacaan);
+                            const bId = parsed?.book?.id || '40';
+                            const chap = parsed?.chapter || 1;
+                            const vRange = parsed?.startVerse ? `${parsed.startVerse}${parsed.endVerse && parsed.endVerse > parsed.startVerse ? '-' + parsed.endVerse : ''}` : '1-5';
+
+                            setPickerBookId(bId);
+                            setPickerChapter(chap);
+                            setPickerVerseRange(vRange);
+                            setScripturePickerTarget({ type: 'khotbah' });
+                            handleUpdateScripturePickerPreview(bId, chap, vRange);
+                          }}
+                          className="px-3 py-2.5 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1"
+                          title="Pilih Kitab, Pasal, dan Ayat Alkitab untuk Khotbah"
+                        >
+                          <BookOpen className="w-3.5 h-3.5 text-blue-200" />
+                          <span>📖 Pilih Kitab</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* PDF UPLOAD BLOCK FOR PARTANGIANGAN WITH EXPLICIT BUTTON */}
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-                    <span className="text-[10px] text-blue-700 font-extrabold uppercase tracking-wider block">File PDF Digital Kebaktian Partangiangan</span>
-                    <div className="space-y-2">
-                      {litUploadedPdfName ? (
-                        <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-2.5">
-                          <div className="flex items-center space-x-2">
-                            <FileText className="w-5 h-5 text-amber-600" />
-                            <div>
-                              <p className="text-xs font-bold text-slate-900 max-w-[200px] truncate">{litUploadedPdfName}</p>
-                              <p className="text-[10px] text-slate-500">{litUploadedPdfSize || 'Format PDF'}</p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setLitUploadedPdfName(null);
-                              setLitUploadedPdfSize(null);
-                              setLitPdfUrl('');
-                              setLitPdfMode(false);
-                            }}
-                            className="p-1 hover:bg-slate-200 text-red-600 hover:text-red-700 rounded cursor-pointer"
-                            title="Hapus File"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center border border-dashed border-slate-300 rounded-lg p-5 hover:border-blue-500/40 hover:bg-slate-100 transition">
-                          <Upload className="w-6 h-6 text-slate-400 mb-2" />
-                          <span className="text-xs font-bold text-slate-700">Unggah berkas PDF Tata Ibadah</span>
-                          <span className="text-[10px] text-slate-500 mt-1 mb-3">Format berkas .pdf (Opsional)</span>
-                          
-                          <button
-                            type="button"
-                            onClick={() => {
-                              document.getElementById('pdf-upload-input-partangiangan')?.click();
-                            }}
-                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors shadow-sm cursor-pointer flex items-center space-x-1.5 animate-pulse"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            <span>Pilih Berkas PDF</span>
-                          </button>
-                          
-                          <input
-                            id="pdf-upload-input-partangiangan"
-                            type="file"
-                            accept=".pdf"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const name = file.name;
-                                const size = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
-                                const reader = new FileReader();
-                                reader.onload = (event) => {
-                                  if (event.target?.result) {
-                                    setLitUploadedPdfName(name);
-                                    setLitUploadedPdfSize(size);
-                                    setLitPdfUrl(event.target.result as string);
-                                    setLitPdfMode(true);
-                                  }
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="form-pdf-mode-partangiangan"
-                        checked={litPdfMode}
-                        onChange={(e) => setLitPdfMode(e.target.checked)}
-                        className="rounded bg-white border-slate-300 text-blue-600 focus:ring-0 w-3.5 h-3.5 cursor-pointer"
-                      />
-                      <label htmlFor="form-pdf-mode-partangiangan" className="text-slate-700 text-xs font-semibold cursor-pointer select-none">
-                        Tampilkan dalam Mode PDF langsung (Tanpa Teks)
-                      </label>
-                    </div>
-                  </div>
 
                   {/* STEPS LIST EDITING */}
                   <div className="space-y-4 pt-4 border-t border-slate-200">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">Susunan Acara</h4>
-                      <button
-                        onClick={addStepRow}
-                        className="px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Tambah Baris Acara</span>
-                      </button>
                     </div>
 
-                    <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                    <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2">
                       {litSteps.map((step, index) => (
-                        <div key={step.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2 relative">
+                        <div key={step.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
                           <div>
-                            <label className="block text-[10px] text-slate-500 font-semibold mb-0.5">Judul</label>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center space-x-2">
+                                <span className="w-5 h-5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                                  {index + 1}
+                                </span>
+                                <label className="text-[11px] text-slate-700 font-bold">Acara</label>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const parsed = parseSongFromLabel(step.label);
+                                    setSongPickerStepIndex(index);
+                                    if (parsed) {
+                                      setSongPickerKategori(parsed.kategori);
+                                      setSongPickerNomor(String(parsed.nomor));
+                                      setSongPickerAyat(parsed.verseString || '1-2');
+                                    } else {
+                                      setSongPickerNomor('10');
+                                      setSongPickerAyat('1-2');
+                                    }
+                                  }}
+                                  className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[10px] font-bold flex items-center space-x-1 cursor-pointer transition"
+                                  title="Pilih nomor & ayat lagu dari Buku Ende"
+                                >
+                                  <Music className="w-3 h-3 text-blue-600" />
+                                  <span>Pilih Lagu & Ayat</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const parsed = parseAlkitabReference(step.label);
+                                    const bId = parsed?.book?.id || '40';
+                                    const chap = parsed?.chapter || 1;
+                                    const vRange = parsed?.startVerse ? `${parsed.startVerse}${parsed.endVerse && parsed.endVerse > parsed.startVerse ? '-' + parsed.endVerse : ''}` : '1-5';
+
+                                    setPickerBookId(bId);
+                                    setPickerChapter(chap);
+                                    setPickerVerseRange(vRange);
+                                    setScripturePickerTarget({ type: 'step', index });
+                                    handleUpdateScripturePickerPreview(bId, chap, vRange);
+                                  }}
+                                  className="px-2 py-1 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 rounded text-[10px] font-extrabold flex items-center space-x-1 cursor-pointer transition shadow-2xs"
+                                  title="Pilih Kitab, Pasal, dan Ayat Alkitab"
+                                >
+                                  <BookOpen className="w-3 h-3 text-blue-200" />
+                                  <span>📖 Pilih Kitab</span>
+                                </button>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => deleteStepRow(index)}
+                                className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
+                                title="Hapus Baris Acara Ini"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                             <input
                               type="text"
                               value={step.label}
                               onChange={(e) => updateStepRow(index, 'label', e.target.value)}
-                              className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 font-medium"
-                              placeholder="Contoh: 01. Marende BE No. 10..."
+                              onBlur={(e) => handleAutoFillSongLyrics(index, e.target.value, true)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleAutoFillSongLyrics(index, (e.target as HTMLInputElement).value, true);
+                                }
+                              }}
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-blue-500"
+                              placeholder="Contoh: 01. Marende BE No. 93 : 1+3 atau 1,2+5..."
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[10px] text-slate-500 font-semibold mb-0.5">Isi Teks</label>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="block text-[10px] text-slate-500 font-semibold">Isi Acara</label>
+                            </div>
                             <textarea
-                              rows={3}
+                              rows={Math.max(2, (step.isi || '').split('\n').length)}
                               value={step.isi}
                               onChange={(e) => updateStepRow(index, 'isi', e.target.value)}
-                              className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono"
+                              onInput={(e) => {
+                                const target = e.target as HTMLTextAreaElement;
+                                target.style.height = 'auto';
+                                target.style.height = `${target.scrollHeight}px`;
+                              }}
+                              ref={(el) => {
+                                if (el) {
+                                  el.style.height = 'auto';
+                                  el.style.height = `${el.scrollHeight}px`;
+                                }
+                              }}
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono outline-none focus:border-blue-500 leading-relaxed overflow-hidden resize-none"
+                              placeholder="Ketik isi liturgi, doa responsif, atau lirik ayat lagu di sini..."
                             />
                           </div>
-
-                          <button
-                            onClick={() => deleteStepRow(index)}
-                            className="absolute top-1 right-2 p-1.5 text-slate-400 hover:text-red-600 rounded transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end space-x-3 pt-5 border-t border-slate-200">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-slate-200">
                     <button
-                      onClick={() => setEditingLiturgyId(null)}
-                      className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-800 rounded-lg transition"
+                      type="button"
+                      onClick={addStepRow}
+                      className="w-full sm:w-auto px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer"
                     >
-                      Batal
+                      <Plus className="w-4 h-4" />
+                      <span>Tambah Baris Acara</span>
                     </button>
-                    <button
-                      onClick={handleSaveLiturgy}
-                      className="px-5 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-lg transition flex items-center space-x-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      <span>Simpan Perubahan</span>
-                    </button>
+
+                    <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">
+                      <button
+                        onClick={() => setEditingLiturgyId(null)}
+                        className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-800 rounded-lg transition"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        onClick={handleSaveLiturgy}
+                        className="px-5 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-lg transition flex items-center space-x-2"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>Simpan Perubahan</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )
@@ -2949,13 +3638,23 @@ export default function AdminView({
                       />
                     </div>
                   </div>
-                  <button
-                    onClick={handleSavePetugasMinggu}
-                    className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-105 active:scale-[0.99] text-xs font-black text-white rounded-xl shadow transition flex items-center justify-center space-x-2 cursor-pointer self-start md:self-auto"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>Simpan</span>
-                  </button>
+                  <div className="flex items-center space-x-2 self-start md:self-auto">
+                    <button
+                      type="button"
+                      onClick={handleAddPetugasMingguRow}
+                      className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl border border-blue-200 transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Tambah Tugas</span>
+                    </button>
+                    <button
+                      onClick={handleSavePetugasMinggu}
+                      className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-105 active:scale-[0.99] text-xs font-black text-white rounded-xl shadow transition flex items-center justify-center space-x-2 cursor-pointer"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Simpan</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Spreadsheet Grid */}
@@ -2968,6 +3667,9 @@ export default function AdminView({
                         </th>
                         <th colSpan={3} className="px-4 py-2 text-center text-xs font-black uppercase tracking-wider border-b border-blue-800 bg-blue-900 text-white">
                           Petugas Ibadah
+                        </th>
+                        <th rowSpan={2} className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider bg-blue-900 text-white min-w-[60px]">
+                          Aksi
                         </th>
                       </tr>
                       <tr className="bg-blue-800 text-blue-100 border-b border-blue-700">
@@ -2985,9 +3687,15 @@ export default function AdminView({
                     <tbody className="divide-y divide-slate-200">
                       {tempPetugasMinggu.map((row, index) => (
                         <tr key={index} className="hover:bg-slate-50/50 transition-colors">
-                          {/* Column 1: Tugas (Static/Fixed text) */}
-                          <td className="px-4 py-3 text-xs font-black text-slate-800 border-r border-slate-200 bg-slate-50/80">
-                            {row.tugas}
+                          {/* Column 1: Tugas (Editable) */}
+                          <td className="p-1 border-r border-slate-200 bg-slate-50/80">
+                            <input
+                              type="text"
+                              value={row.tugas || ''}
+                              onChange={(e) => handleCellChange(index, 'tugas', e.target.value)}
+                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-900 font-extrabold border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg transition"
+                              placeholder="Nama tugas/peran..."
+                            />
                           </td>
                           {/* Column 2: Shift 1 */}
                           <td className="p-1 border-r border-slate-200">
@@ -3010,7 +3718,7 @@ export default function AdminView({
                             />
                           </td>
                           {/* Column 4: Sekolah Minggu */}
-                          <td className="p-1">
+                          <td className="p-1 border-r border-slate-200">
                             <input
                               type="text"
                               value={row.sekolahMinggu || ''}
@@ -3018,6 +3726,17 @@ export default function AdminView({
                               className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg transition"
                               placeholder="Ketik nama petugas..."
                             />
+                          </td>
+                          {/* Column 5: Action (Delete row) */}
+                          <td className="p-1 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePetugasMingguRow(index)}
+                              className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition cursor-pointer"
+                              title="Hapus Tugas"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -3053,13 +3772,23 @@ export default function AdminView({
                         />
                       </div>
                     </div>
-                    <button
-                      onClick={handleSavePartangianganAttendance}
-                      className="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:brightness-105 active:scale-[0.99] text-xs font-black text-white rounded-xl shadow transition flex items-center justify-center space-x-2 cursor-pointer self-start md:self-auto"
-                    >
-                      <Save className="w-4 h-4" />
-                      <span>Simpan</span>
-                    </button>
+                    <div className="flex items-center space-x-2 self-start md:self-auto">
+                      <button
+                        type="button"
+                        onClick={handleAddPartangianganAttendanceRow}
+                        className="px-4 py-2.5 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold rounded-xl border border-teal-200 transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Tambah Baris</span>
+                      </button>
+                      <button
+                        onClick={handleSavePartangianganAttendance}
+                        className="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:brightness-105 active:scale-[0.99] text-xs font-black text-white rounded-xl shadow transition flex items-center justify-center space-x-2 cursor-pointer"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>Simpan</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="overflow-x-auto">
@@ -3087,8 +3816,11 @@ export default function AdminView({
                           <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[95px]">
                             Parhalado
                           </th>
-                          <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider bg-teal-950/40 min-w-[100px]">
+                          <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 bg-teal-950/40 min-w-[100px]">
                             Naro (Total)
+                          </th>
+                          <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider bg-teal-950/40 min-w-[60px]">
+                            Aksi
                           </th>
                         </tr>
                       </thead>
@@ -3173,8 +3905,19 @@ export default function AdminView({
                                 />
                               </td>
                               {/* 8. Total Naro */}
-                              <td className="px-4 py-3 text-xs font-extrabold text-teal-800 text-center bg-teal-50/30">
+                              <td className="px-4 py-3 text-xs font-extrabold text-teal-800 text-center border-r border-slate-200 bg-teal-50/30">
                                 {rowTotal}
+                              </td>
+                              {/* 9. Aksi Delete */}
+                              <td className="p-1 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePartangianganAttendanceRow(index)}
+                                  className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition cursor-pointer"
+                                  title="Hapus Baris Lunggu"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </td>
                             </tr>
                           );
@@ -3209,9 +3952,10 @@ export default function AdminView({
                               <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 text-teal-950">
                                 {totalParhalado}
                               </td>
-                              <td className="px-4 py-3.5 text-xs text-center bg-teal-600 text-white font-black">
+                              <td className="px-4 py-3.5 text-xs text-center bg-teal-600 text-white font-black border-r border-teal-700">
                                 {grandTotalNaro}
                               </td>
+                              <td className="bg-teal-100/60"></td>
                             </tr>
                           );
                         })()}
@@ -3390,6 +4134,102 @@ export default function AdminView({
                   </div>
                 </div>
 
+                {/* OPSI NON-TABEL STATUS IBADAH PARTANGIANGAN */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 flex items-center space-x-2">
+                      <Shield className="w-4 h-4 text-indigo-600" />
+                      <span>Opsi Status & Tampilan Ibadah Partangiangan di Portal Utama</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Pilih opsi di bawah ini jika ibadah partangiangan dialihkan atau diliburkan. Pilihan akan langsung mengubah pesan di halaman utama jemaat.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    {/* Opsi 1: Tabel Standar */}
+                    <label
+                      onClick={() => onUpdatePartangianganMode?.('normal')}
+                      className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
+                        partangianganMode === 'normal'
+                          ? 'bg-indigo-50/70 border-indigo-600 text-indigo-950 shadow-xs'
+                          : 'bg-slate-50/60 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="partangianganMode"
+                            checked={partangianganMode === 'normal'}
+                            onChange={() => onUpdatePartangianganMode?.('normal')}
+                            className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <span className="text-xs font-black">Tampilkan Tabel Petugas</span>
+                        </div>
+                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 uppercase">Standar</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-snug">
+                        Menampilkan tabel jadwal dan daftar nama petugas pelayanan partangiangan seperti biasa di portal utama.
+                      </p>
+                    </label>
+
+                    {/* Opsi 2: Partangiangan Keluarga */}
+                    <label
+                      onClick={() => onUpdatePartangianganMode?.('keluarga')}
+                      className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
+                        partangianganMode === 'keluarga'
+                          ? 'bg-amber-50/80 border-amber-600 text-amber-950 shadow-xs'
+                          : 'bg-slate-50/60 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="partangianganMode"
+                            checked={partangianganMode === 'keluarga'}
+                            onChange={() => onUpdatePartangianganMode?.('keluarga')}
+                            className="mt-0.5 text-amber-600 focus:ring-amber-500"
+                          />
+                          <span className="text-xs font-black">Partangiangan Keluarga (Ibadah Keluarga)</span>
+                        </div>
+                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-amber-200 text-amber-900 uppercase">Opsi 1</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-snug bg-white/80 p-2.5 rounded-xl border border-amber-200/80 font-medium">
+                        "tidak ada petugas ibadah partangiangan dikarenakan ibadah keluarga akan dilakukan di rumah masing masing"
+                      </p>
+                    </label>
+
+                    {/* Opsi 3: Tidak Ada Ibadah Partangiangan */}
+                    <label
+                      onClick={() => onUpdatePartangianganMode?.('selesai')}
+                      className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
+                        partangianganMode === 'selesai'
+                          ? 'bg-blue-50/80 border-blue-600 text-blue-950 shadow-xs'
+                          : 'bg-slate-50/60 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            name="partangianganMode"
+                            checked={partangianganMode === 'selesai'}
+                            onChange={() => onUpdatePartangianganMode?.('selesai')}
+                            className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-xs font-black">Tidak Ada Ibadah Partangiangan</span>
+                        </div>
+                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-blue-200 text-blue-900 uppercase">Opsi 2</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-snug bg-white/80 p-2.5 rounded-xl border border-blue-200/80 font-medium">
+                        "tidak ada ibadah partangiangan karena ibadah partangiangann untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
+                      </p>
+                    </label>
+                  </div>
+                </div>
+
               </div>
             )}
           </div>
@@ -3400,6 +4240,140 @@ export default function AdminView({
         {/* ======================================================== */}
         {activeSubTab === 'warta' && (
           <div className="space-y-6">
+            {/* RINGKASAN TREN KEHADIRAN 1 MINGGU TERBARU (KHUSUS MINGGU, NO PARTANGIANGAN) */}
+            {(() => {
+              const trendsList = tempAttendanceTrends.length > 0 ? tempAttendanceTrends : (attendanceTrends && attendanceTrends.length > 0 ? attendanceTrends : INITIAL_ATTENDANCE_TRENDS);
+              const latestIdx = trendsList.length - 1;
+              const latest1W = trendsList[latestIdx] || INITIAL_ATTENDANCE_TRENDS[0];
+              const smCount = latest1W.sekolahMinggu ?? latest1W.mingguSm ?? 95;
+              const shift1Count = latest1W.shift1 ?? latest1W.mingguAma ?? 215;
+              const shift2Count = latest1W.shift2 ?? latest1W.mingguIna ?? 212;
+              const totalSunday = smCount + shift1Count + shift2Count;
+
+              return (
+                <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 border border-slate-800 shadow-md space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                          Tren Kehadiran 1 Minggu
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">
+                          {latest1W.tanggalRange || petugasMingguDate || 'Minggu Terbaru'}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-black text-white mt-1 flex items-center space-x-2">
+                        <TrendingUp className="w-4 h-4 text-emerald-400" />
+                        <span>Statistik Kehadiran Kebaktian Minggu</span>
+                      </h3>
+                    </div>
+                    <div className="text-right self-start sm:self-auto">
+                      <span className="text-[10px] text-slate-400 font-medium block">Total Hadir Kebaktian Minggu</span>
+                      <span className="text-xl font-black text-emerald-400">{totalSunday} <span className="text-xs font-semibold text-slate-300">Jemaat</span></span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Sekolah Minggu */}
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sekolah Minggu</span>
+                        <div className="p-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg">
+                          <BookOpen className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={smCount}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 0;
+                            const updated = [...trendsList];
+                            updated[latestIdx] = {
+                              ...updated[latestIdx],
+                              mingguSm: val,
+                              sekolahMinggu: val
+                            };
+                            setTempAttendanceTrends(updated);
+                            if (onUpdateAttendanceTrends) {
+                              onUpdateAttendanceTrends(updated);
+                            }
+                          }}
+                          className="w-24 bg-slate-900/90 border border-slate-600 rounded-lg px-2.5 py-1 text-base font-black text-amber-400 focus:border-amber-400 outline-none"
+                        />
+                        <span className="text-xs font-bold text-slate-400">Jemaat</span>
+                      </div>
+                    </div>
+
+                    {/* Shift 1 */}
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Shift 1 (Pagi)</span>
+                        <div className="p-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-lg">
+                          <Clock className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={shift1Count}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 0;
+                            const updated = [...trendsList];
+                            updated[latestIdx] = {
+                              ...updated[latestIdx],
+                              mingguAma: val,
+                              shift1: val
+                            };
+                            setTempAttendanceTrends(updated);
+                            if (onUpdateAttendanceTrends) {
+                              onUpdateAttendanceTrends(updated);
+                            }
+                          }}
+                          className="w-24 bg-slate-900/90 border border-slate-600 rounded-lg px-2.5 py-1 text-base font-black text-cyan-400 focus:border-cyan-400 outline-none"
+                        />
+                        <span className="text-xs font-bold text-slate-400">Jemaat</span>
+                      </div>
+                    </div>
+
+                    {/* Shift 2 */}
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Shift 2 (Siang)</span>
+                        <div className="p-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg">
+                          <Clock className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          value={shift2Count}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 0;
+                            const updated = [...trendsList];
+                            updated[latestIdx] = {
+                              ...updated[latestIdx],
+                              mingguIna: val,
+                              shift2: val
+                            };
+                            setTempAttendanceTrends(updated);
+                            if (onUpdateAttendanceTrends) {
+                              onUpdateAttendanceTrends(updated);
+                            }
+                          }}
+                          className="w-24 bg-slate-900/90 border border-slate-600 rounded-lg px-2.5 py-1 text-base font-black text-indigo-400 focus:border-indigo-400 outline-none"
+                        />
+                        <span className="text-xs font-bold text-slate-400">Jemaat</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 italic font-medium">
+                    * Statistik tren 1 minggu di atas hanya mencakup Kebaktian Minggu (Sekolah Minggu, Shift 1, dan Shift 2) tanpa ibadah partangiangan. Perubahan angka di atas otomatis memperbarui tren di halaman warta jemaat.
+                  </p>
+                </div>
+              );
+            })()}
+
             {!editingWartaId ? (
               <div className="space-y-4">
                 <div className="flex justify-end">
@@ -4612,35 +5586,26 @@ export default function AdminView({
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex items-center justify-center gap-1.5">
-                            {lit.pdfUrl ? (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    setPreviewPdfUrl(lit.pdfUrl || null);
-                                    setPreviewPdfTitle(lit.judul);
-                                  }}
-                                  className="px-2 py-1 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 rounded text-[11px] font-bold transition cursor-pointer flex items-center space-x-1"
-                                >
-                                  <ExternalLink className="w-3 h-3" />
-                                  <span>Preview</span>
-                                </button>
-                                <a
-                                  href={lit.pdfUrl}
-                                  download={`${lit.judul.replace(/\s+/g, '_')}.pdf`}
-                                  className="p-1 px-2 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200 rounded text-[11px] font-bold transition flex items-center space-x-1"
-                                >
-                                  <Download className="w-3 h-3" />
-                                  <span>Unduh</span>
-                                </a>
-                              </>
-                            ) : (
+                            {lit.teksLiturgi && lit.teksLiturgi.length > 0 && (
                               <button
                                 onClick={() => setPreviewManualLit(lit)}
                                 className="px-2 py-1 bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-750 rounded text-[11px] font-bold transition cursor-pointer flex items-center space-x-1"
+                                title="Lihat Teks Acara"
                               >
                                 <FileText className="w-3 h-3 text-amber-600" />
                                 <span>Lihat Teks</span>
                               </button>
+                            )}
+                            {lit.pdfUrl && (
+                              <a
+                                href={lit.pdfUrl}
+                                download={`${lit.judul.replace(/\s+/g, '_')}.pdf`}
+                                className="p-1 px-2 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200 rounded text-[11px] font-bold transition flex items-center space-x-1"
+                                title="Unduh Berkas PDF"
+                              >
+                                <Download className="w-3 h-3 text-blue-600" />
+                                <span>Unduh</span>
+                              </a>
                             )}
                             <button
                               onClick={() => handleDeleteLiturgy(lit.id, 'minggu')}
@@ -4676,35 +5641,26 @@ export default function AdminView({
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex items-center justify-center gap-1.5">
-                            {lit.pdfUrl ? (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    setPreviewPdfUrl(lit.pdfUrl || null);
-                                    setPreviewPdfTitle(lit.judul);
-                                  }}
-                                  className="px-2 py-1 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 rounded text-[11px] font-bold transition cursor-pointer flex items-center space-x-1"
-                                >
-                                  <ExternalLink className="w-3 h-3" />
-                                  <span>Preview</span>
-                                </button>
-                                <a
-                                  href={lit.pdfUrl}
-                                  download={`${lit.judul.replace(/\s+/g, '_')}.pdf`}
-                                  className="p-1 px-2 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200 rounded text-[11px] font-bold transition flex items-center space-x-1"
-                                >
-                                  <Download className="w-3 h-3" />
-                                  <span>Unduh</span>
-                                </a>
-                              </>
-                            ) : (
+                            {lit.teksLiturgi && lit.teksLiturgi.length > 0 && (
                               <button
                                 onClick={() => setPreviewManualLit(lit)}
                                 className="px-2 py-1 bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-750 rounded text-[11px] font-bold transition cursor-pointer flex items-center space-x-1"
+                                title="Lihat Teks Acara"
                               >
                                 <FileText className="w-3 h-3 text-amber-600" />
                                 <span>Lihat Teks</span>
                               </button>
+                            )}
+                            {lit.pdfUrl && (
+                              <a
+                                href={lit.pdfUrl}
+                                download={`${lit.judul.replace(/\s+/g, '_')}.pdf`}
+                                className="p-1 px-2 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200 rounded text-[11px] font-bold transition flex items-center space-x-1"
+                                title="Unduh Berkas PDF"
+                              >
+                                <Download className="w-3 h-3 text-emerald-600" />
+                                <span>Unduh</span>
+                              </a>
                             )}
                             <button
                               onClick={() => handleDeleteLiturgy(lit.id, 'partangiangan')}
@@ -5061,24 +6017,30 @@ export default function AdminView({
                                 </div>
 
                                 <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                                  <button
-                                    onClick={() => {
-                                      if (isPdf) {
-                                        if (doc.pdfUrl) {
-                                          setPreviewPdfUrl(doc.pdfUrl);
-                                          setPreviewPdfTitle(doc.judul);
-                                        } else {
-                                          alert('Berkas ini hanya katalog mockup. Silakan unggah dokumen PDF baru untuk menguji preview fungsional!');
-                                        }
-                                      } else {
-                                        setPreviewManualLit(doc);
-                                      }
-                                    }}
-                                    className={`px-2.5 py-1.5 ${isPdf ? 'bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100' : 'bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100'} rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center space-x-1`}
-                                  >
-                                    <ExternalLink className="w-3 h-3" />
-                                    <span>Preview Berkas</span>
-                                  </button>
+                                  {isPdf ? (
+                                    doc.pdfUrl ? (
+                                      <a
+                                        href={doc.pdfUrl}
+                                        download={`${doc.judul.replace(/\s+/g, '_')}.pdf`}
+                                        className="px-2.5 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center space-x-1"
+                                        title="Unduh Berkas PDF"
+                                      >
+                                        <Download className="w-3 h-3 text-blue-600" />
+                                        <span>Unduh Berkas</span>
+                                      </a>
+                                    ) : (
+                                      <span className="text-[10px] text-slate-400 italic">Katalog Berkas</span>
+                                    )
+                                  ) : (
+                                    <button
+                                      onClick={() => setPreviewManualLit(doc)}
+                                      className="px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center space-x-1"
+                                      title="Lihat Teks Acara"
+                                    >
+                                      <FileText className="w-3 h-3 text-emerald-600" />
+                                      <span>Lihat Teks</span>
+                                    </button>
+                                  )}
 
                                   <div className="flex items-center space-x-1.5">
                                     {doc.kategori === 'keuangan' && (
@@ -5128,6 +6090,323 @@ export default function AdminView({
                   });
                 })()}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* PANEL: DATABASE BUKU NYANYIAN (BE & BN)                 */}
+        {/* ======================================================== */}
+        {activeSubTab === 'buku_nyanyian' && (
+          <div className="space-y-6 font-sans">
+            {/* Top Info Banner & Actions */}
+            <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-lg relative overflow-hidden">
+              <div className="relative z-10 max-w-2xl">
+                <div className="flex items-center space-x-2 text-blue-300 text-xs font-bold uppercase tracking-wider mb-2">
+                  <Music className="w-4 h-4 text-blue-400" />
+                  <span>Portal Resmi HKBP: hkbp.or.id/buku-ende</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  Database Buku Ende Resmi HKBP
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                  Basis data lirik dan nomor lagu resmi Buku Ende & Buku Nyanyian HKBP langsung dari <strong>hkbp.or.id/buku-ende</strong> dan <strong>hkbp.or.id/buku-nyanyian</strong>. Ketika membuat susunan acara kebaktian, sistem membaca nomor dan ayat lagu lalu otomatis mengisi lirik asli otentik tanpa perubahan kata.
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-2.5">
+                  <a
+                    href="https://hkbp.or.id/buku-ende"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                  >
+                    <span>🌐 Portal Buku Ende</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                  </a>
+                  <a
+                    href="https://hkbp.or.id/buku-nyanyian"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                  >
+                    <span>🌐 Portal Buku Nyanyian</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-emerald-600" />
+                  </a>
+                  <a
+                    href="https://hkbp.or.id/kidung"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                  >
+                    <span>🌐 Portal Kidung Jemaat</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-amber-600" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImportDbJsonText('');
+                      setIsImportDbModalOpen(true);
+                    }}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    title="Impor atau berikan database lagu dalam format JSON atau teks"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>📥 Berikan / Impor Database</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSyncStart('1');
+                      setSyncEnd('50');
+                      setIsSyncApiModalOpen(true);
+                    }}
+                    className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    title="Sinkronisasi lagu otomatis langsung dari https://hkbp.or.id/buku-ende"
+                  >
+                    <Activity className="w-4 h-4 text-blue-200" />
+                    <span>⚡ Sinkron dari hkbp.or.id</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExportDb}
+                    className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    title="Unduh backup database lagu saat ini sebagai berkas JSON"
+                  >
+                    <Download className="w-4 h-4 text-slate-300" />
+                    <span>Ekspor JSON</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewSongKategori('BE');
+                      setNewSongNomor('');
+                      setNewSongJudul('');
+                      setNewSongRawLyrics('');
+                      setIsAddSongModalOpen(true);
+                    }}
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ Tambah Lagu Baru</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">Total Lagu</span>
+                <span className="text-xl font-extrabold text-slate-900">{bukuNyanyianDb.length} Lagu</span>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                <span className="text-[10px] text-blue-600 uppercase tracking-wider block font-bold">Buku Ende (BE)</span>
+                <span className="text-xl font-extrabold text-blue-900">
+                  {bukuNyanyianDb.filter(s => s.kategori === 'BE').length} Lagu
+                </span>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                <span className="text-[10px] text-emerald-600 uppercase tracking-wider block font-bold">Buku Nyanyian (BN)</span>
+                <span className="text-xl font-extrabold text-emerald-900">
+                  {bukuNyanyianDb.filter(s => s.kategori === 'BN').length} Lagu
+                </span>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                <span className="text-[10px] text-amber-600 uppercase tracking-wider block font-bold">Kidung Jemaat (KJ)</span>
+                <span className="text-xl font-extrabold text-amber-900">
+                  {bukuNyanyianDb.filter(s => s.kategori === 'KJ').length} Lagu
+                </span>
+              </div>
+            </div>
+
+            {/* Filter & Search Controls */}
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center space-x-1.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+                {(['ALL', 'BE', 'BN', 'KJ'] as const).map(kat => (
+                  <button
+                    key={kat}
+                    onClick={() => setSongCatalogFilter(kat)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+                      songCatalogFilter === kat
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {kat === 'ALL' ? 'Semua Buku' : kat === 'BE' ? 'Buku Ende (BE)' : kat === 'BN' ? 'Buku Nyanyian (BN)' : 'Kidung Jemaat (KJ)'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative w-full md:w-80">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
+                <input
+                  type="text"
+                  value={songCatalogSearch}
+                  onChange={(e) => setSongCatalogSearch(e.target.value)}
+                  placeholder="Cari nomor lagu (10), judul, atau lirik..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Song Grid / Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {bukuNyanyianDb
+                .filter(song => {
+                  if (songCatalogFilter !== 'ALL' && song.kategori !== songCatalogFilter) return false;
+                  if (!songCatalogSearch.trim()) return true;
+                  const query = songCatalogSearch.toLowerCase();
+                  const matchNum = String(song.nomor).includes(query);
+                  const matchTitle = song.judul.toLowerCase().includes(query);
+                  const matchLyrics = song.ayatList.some(v => v.teks.toLowerCase().includes(query));
+                  return matchNum || matchTitle || matchLyrics;
+                })
+                .map(song => {
+                  const isExpanded = expandedSongId === song.id;
+                  const testRange = testSongVerseRange[song.id] || '1-2';
+                  const parsedRange = parseVerseRange(testRange);
+                  const formattedPreview = findSongAndFormatLyrics([song], song.kategori, song.nomor, parsedRange);
+
+                  return (
+                    <div
+                      key={song.id}
+                      className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-slate-300 transition flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-lg border ${
+                            song.kategori === 'BE'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : song.kategori === 'BN'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                          }`}>
+                            {song.kategori} No. {song.nomor}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {song.ayatList.length} Ayat
+                          </span>
+                        </div>
+
+                        <h4 className="text-sm font-extrabold text-slate-900 leading-snug">
+                          {song.judul}
+                        </h4>
+
+                        <p className="text-[11px] text-slate-500 mt-2 line-clamp-2 italic">
+                          &quot;{song.ayatList[0]?.teks.replace(/\n/g, ' ')}&quot;
+                        </p>
+                      </div>
+
+                      <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
+                        <button
+                          onClick={() => setExpandedSongId(isExpanded ? null : song.id)}
+                          className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer flex items-center space-x-1"
+                        >
+                          <span>{isExpanded ? 'Tutup Ayat' : 'Buka & Uji Ayat'}</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSongFromDb(song.id)}
+                          className="p-1 text-slate-300 hover:text-red-600 rounded transition cursor-pointer"
+                          title="Hapus Lagu dari DB"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="mt-3 pt-3 border-t border-slate-100 space-y-3">
+                          {/* Ayat Tester */}
+                          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                            <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                              Simulasi Pengambilan Ayat:
+                            </label>
+                            <input
+                              type="text"
+                              value={testRange}
+                              onChange={(e) => setTestSongVerseRange({ ...testSongVerseRange, [song.id]: e.target.value })}
+                              placeholder="Contoh: 1-2 atau 1 & 3"
+                              className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-800 font-mono font-bold"
+                            />
+                            <div className="mt-2 p-2 bg-white rounded border border-slate-150 text-[11px] font-mono whitespace-pre-line text-slate-700 max-h-40 overflow-y-auto">
+                              {formattedPreview.lyrics || 'Tidak ada ayat cocok.'}
+                            </div>
+                          </div>
+
+                          {/* All verses list */}
+                          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase block">Semua Bait / Ayat:</span>
+                            {song.ayatList.map(v => (
+                              <div key={v.ayat} className="p-2 bg-slate-50 rounded-lg border border-slate-150 text-[11px]">
+                                <span className="font-bold text-blue-700 block mb-0.5">Ayat {v.ayat}:</span>
+                                <p className="text-slate-700 whitespace-pre-line font-mono">{v.teks}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+              {/* Not-yet-downloaded songs from the official HKBP catalog */}
+              {(() => {
+                if (!songCatalogSearch.trim() || (songCatalogFilter !== 'ALL' && songCatalogFilter !== 'BE')) return null;
+                const query = songCatalogSearch.toLowerCase().trim();
+                const existingSet = new Set(bukuNyanyianDb.map(s => `${s.kategori}-${s.nomor}`));
+                const matchingCatalog = BUKU_ENDE_CATALOG.filter(catItem => {
+                  const numStr = String(catItem.nomorLagu);
+                  const title = (catItem.judul || '').toLowerCase();
+                  const isMatch = numStr === query || numStr.includes(query) || title.includes(query);
+                  return isMatch && !existingSet.has(`BE-${catItem.nomorLagu}`);
+                }).slice(0, 12);
+
+                if (matchingCatalog.length === 0) return null;
+
+                return (
+                  <div className="col-span-full mt-4 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="text-xs font-black text-blue-900 uppercase tracking-wider flex items-center space-x-1.5">
+                          <Music className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Ditemukan di Katalog Resmi HKBP (hkbp.or.id/buku-ende)</span>
+                        </h4>
+                        <p className="text-[11px] text-blue-700 mt-0.5">
+                          Lagu resmi berikut tersedia di portal HKBP dan lirik aslinya dapat diunduh sekali klik:
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {matchingCatalog.map(item => (
+                        <div key={item.nomorLagu} className="bg-white border border-blue-200 rounded-xl p-3 flex items-center justify-between shadow-xs">
+                          <div>
+                            <span className="text-[10px] font-extrabold text-blue-800 bg-blue-100 px-2 py-0.5 rounded">
+                              BE {item.nomorLagu}
+                            </span>
+                            <h5 className="text-xs font-bold text-slate-900 mt-1 line-clamp-1">{item.judul}</h5>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              showToast(`Mengambil BE ${item.nomorLagu} dari hkbp.or.id...`);
+                              const s = await fetchOfficialSongFromHkbp(Number(item.nomorLagu));
+                              if (s) {
+                                const updated = [...bukuNyanyianDb.filter(x => !(x.kategori === 'BE' && x.nomor === s.nomor)), s].sort((a, b) => a.nomor - b.nomor);
+                                saveBukuNyanyianDb(updated);
+                                showToast(`✓ Berhasil mengunduh BE ${item.nomorLagu} "${s.judul}" dari hkbp.or.id!`);
+                              } else {
+                                alert(`Gagal mengambil BE ${item.nomorLagu} dari hkbp.or.id`);
+                              }
+                            }}
+                            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center space-x-1 shrink-0 ml-2"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span>Unduh Lirik</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
@@ -5461,11 +6740,15 @@ export default function AdminView({
                       <button
                         type="button"
                         onClick={() => {
-                          if (window.confirm(`Apakah Anda yakin ingin menghapus konten "${item.judul}"?`)) {
-                            const updated = tentangGerejaList.filter((t) => t.id !== item.id);
-                            onUpdateTentangGerejaList(updated);
-                            showToast('Konten berhasil dihapus!');
-                          }
+                          triggerConfirm(
+                            'Hapus Konten Informasi',
+                            `Apakah Anda yakin ingin menghapus konten "${item.judul}"?`,
+                            () => {
+                              const updated = tentangGerejaList.filter((t) => t.id !== item.id);
+                              onUpdateTentangGerejaList(updated);
+                              showToast('Konten berhasil dihapus!');
+                            }
+                          );
                         }}
                         className="p-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition cursor-pointer"
                         title="Hapus Konten"
@@ -5933,17 +7216,6 @@ export default function AdminView({
 
       </main>
 
-      {/* IMMERSIVE COMPATIBLE PDF PREVIEWER MODAL */}
-      {previewPdfUrl && (
-        <AdminPdfPreviewModal
-          pdfUrl={previewPdfUrl}
-          title={previewPdfTitle}
-          onClose={() => {
-            setPreviewPdfUrl(null);
-            setPreviewPdfTitle('');
-          }}
-        />
-      )}
 
       {/* CUSTOM CONFIRMATION DIALOG */}
       {confirmDialog.isOpen && (
@@ -6043,19 +7315,916 @@ export default function AdminView({
           </div>
         </div>
       )}
-    </div>
-  );
-}
+      {/* MODAL: INPUT NOMOR & AYAT LAGU DARI DATABASE */}
+      {songPickerStepIndex !== null && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm font-sans animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
+                  <Music className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">Input Nomor & Ayat Lagu</h3>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Membaca data lagu & lirik otomatis untuk Acara #{songPickerStepIndex + 1}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSongPickerStepIndex(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-// ----------------------------------------------------------------------
-// SUB-COMPONENT: PORTABLE MEMORY-SAFE PDF PREVIEWER MODAL
-// ----------------------------------------------------------------------
-function AdminPdfPreviewModal({ pdfUrl, title, onClose }: { pdfUrl: string; title: string; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
-      <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden shadow-2xl relative">
-        <PdfJsViewer pdfUrl={pdfUrl} title={title} onClose={onClose} />
-      </div>
+            {/* Modal Content */}
+            <div className="p-5 overflow-y-auto space-y-4 flex-1">
+              {/* Category Pills */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1.5">Pilih Buku Nyanyian:</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['BE', 'BN', 'KJ'] as const).map(k => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setSongPickerKategori(k)}
+                      className={`py-2 px-3 rounded-xl text-xs font-extrabold transition cursor-pointer border text-center ${
+                        songPickerKategori === k
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {k === 'BE' ? 'BE (Buku Ende)' : k === 'BN' ? 'BN (Buku Nyanyian)' : 'KJ (Kidung Jemaat)'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Number and Verse inputs */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                    Nomor Lagu:
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    value={songPickerNomor}
+                    onChange={(e) => setSongPickerNomor(e.target.value)}
+                    placeholder="Contoh: 10"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-slate-900 outline-none focus:border-blue-500 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                    Ayat / Bait:
+                  </label>
+                  <input
+                    type="text"
+                    value={songPickerAyat}
+                    onChange={(e) => setSongPickerAyat(e.target.value)}
+                    placeholder="Contoh: 1-3, 1+3, atau 1,2+5"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Quick Popular Numbers Pill suggestion */}
+              <div>
+                <span className="text-[10px] text-slate-400 font-semibold block mb-1">Contoh Cepat Tersedia:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {bukuNyanyianDb
+                    .filter(s => s.kategori === songPickerKategori)
+                    .slice(0, 8)
+                    .map(s => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => {
+                          setSongPickerNomor(String(s.nomor));
+                          setSongPickerAyat('1-2');
+                        }}
+                        className={`text-[10px] px-2 py-0.5 rounded-lg border cursor-pointer font-bold transition ${
+                          songPickerNomor === String(s.nomor)
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                        }`}
+                      >
+                        No. {s.nomor}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              {/* Live Preview Box */}
+              {(() => {
+                const n = parseInt(songPickerNomor, 10);
+                const range = parseVerseRange(songPickerAyat);
+                const match = findSongAndFormatLyrics(bukuNyanyianDb, songPickerKategori, n, range);
+
+                if (match.found && match.song) {
+                  return (
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-[9px] font-extrabold uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
+                            {match.song.kategori} No. {match.song.nomor}
+                          </span>
+                          <h4 className="text-xs font-black text-slate-900 mt-1">{match.title}</h4>
+                        </div>
+                        <span className="text-[10px] text-slate-500 font-semibold">
+                          Total {match.song.ayatList.length} Ayat
+                        </span>
+                      </div>
+
+                      {/* Quick verse toggle buttons */}
+                      <div className="flex flex-wrap gap-1 pt-1 border-t border-slate-200/60">
+                        <button
+                          type="button"
+                          onClick={() => setSongPickerAyat('')}
+                          className={`text-[9px] px-2 py-0.5 rounded border font-bold ${
+                            !songPickerAyat.trim() ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200'
+                          }`}
+                        >
+                          Semua Ayat
+                        </button>
+                        {match.song.ayatList.map(v => (
+                          <button
+                            key={v.ayat}
+                            type="button"
+                            onClick={() => setSongPickerAyat(String(v.ayat))}
+                            className={`text-[9px] px-2 py-0.5 rounded border font-bold ${
+                              songPickerAyat.trim() === String(v.ayat)
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-slate-600 border-slate-200'
+                            }`}
+                          >
+                            Ayat {v.ayat}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="p-2.5 bg-white rounded-xl border border-slate-150 text-[11px] text-slate-700 whitespace-pre-line font-mono max-h-36 overflow-y-auto leading-relaxed">
+                        {match.lyrics}
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 text-center space-y-2">
+                    <p className="text-xs font-bold text-amber-900">
+                      Lagu {songPickerKategori} No. {songPickerNomor || '?'} belum terdaftar di database lokal.
+                    </p>
+                    <p className="text-[11px] text-amber-700">
+                      Anda dapat melihat dan menyalin nomor dan lirik lagu dari website resmi lagu HKBP.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                      {(songPickerKategori === 'BE' || songPickerKategori === 'BN' || songPickerKategori === 'KJ') && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const n = parseInt(songPickerNomor, 10);
+                            if (isNaN(n) || n <= 0) return;
+                            try {
+                              showToast(`Mengambil ${songPickerKategori} No. ${n} dari API resmi hkbp.or.id...`);
+                              const s = await fetchSongFromApi(n, songPickerKategori);
+                              if (s) {
+                                const updated = [...bukuNyanyianDb.filter(x => !(x.kategori === songPickerKategori && x.nomor === n)), s].sort((a, b) => {
+                                  if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+                                  return a.nomor - b.nomor;
+                                });
+                                saveBukuNyanyianDb(updated);
+                                showToast(`Berhasil mengambil ${songPickerKategori} No. ${n} "${s.judul}" dari portal resmi HKBP!`);
+                              } else {
+                                alert(`Lagu ${songPickerKategori} No. ${n} tidak ditemukan di portal hkbp.or.id.`);
+                              }
+                            } catch (e: any) {
+                              alert(`Gagal mengambil lagu: ${e.message}`);
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-xs"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>⚡ Ambil Resmi dari hkbp.or.id</span>
+                        </button>
+                      )}
+                      <a
+                        href={songPickerKategori === 'BN' ? 'https://hkbp.or.id/buku-nyanyian' : songPickerKategori === 'KJ' ? 'https://hkbp.or.id/kidung' : 'https://hkbp.or.id/buku-ende'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 rounded-lg text-xs font-bold transition flex items-center space-x-1"
+                      >
+                        <span>Cari di hkbp.or.id</span>
+                        <ExternalLink className="w-3 h-3 text-amber-600" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewSongKategori(songPickerKategori);
+                          setNewSongNomor(songPickerNomor);
+                          setNewSongJudul('');
+                          setNewSongRawLyrics('');
+                          setIsAddSongModalOpen(true);
+                        }}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                      >
+                        + Tambah Manual
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+              <a
+                href={songPickerKategori === 'BN' ? "https://hkbp.or.id/buku-nyanyian" : songPickerKategori === 'KJ' ? "https://hkbp.or.id/kidung" : "https://hkbp.or.id/buku-ende"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-bold text-blue-700 hover:underline flex items-center space-x-1"
+              >
+                <span>🌐 Portal Resmi: {songPickerKategori === 'BN' ? 'hkbp.or.id/buku-nyanyian' : songPickerKategori === 'KJ' ? 'hkbp.or.id/kidung' : 'hkbp.or.id/buku-ende'}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setSongPickerStepIndex(null)}
+                  className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApplySongFromPicker}
+                  className="px-5 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-blue-500/20 hover:brightness-105 active:scale-[0.99] cursor-pointer flex items-center space-x-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Terapkan ke Acara</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: TAMBAH LAGU BARU KE DATABASE */}
+      {isAddSongModalOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm font-sans animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+              <div>
+                <h3 className="text-sm font-black text-slate-900">Tambah Lagu ke Database</h3>
+                <p className="text-[10px] text-slate-500 mt-0.5">Tambah lagu atau sinkronkan langsung dari portal resmi https://hkbp.or.id/buku-ende</p>
+              </div>
+              <button
+                onClick={() => setIsAddSongModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4 flex-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Kategori Buku:</label>
+                  <select
+                    value={newSongKategori}
+                    onChange={(e) => setNewSongKategori(e.target.value as any)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-blue-500"
+                  >
+                    <option value="BE">BE (Buku Ende)</option>
+                    <option value="BN">BN (Buku Nyanyian)</option>
+                    <option value="KJ">KJ (Kidung Jemaat)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Nomor Lagu:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    value={newSongNomor}
+                    onChange={(e) => setNewSongNomor(e.target.value)}
+                    placeholder="Contoh: 10"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-slate-900 outline-none focus:border-blue-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Judul Lagu:</label>
+                <input
+                  type="text"
+                  value={newSongJudul}
+                  onChange={(e) => setNewSongJudul(e.target.value)}
+                  placeholder="Contoh: Hupuji Ho Amang"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase">Lirik / Bait Lagu:</label>
+                  <span className="text-[10px] text-slate-400">Pisahkan tiap bait dengan baris kosong</span>
+                </div>
+                <textarea
+                  rows={6}
+                  value={newSongRawLyrics}
+                  onChange={(e) => setNewSongRawLyrics(e.target.value)}
+                  placeholder={"1. Hupuji Ho Amang pardenggan basa i...\n\n2. Gok di Ho do dongan nang hagogoon i..."}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end space-x-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsAddSongModalOpen(false)}
+                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveNewSongToDb}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer flex items-center space-x-1"
+              >
+                <Save className="w-4 h-4" />
+                <span>Simpan ke Database</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL: IMPOR / BERIKAN DATABASE BUKU NYANYIAN */}
+      {isImportDbModalOpen && (
+        <div className="fixed inset-0 z-[125] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm font-sans animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Upload className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">Impor / Berikan Database Lagu</h3>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Unggah berkas JSON atau tempel format data buku nyanyian</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsImportDbModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4 flex-1">
+              {/* File Upload Option */}
+              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-emerald-500 transition">
+                <input
+                  type="file"
+                  id="import-song-db-file"
+                  accept=".json,.txt"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                      const text = evt.target?.result as string;
+                      if (text) {
+                        setImportDbJsonText(text);
+                      }
+                    };
+                    reader.readAsText(file);
+                  }}
+                />
+                <label
+                  htmlFor="import-song-db-file"
+                  className="cursor-pointer flex flex-col items-center justify-center space-y-1.5"
+                >
+                  <FolderOpen className="w-6 h-6 text-emerald-600" />
+                  <span className="text-xs font-bold text-slate-800">Klik untuk Unggah Berkas JSON</span>
+                  <span className="text-[10px] text-slate-400">Mendukung berkas data resmi dari https://hkbp.or.id/buku-ende atau format JSON</span>
+                </label>
+              </div>
+
+              {/* Paste JSON Textarea */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-[10px] font-bold text-slate-700 uppercase">Atau Tempel (Paste) Teks JSON Database:</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const sample = [
+                        {
+                          kategori: "BE",
+                          nomor: 10,
+                          judul: "HUPUJI HUPASANGAP HO",
+                          ayatList: [
+                            { ayat: 1, teks: "Hupuji hupasangap Ho Amang pardenggan basa\nAi jadijadianMu do sude angka na masa\nDitompa Ho do sasude Dagingku ro di tondi pe Pinuji ma goarMu" },
+                            { ayat: 2, teks: "Saluhut na tinompaMi Naeng sonang di rohaMu\nArian dohot borngin pe Disarihon rohaMu\nNang uhum di gomgomanMi Na tigor na sintong do i Pinuji ma goarMu" }
+                          ]
+                        }
+                      ];
+                      setImportDbJsonText(JSON.stringify(sample, null, 2));
+                    }}
+                    className="text-[10px] text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
+                  >
+                    Muat Contoh Format
+                  </button>
+                </div>
+                <textarea
+                  rows={8}
+                  value={importDbJsonText}
+                  onChange={(e) => setImportDbJsonText(e.target.value)}
+                  placeholder={`Contoh struktur JSON:\n[\n  {\n    "kategori": "BE",\n    "nomor": 10,\n    "judul": "Hupuji Ho Amang",\n    "ayatList": [\n      { "ayat": 1, "teks": "..." },\n      { "ayat": 2, "teks": "..." }\n    ]\n  }\n]`}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-mono text-slate-800 outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              {/* Live Detection Summary */}
+              {(() => {
+                if (!importDbJsonText.trim()) return null;
+                const parsed = normalizeSongImport(importDbJsonText);
+                return (
+                  <div className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between ${
+                    parsed.length > 0 ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : 'bg-amber-50 text-amber-900 border-amber-200'
+                  }`}>
+                    <div className="flex items-center space-x-2">
+                      <Music className="w-4 h-4 shrink-0 text-emerald-600" />
+                      <span>{parsed.length > 0 ? `Siap diimpor: ${parsed.length} lagu berhasil dikenali` : 'Format belum sesuai. Periksa kembali struktur data.'}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Import Mode Selection */}
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+                <span className="text-[10px] font-bold text-slate-600 uppercase block">Metode Penggabungan Database:</span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <label className={`p-2.5 rounded-xl border cursor-pointer flex items-start space-x-2 ${
+                    importDbMode === 'merge' ? 'bg-blue-50 border-blue-300 text-blue-900 font-bold' : 'bg-white border-slate-200 text-slate-700'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="importMode"
+                      value="merge"
+                      checked={importDbMode === 'merge'}
+                      onChange={() => setImportDbMode('merge')}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <span className="block text-xs font-bold">Gabungkan (Merge)</span>
+                      <span className="block text-[10px] text-slate-500 font-normal">Menambahkan lagu baru tanpa menghapus lagu yang ada</span>
+                    </div>
+                  </label>
+
+                  <label className={`p-2.5 rounded-xl border cursor-pointer flex items-start space-x-2 ${
+                    importDbMode === 'replace' ? 'bg-amber-50 border-amber-300 text-amber-900 font-bold' : 'bg-white border-slate-200 text-slate-700'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="importMode"
+                      value="replace"
+                      checked={importDbMode === 'replace'}
+                      onChange={() => setImportDbMode('replace')}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <span className="block text-xs font-bold">Ganti Total (Replace)</span>
+                      <span className="block text-[10px] text-slate-500 font-normal">Mengganti seluruh lagu dengan data yang baru diimpor</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={handleResetToDefaultDb}
+                className="text-[10px] font-bold text-slate-500 hover:text-red-600 underline cursor-pointer"
+              >
+                Reset ke Standar HKBP
+              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsImportDbModalOpen(false)}
+                  className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleProcessImportDb}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer flex items-center space-x-1.5"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Proses & Simpan Database</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL: SINKRONISASI BUKU ENDE, BUKU NYANYIAN & KIDUNG JEMAAT API */}
+      {isSyncApiModalOpen && (
+        <div className="fixed inset-0 z-[125] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm font-sans animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                  syncBook === 'BN' ? 'bg-emerald-100 text-emerald-700' : syncBook === 'KJ' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  <Activity className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    Portal Resmi HKBP (hkbp.or.id/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende'})
+                  </h3>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Sinkronisasi lagu otentik langsung dari basis data resmi HKBP</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={isSyncingApi}
+                onClick={() => setIsSyncApiModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4 flex-1">
+              {/* Book Category Switcher */}
+              <div>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1.5">Pilih Buku Nyanyian:</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    disabled={isSyncingApi}
+                    onClick={() => {
+                      setSyncBook('BE');
+                      setSyncStart('1');
+                      setSyncEnd('50');
+                    }}
+                    className={`py-2 px-2.5 rounded-xl text-[11px] font-extrabold transition cursor-pointer border text-center ${
+                      syncBook === 'BE'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    Buku Ende (867)
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSyncingApi}
+                    onClick={() => {
+                      setSyncBook('BN');
+                      setSyncStart('1');
+                      setSyncEnd('50');
+                    }}
+                    className={`py-2 px-2.5 rounded-xl text-[11px] font-extrabold transition cursor-pointer border text-center ${
+                      syncBook === 'BN'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    Buku Nyanyian (865)
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSyncingApi}
+                    onClick={() => {
+                      setSyncBook('KJ');
+                      setSyncStart('1');
+                      setSyncEnd('50');
+                    }}
+                    className={`py-2 px-2.5 rounded-xl text-[11px] font-extrabold transition cursor-pointer border text-center ${
+                      syncBook === 'KJ'
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    Kidung Jemaat (478)
+                  </button>
+                </div>
+              </div>
+
+              {/* API Info Card */}
+              <div className={`border rounded-2xl p-4 space-y-1.5 ${
+                syncBook === 'BN' ? 'bg-emerald-50/70 border-emerald-200' : syncBook === 'KJ' ? 'bg-amber-50/70 border-amber-200' : 'bg-blue-50/70 border-blue-200'
+              }`}>
+                <div className={`flex items-center space-x-1.5 text-xs font-bold ${
+                  syncBook === 'BN' ? 'text-emerald-800' : syncBook === 'KJ' ? 'text-amber-800' : 'text-blue-800'
+                }`}>
+                  <Check className={`w-4 h-4 ${syncBook === 'BN' ? 'text-emerald-600' : syncBook === 'KJ' ? 'text-amber-600' : 'text-blue-600'}`} />
+                  <span>Sumber Resmi: https://hkbp.or.id/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende'}</span>
+                </div>
+                <p className={`text-[11px] leading-relaxed ${
+                  syncBook === 'BN' ? 'text-emerald-700' : syncBook === 'KJ' ? 'text-amber-700' : 'text-blue-700'
+                }`}>
+                  Data diambil langsung dari API resmi HKBP (<code>api.hkbp.or.id/api/v1/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung-jemaat' : 'buku-ende'}/songs</code>) yang menopang portal resmi <strong>hkbp.or.id/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende'}</strong>. Seluruh lirik dan bait lagu dijamin 100% otentik, akurat, dan tidak diubah.
+                </p>
+                <div className="pt-1">
+                  <span className={`text-[10px] font-mono bg-white px-2 py-0.5 rounded border inline-block ${
+                    syncBook === 'BN' ? 'text-emerald-900 border-emerald-200' : syncBook === 'KJ' ? 'text-amber-900 border-amber-200' : 'text-blue-900 border-blue-200'
+                  }`}>
+                    Endpoint: https://api.hkbp.or.id/api/v1/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung-jemaat' : 'buku-ende'}/songs/:nomor
+                  </span>
+                </div>
+              </div>
+
+              {/* Range input */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <label className="block text-[10px] font-bold text-slate-700 uppercase">
+                  Tentukan Rentang Nomor Lagu {syncBook} (1 - {syncBook === 'BN' ? '865' : syncBook === 'KJ' ? '478' : '867'}):
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-[10px] text-slate-500 block mb-1">Dari Nomor:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max={syncBook === 'BN' ? 865 : syncBook === 'KJ' ? 478 : 867}
+                      disabled={isSyncingApi}
+                      value={syncStart}
+                      onChange={(e) => setSyncStart(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block mb-1">Sampai Nomor:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max={syncBook === 'BN' ? 865 : syncBook === 'KJ' ? 478 : 867}
+                      disabled={isSyncingApi}
+                      value={syncEnd}
+                      onChange={(e) => setSyncEnd(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Preset shortcuts */}
+                <div>
+                  <span className="text-[10px] text-slate-400 block mb-1.5 font-semibold">Pilihan Cepat {syncBook}:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { label: `${syncBook} 1 - 25`, s: '1', e: '25' },
+                      { label: `${syncBook} 1 - 50`, s: '1', e: '50' },
+                      { label: `${syncBook} 51 - 100`, s: '51', e: '100' },
+                      { label: `${syncBook} 101 - 150`, s: '101', e: '150' },
+                      { label: `${syncBook} ${syncBook === 'KJ' ? '400 - 450' : '700 - 750'}`, s: syncBook === 'KJ' ? '400' : '700', e: syncBook === 'KJ' ? '450' : '750' }
+                    ].map(preset => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        disabled={isSyncingApi}
+                        onClick={() => {
+                          setSyncStart(preset.s);
+                          setSyncEnd(preset.e);
+                        }}
+                        className={`text-[10px] font-bold px-2 py-1 bg-white rounded-lg border border-slate-200 cursor-pointer transition ${
+                          syncBook === 'BN' ? 'hover:bg-emerald-50 hover:text-emerald-700' : 'hover:bg-blue-50 hover:text-blue-700'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress State */}
+              {isSyncingApi && (
+                <div className={`p-3 rounded-xl border flex items-center space-x-2.5 text-xs font-bold animate-pulse ${
+                  syncBook === 'BN' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-blue-50 border-blue-200 text-blue-900'
+                }`}>
+                  <Loader2 className={`w-4 h-4 animate-spin shrink-0 ${
+                    syncBook === 'BN' ? 'text-emerald-600' : 'text-blue-600'
+                  }`} />
+                  <span>{syncProgress}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end space-x-2 shrink-0">
+              <button
+                type="button"
+                disabled={isSyncingApi}
+                onClick={() => setIsSyncApiModalOpen(false)}
+                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                disabled={isSyncingApi}
+                onClick={handleSyncFromApi}
+                className={`px-5 py-2 hover:brightness-105 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer flex items-center space-x-1.5 ${
+                  syncBook === 'BN' ? 'bg-gradient-to-r from-emerald-700 to-teal-700' : 'bg-gradient-to-r from-blue-700 to-indigo-700'
+                }`}
+              >
+                {isSyncingApi ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                <span>{isSyncingApi ? 'Sedang Mengambil...' : `Mulai Sinkronisasi ${syncBook}`}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* SCRIPTURE PICKER MODAL ("Pilih Kitab & Ayat Alkitab") */}
+      {scripturePickerTarget && (
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-rose-950 text-white px-6 py-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 bg-white/10 rounded-xl border border-white/20">
+                  <BookOpen className="w-5 h-5 text-blue-200" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-wide">Pilih Kitab & Ayat Alkitab</h3>
+                  <p className="text-[10px] text-blue-100/90">Pilih dari 66 Kitab PL/PB (Bahasa Indonesia atau Bahasa Batak)</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setScripturePickerTarget(null)}
+                className="p-1.5 hover:bg-white/20 rounded-xl transition cursor-pointer"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4">
+              {/* Language Mode Selector */}
+              <div className="bg-slate-900/5 border border-slate-200/90 rounded-2xl p-3.5 space-y-2">
+                <label className="block text-[11px] font-extrabold text-slate-800 uppercase tracking-wider">
+                  Bahasa
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPickerLangMode('indo');
+                      handleUpdateScripturePickerPreview(pickerBookId, pickerChapter, pickerVerseRange, 'indo');
+                    }}
+                    className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer border ${
+                      pickerLangMode === 'indo'
+                        ? 'bg-gradient-to-r from-blue-900 to-rose-900 text-white border-blue-950 shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>Bahasa Indonesia</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPickerLangMode('batak');
+                      handleUpdateScripturePickerPreview(pickerBookId, pickerChapter, pickerVerseRange, 'batak');
+                    }}
+                    className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer border ${
+                      pickerLangMode === 'batak'
+                        ? 'bg-gradient-to-r from-blue-900 to-rose-900 text-white border-blue-950 shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>Bahasa Batak</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Book Selection */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Pilih Kitab</label>
+                  <select
+                    value={pickerBookId}
+                    onChange={(e) => {
+                      const newBId = e.target.value;
+                      setPickerBookId(newBId);
+                      setPickerChapter(1);
+                      handleUpdateScripturePickerPreview(newBId, 1, pickerVerseRange, pickerLangMode);
+                    }}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-blue-800"
+                  >
+                    <optgroup label="Perjanjian Lama (Padan Na Robi)">
+                      {ALKITAB_BOOKS_CATALOG.filter(b => b.testament === 'PL').map(b => (
+                        <option key={b.id} value={b.id}>
+                          {pickerLangMode === 'batak' ? `${b.batak} (${b.indonesia})` : `${b.indonesia} (${b.batak})`}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Perjanjian Baru (Padan Na Imbaru)">
+                      {ALKITAB_BOOKS_CATALOG.filter(b => b.testament === 'PB').map(b => (
+                        <option key={b.id} value={b.id}>
+                          {pickerLangMode === 'batak' ? `${b.batak} (${b.indonesia})` : `${b.indonesia} (${b.batak})`}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
+
+                {/* Chapter Selection */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Pasal / Bindu</label>
+                  {(() => {
+                    const bInfo = ALKITAB_BOOKS_CATALOG.find(b => b.id === pickerBookId) || ALKITAB_BOOKS_CATALOG[39];
+                    return (
+                      <select
+                        value={pickerChapter}
+                        onChange={(e) => {
+                          const chap = parseInt(e.target.value, 10);
+                          setPickerChapter(chap);
+                          handleUpdateScripturePickerPreview(pickerBookId, chap, pickerVerseRange, pickerLangMode);
+                        }}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-blue-800"
+                      >
+                        {Array.from({ length: bInfo.totalChapters }, (_, i) => i + 1).map(c => (
+                          <option key={c} value={c}>
+                            {pickerLangMode === 'batak' ? `Bindu ${c}` : `Pasal ${c}`}
+                          </option>
+                        ))}
+                      </select>
+                    );
+                  })()}
+                </div>
+
+                {/* Verse Range Selection */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Ayat (Contoh: 1-5 atau 16)</label>
+                  <div className="flex items-center space-x-1.5">
+                    <input
+                      type="text"
+                      value={pickerVerseRange}
+                      onChange={(e) => setPickerVerseRange(e.target.value)}
+                      placeholder="1-5"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-blue-800"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateScripturePickerPreview(pickerBookId, pickerChapter, pickerVerseRange, pickerLangMode)}
+                      className="px-3.5 py-2 bg-gradient-to-r from-blue-900 to-rose-900 hover:brightness-110 text-white rounded-xl text-xs font-bold transition cursor-pointer shrink-0 shadow-xs"
+                    >
+                      Cek
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview Box */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                    Pratinjau Nats ({pickerLangMode === 'indo' ? 'Bahasa Indonesia' : 'Bahasa Batak'}):
+                  </span>
+                  {isFetchingPickerPreview && (
+                    <span className="text-[10px] text-blue-900 font-bold flex items-center space-x-1">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>Memuat...</span>
+                    </span>
+                  )}
+                </div>
+                <textarea
+                  readOnly
+                  rows={8}
+                  value={pickerPreviewText}
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-800 outline-none resize-none leading-relaxed"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end space-x-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setScripturePickerTarget(null)}
+                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyScriptureFromPicker}
+                className="px-5 py-2 bg-gradient-to-r from-blue-900 via-indigo-900 to-rose-900 hover:brightness-110 text-white rounded-xl text-xs font-extrabold transition shadow-md cursor-pointer flex items-center space-x-1.5"
+              >
+                <Check className="w-4 h-4" />
+                <span>Terapkan Ke Acara</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

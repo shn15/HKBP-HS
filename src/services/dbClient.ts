@@ -41,8 +41,22 @@ function serializeFields(data: any): any {
   const fields: any = {};
   for (const [key, value] of Object.entries(data)) {
     if (value !== undefined && value !== null) {
+      // Don't send giant static song database in single kv_store document (>1MB limit)
+      if (key === 'hkbp_buku_nyanyian_db' && Array.isArray(value)) {
+        const customOnly = value.filter((s: any) => s && s.isCustom);
+        if (customOnly.length > 0) {
+          fields['hkbp_custom_songs'] = { stringValue: JSON.stringify(customOnly) };
+        }
+        continue;
+      }
+
       const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
-      fields[key] = { stringValue };
+      // Safety check: Firestore single document field max size limit
+      if (stringValue.length < 800000) {
+        fields[key] = { stringValue };
+      } else {
+        console.warn(`Skipping key '${key}' in single Firestore document payload as string length (${stringValue.length}) exceeds safety limit.`);
+      }
     }
   }
   return fields;

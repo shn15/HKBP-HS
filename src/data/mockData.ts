@@ -496,3 +496,21 @@ export const INITIAL_ATTENDANCE_TRENDS: WeeklyAttendanceTrend[] = [
   }
 ];
 
+export const CHURCH_LOCATION_INFO = {
+  nama: 'HKBP Hinalang Silalahi Lutheran Church',
+  resort: 'Resort Hinalang Silalahi (Distrik XI Toba Hasundutan)',
+  desa: 'Hinalang Bagasan',
+  kecamatan: 'Balige',
+  kabupaten: 'Kabupaten Toba',
+  provinsi: 'Sumatera Utara',
+  kodePos: '22312',
+  negara: 'Indonesia',
+  alamatLengkap: 'Desa Hinalang Bagasan, Kecamatan Balige, Kabupaten Toba, Sumatera Utara 22312, Indonesia',
+  koordinat: {
+    lat: 2.3346565,
+    lng: 99.0417933
+  },
+  plusCode: '897R+VP Hinalang Bagasan',
+  mapsAppUrl: 'https://maps.app.goo.gl/MsdAzCJwb64EB8eP6',
+  directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=2.3346565,99.0417933'
+};
