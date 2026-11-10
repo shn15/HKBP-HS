@@ -24,12 +24,36 @@ try {
   console.error("Failed to load Firebase configuration:", err);
 }
 
-// Helper to get Firestore REST API URL for the single-document store
+const MAX_CHUNK_CHARS = 700000;
+
+// Helper to get Firestore REST API URLs
 function getFirestoreUrl() {
   if (!firebaseConfig || !firebaseConfig.projectId || !firebaseConfig.firestoreDatabaseId || !firebaseConfig.apiKey) {
     return null;
   }
   return `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/kv_store/all_data?key=${firebaseConfig.apiKey}`;
+}
+
+function getFirestoreCollectionUrl(collectionName: string, docId?: string) {
+  if (!firebaseConfig || !firebaseConfig.projectId || !firebaseConfig.firestoreDatabaseId || !firebaseConfig.apiKey) {
+    return null;
+  }
+  const base = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/${collectionName}`;
+  if (docId) {
+    return `${base}/${encodeURIComponent(docId)}?key=${firebaseConfig.apiKey}`;
+  }
+  return `${base}?pageSize=200&key=${firebaseConfig.apiKey}`;
+}
+
+function safeParseJsonOrString(rawValue: string): any {
+  try {
+    if (rawValue.startsWith("{") || rawValue.startsWith("[")) {
+      return JSON.parse(rawValue);
+    }
+    return rawValue;
+  } catch {
+    return rawValue;
+  }
 }
 
 // Helper to parse Firestore REST API document to standard JavaScript object
@@ -39,15 +63,7 @@ function parseDocument(doc: any): any {
   for (const [key, valueObj] of Object.entries(doc.fields)) {
     const rawValue = (valueObj as any)?.stringValue;
     if (rawValue !== undefined && rawValue !== null) {
-      try {
-        if (rawValue.startsWith("{") || rawValue.startsWith("[")) {
-          data[key] = JSON.parse(rawValue);
-        } else {
-          data[key] = rawValue;
-        }
-      } catch {
-        data[key] = rawValue;
-      }
+      data[key] = safeParseJsonOrString(rawValue);
     }
   }
   return data;
@@ -80,31 +96,85 @@ function writeLocalDb(data: any) {
 // Pre-load in-memory database
 inMemoryDb = readLocalDb();
 
+async function fetchMergedFirestoreData(): Promise<Record<string, any> | null> {
+  if (!firebaseConfig || !firebaseConfig.projectId || !firebaseConfig.firestoreDatabaseId || !firebaseConfig.apiKey) {
+    return null;
+  }
+  const runQueryUrl = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents:runQuery?key=${firebaseConfig.apiKey}`;
+
+  try {
+    const queryRes = await fetch(runQueryUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: "kv_store" }],
+        },
+      }),
+    });
+    if (!queryRes.ok) return null;
+    const rows: any[] = await queryRes.json();
+    const docs: any[] = Array.isArray(rows) ? rows.map((r) => r?.document).filter(Boolean) : [];
+    const merged: Record<string, any> = {};
+
+    const legacyDoc = docs.find((d) => String(d.name || "").endsWith("/all_data"));
+    if (legacyDoc) {
+      Object.assign(merged, parseDocument(legacyDoc));
+    }
+
+    for (const d of docs) {
+      const docId = String(d.name || "").split("/").pop() || "";
+      if (!docId || docId === "all_data" || docId === "test_doc") continue;
+      const fields = d.fields || {};
+      const isChunked = Boolean(fields.isChunked?.booleanValue);
+      const chunkCount = Number(fields.chunkCount?.integerValue || 0);
+      const clientTs = Number(fields.clientTs?.integerValue || 0);
+
+      if (isChunked && chunkCount > 0) {
+        let combined = "";
+        for (let i = 0; i < chunkCount; i++) {
+          const chunkUrl = getFirestoreCollectionUrl("kv_store_chunks", `${docId}__chunk_${i}`);
+          if (!chunkUrl) continue;
+          const cRes = await fetch(chunkUrl);
+          if (cRes.ok) {
+            const cJson: any = await cRes.json();
+            combined += String(cJson?.fields?.chunk?.stringValue || "");
+          }
+        }
+        merged[docId] = safeParseJsonOrString(combined);
+        if (clientTs) merged[`updated_at_${docId}`] = clientTs;
+      } else if (typeof fields.valueStr?.stringValue === "string") {
+        merged[docId] = safeParseJsonOrString(fields.valueStr.stringValue);
+        if (clientTs) merged[`updated_at_${docId}`] = clientTs;
+      }
+    }
+
+    return merged;
+  } catch (err) {
+    console.warn("Firestore REST sync error:", err);
+    return null;
+  }
+}
+
 // Asynchronously load and merge from Firestore REST API on boot
 async function initFirestoreSync() {
-  const url = getFirestoreUrl();
-  if (url) {
-    try {
-      const response = await fetch(url);
-      if (response.status === 200) {
-        const doc = await response.json();
-        const firestoreData = parseDocument(doc);
-        if (firestoreData && Object.keys(firestoreData).length > 0) {
-          inMemoryDb = Object.assign({}, inMemoryDb, firestoreData);
-          writeLocalDb(inMemoryDb);
-          console.log("Database successfully synced from Firestore REST API on server start.");
-        }
-      }
-    } catch (err) {
-      console.warn("Initial Firestore sync check error:", err);
-    }
+  const firestoreData = await fetchMergedFirestoreData();
+  if (firestoreData && Object.keys(firestoreData).length > 0) {
+    inMemoryDb = Object.assign({}, inMemoryDb, firestoreData);
+    writeLocalDb(inMemoryDb);
+    console.log("Database successfully synced from Firestore REST API on server start.");
   }
 }
 const firestoreInitPromise = initFirestoreSync();
 
-// Helper to read database with in-memory immediacy after initial Firestore sync
+// Helper to read database with fresh Firestore sync
 async function readDb() {
   await firestoreInitPromise;
+  const latest = await fetchMergedFirestoreData();
+  if (latest && Object.keys(latest).length > 0) {
+    inMemoryDb = Object.assign({}, inMemoryDb, latest);
+    return inMemoryDb;
+  }
   if (inMemoryDb && Object.keys(inMemoryDb).length > 0) {
     return inMemoryDb;
   }
@@ -112,7 +182,72 @@ async function readDb() {
   return inMemoryDb;
 }
 
-// Write a single key-value pair to memory, disk, and Firestore with atomic updateMask
+async function writePerKeyToFirestore(targetKey: string, targetValue: any, timestamp: number) {
+  const serialized =
+    typeof targetValue === "string"
+      ? targetValue
+      : typeof targetValue === "number" || typeof targetValue === "boolean"
+        ? String(targetValue)
+        : JSON.stringify(targetValue);
+
+  if (serialized.length <= MAX_CHUNK_CHARS) {
+    const docUrl = getFirestoreCollectionUrl("kv_store", targetKey);
+    if (!docUrl) return;
+    const patchRes = await fetch(docUrl, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fields: {
+          valueStr: { stringValue: serialized },
+          isChunked: { booleanValue: false },
+          chunkCount: { integerValue: "0" },
+          clientTs: { integerValue: String(timestamp) },
+        },
+      }),
+    });
+    if (!patchRes.ok) {
+      console.warn(`Firestore REST API key write returned ${patchRes.status} for ${targetKey}`);
+    }
+  } else {
+    const chunks: string[] = [];
+    for (let i = 0; i < serialized.length; i += MAX_CHUNK_CHARS) {
+      chunks.push(serialized.slice(i, i + MAX_CHUNK_CHARS));
+    }
+    for (let i = 0; i < chunks.length; i++) {
+      const chunkUrl = getFirestoreCollectionUrl("kv_store_chunks", `${targetKey}__chunk_${i}`);
+      if (!chunkUrl) continue;
+      await fetch(chunkUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fields: {
+            key: { stringValue: targetKey },
+            index: { integerValue: String(i) },
+            chunk: { stringValue: chunks[i] },
+            clientTs: { integerValue: String(timestamp) },
+          },
+        }),
+      });
+    }
+    const metaUrl = getFirestoreCollectionUrl("kv_store", targetKey);
+    if (metaUrl) {
+      await fetch(metaUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fields: {
+            valueStr: { stringValue: "" },
+            isChunked: { booleanValue: true },
+            chunkCount: { integerValue: String(chunks.length) },
+            clientTs: { integerValue: String(timestamp) },
+          },
+        }),
+      });
+    }
+  }
+}
+
+// Write a single key-value pair to memory, disk, and Firestore per-key doc
 async function writeDbKey(key: string, value: any) {
   await firestoreInitPromise;
   if (!inMemoryDb) {
@@ -123,36 +258,16 @@ async function writeDbKey(key: string, value: any) {
   inMemoryDb[`updated_at_${key}`] = timestamp;
   writeLocalDb(inMemoryDb);
 
-  const baseUrl = getFirestoreUrl();
-  if (baseUrl) {
-    try {
-      let targetKey = key;
-      let targetValue = value;
-      if (key === "hkbp_buku_nyanyian_db" && Array.isArray(value)) {
-        const customOnly = value.filter((s: any) => s && s.isCustom);
-        if (customOnly.length === 0) return true;
-        targetKey = "hkbp_custom_songs";
-        targetValue = customOnly;
-      }
-      const fieldVal = typeof targetValue === "object" ? JSON.stringify(targetValue) : String(targetValue);
-      if (fieldVal.length < 800000) {
-        const patchFields: any = {
-          [targetKey]: { stringValue: fieldVal },
-          [`updated_at_${targetKey}`]: { stringValue: String(timestamp) }
-        };
-        const patchUrl = `${baseUrl}&updateMask.fieldPaths=${encodeURIComponent(targetKey)}&updateMask.fieldPaths=updated_at_${encodeURIComponent(targetKey)}`;
-        const patchRes = await fetch(patchUrl, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fields: patchFields })
-        });
-        if (!patchRes.ok) {
-          console.warn(`Firestore REST API key write returned ${patchRes.status} for ${targetKey}`);
-        }
-      }
-    } catch (err) {
-      console.warn(`Firestore REST API key write error for ${key}:`, err);
+  try {
+    let targetKey = key;
+    let targetValue = value;
+    if (key === "hkbp_buku_nyanyian_db" && Array.isArray(value)) {
+      targetKey = "hkbp_custom_songs";
+      targetValue = value.filter((s: any) => s && s.isCustom);
     }
+    await writePerKeyToFirestore(targetKey, targetValue, timestamp);
+  } catch (err) {
+    console.warn(`Firestore REST API key write error for ${key}:`, err);
   }
   return true;
 }
@@ -164,47 +279,27 @@ async function writeDbBatch(batchData: any) {
     inMemoryDb = readLocalDb();
   }
   const timestamp = Date.now();
-  const patchFields: any = {};
-  const maskPaths: string[] = [];
 
   for (const [k, v] of Object.entries(batchData)) {
     inMemoryDb[k] = v;
     inMemoryDb[`updated_at_${k}`] = timestamp;
-
-    let targetKey = k;
-    let targetValue = v;
-    if (k === "hkbp_buku_nyanyian_db" && Array.isArray(v)) {
-      const customOnly = v.filter((s: any) => s && s.isCustom);
-      if (customOnly.length === 0) continue;
-      targetKey = "hkbp_custom_songs";
-      targetValue = customOnly;
-    }
-
-    const fieldVal = typeof targetValue === "object" ? JSON.stringify(targetValue) : String(targetValue);
-    if (fieldVal.length < 800000) {
-      patchFields[targetKey] = { stringValue: fieldVal };
-      patchFields[`updated_at_${targetKey}`] = { stringValue: String(timestamp) };
-      maskPaths.push(`updateMask.fieldPaths=${encodeURIComponent(targetKey)}`);
-      maskPaths.push(`updateMask.fieldPaths=updated_at_${encodeURIComponent(targetKey)}`);
-    }
   }
   writeLocalDb(inMemoryDb);
 
-  const baseUrl = getFirestoreUrl();
-  if (baseUrl && maskPaths.length > 0) {
-    try {
-      const patchUrl = `${baseUrl}&${maskPaths.join('&')}`;
-      const patchRes = await fetch(patchUrl, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fields: patchFields })
-      });
-      if (!patchRes.ok) {
-        console.warn(`Firestore REST API batch write returned ${patchRes.status}`);
-      }
-    } catch (err) {
-      console.warn("Firestore REST API batch write error:", err);
-    }
+  try {
+    await Promise.all(
+      Object.entries(batchData).map(([k, v]) => {
+        let targetKey = k;
+        let targetValue = v;
+        if (k === "hkbp_buku_nyanyian_db" && Array.isArray(v)) {
+          targetKey = "hkbp_custom_songs";
+          targetValue = v.filter((s: any) => s && s.isCustom);
+        }
+        return writePerKeyToFirestore(targetKey, targetValue, timestamp);
+      })
+    );
+  } catch (err) {
+    console.warn("Firestore REST API batch write error:", err);
   }
   return true;
 }
@@ -1032,8 +1127,28 @@ async function startServer() {
     console.log(`[HKBP OTP] Domain valid terdeteksi (@${domain}). Mengirim kode autentikasi ${code} ke ${emailStr}`);
 
     try {
+      const smtpHost = process.env.SMTP_HOST?.trim();
+      const smtpPort = Number(process.env.SMTP_PORT || 587);
+
       // Helper function to create Gmail or standard SMTP transporter
       const createTransporterForUser = (user: string) => {
+        if (smtpHost && smtpHost !== "smtp.gmail.com") {
+          return nodemailer.createTransport({
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpPort === 465,
+            auth: {
+              user: user,
+              pass: cleanPass,
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 15000,
+            tls: {
+              rejectUnauthorized: false
+            }
+          });
+        }
         return nodemailer.createTransport({
           service: "gmail",
           auth: {

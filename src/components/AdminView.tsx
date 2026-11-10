@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'motion/react';
 import * as XLSX from 'xlsx';
-import { fetchDbFromServer, saveDbKey } from '../services/dbClient';
+import { fetchDbFromServer, saveDbKey, isLocallyPendingWrite } from '../services/dbClient';
 
 function safeJsonParse<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback;
@@ -111,6 +111,7 @@ interface AdminViewProps {
   onUpdateParhaladoList: (data: ParhaladoMember[]) => void;
   onUpdatePartangianganMode?: (mode: PartangianganMode) => void;
   onUpdateAttendanceTrends?: (data: WeeklyAttendanceTrend[]) => void;
+  isDbLoaded?: boolean;
 }
 
 export default function AdminView({
@@ -150,7 +151,8 @@ export default function AdminView({
   onUpdateTentangGerejaList,
   onUpdateParhaladoList,
   onUpdatePartangianganMode,
-  onUpdateAttendanceTrends
+  onUpdateAttendanceTrends,
+  isDbLoaded = true
 }: AdminViewProps) {
   // Sidebar Sub-navigation for Desktop Admin Panels with refresh persistence
   const [activeSubTab, setActiveSubTab] = useState<'dashboard' | 'liturgi' | 'petugas' | 'warta' | 'keuangan' | 'jemaat' | 'arsip_pdf' | 'jadwal' | 'sejarah' | 'parhalado' | 'database_akun' | 'buku_nyanyian'>(() => {
@@ -210,99 +212,124 @@ export default function AdminView({
       setAccountsList(parsedAccounts);
     }
 
+    const applyAdminSecondaryDb = (db: Record<string, any> | null, forceInitial = false) => {
+      if (!db) return;
+
+      if (forceInitial || !isLocallyPendingWrite('hkbp_registered_admins')) {
+        if (Array.isArray(db.hkbp_registered_admins) && db.hkbp_registered_admins.length > 0) {
+          setAccountsList(db.hkbp_registered_admins);
+          localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
+        } else if (forceInitial) {
+          const defaultAdmins: AdminCredentials[] = [
+            {
+              username: 'Pirma 15',
+              email: 'pirmasiahaan12342@gmail.com',
+              password: 'Pirma 08',
+              namaGereja: 'HKBP Hinalang Silalahi',
+              status: 'ruas',
+              isActive: true
+            },
+            {
+              username: 'admin',
+              email: 'admin@hkbp.or.id',
+              password: 'adminpassword123',
+              namaGereja: 'HKBP Hinalang Silalahi',
+              status: 'parhalado',
+              isActive: true
+            }
+          ];
+          setAccountsList(defaultAdmins);
+          localStorage.setItem('hkbp_registered_admins', JSON.stringify(defaultAdmins));
+          saveRegisteredAdminsToServer(defaultAdmins);
+        }
+      }
+
+      if (Array.isArray(db.hkbp_deleted_arsip_ids) && (forceInitial || !isLocallyPendingWrite('hkbp_deleted_arsip_ids'))) {
+        const mergedDeleted = forceInitial
+          ? Array.from(new Set([...deletedArsipIdsRef.current, ...db.hkbp_deleted_arsip_ids]))
+          : Array.from(new Set(db.hkbp_deleted_arsip_ids));
+        deletedArsipIdsRef.current = mergedDeleted;
+        localStorage.setItem('hkbp_deleted_arsip_ids', JSON.stringify(mergedDeleted));
+      }
+
+      if (forceInitial || !isLocallyPendingWrite('hkbp_arsip_pdf')) {
+        if (Array.isArray(db.hkbp_arsip_pdf)) {
+          const cleanedArsip = db.hkbp_arsip_pdf.filter((a: any) => a && !deletedArsipIdsRef.current.includes(a.id));
+          arsipPdfsRef.current = cleanedArsip;
+          setArsipPdfs(cleanedArsip);
+          localStorage.setItem('hkbp_arsip_pdf', JSON.stringify(cleanedArsip));
+        } else if (forceInitial) {
+          const defaultArsip = [
+            {
+              id: 'arsip-1',
+              judul: 'Tata Gereja HKBP (Amanat & Peraturan)',
+              keterangan: 'Aturan, Peraturan, dan Konfesi resmi HKBP sebagai landasan pelayanan gerejawi.',
+              tanggalUpload: '2026-06-15',
+              fileName: 'tata_gereja_hkbp_2026.pdf',
+              fileSize: '1.24 MB',
+              pdfUrl: 'data:application/pdf;base64,JVBERi0xLjQKJ...'
+            },
+            {
+              id: 'arsip-2',
+              judul: 'Kumpulan Lagu Koor Huria Batak',
+              keterangan: 'Daftar lagu koor koor Batak populer untuk latihan Koor Ama, Ina, dan Remaja.',
+              tanggalUpload: '2026-06-20',
+              fileName: 'kumpulan_koor_batak.pdf',
+              fileSize: '3.12 MB',
+              pdfUrl: ''
+            }
+          ];
+          saveDbKey('hkbp_arsip_pdf', defaultArsip).catch(e => console.error(e));
+        }
+      }
+
+      if (
+        forceInitial ||
+        (!isLocallyPendingWrite('hkbp_buku_nyanyian_db') && !isLocallyPendingWrite('hkbp_custom_songs'))
+      ) {
+        const songMap = new Map<string, BukuSong>();
+        INITIAL_BUKU_NYANYIAN_DB.forEach(s => songMap.set(s.id, s));
+        if (db.hkbp_buku_nyanyian_db && Array.isArray(db.hkbp_buku_nyanyian_db)) {
+          db.hkbp_buku_nyanyian_db.forEach((s: any) => {
+            if (s && s.id && (s.isCustom || !songMap.has(s.id))) {
+              songMap.set(s.id, s);
+            }
+          });
+        }
+        if (db.hkbp_custom_songs && Array.isArray(db.hkbp_custom_songs)) {
+          db.hkbp_custom_songs.forEach((s: any) => {
+            if (s && s.id) {
+              songMap.set(s.id, { ...s, isCustom: true });
+            }
+          });
+        }
+        const mergedDb = Array.from(songMap.values()).sort((a, b) => {
+          if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+          return a.nomor - b.nomor;
+        });
+        setBukuNyanyianDb(mergedDb);
+        localStorage.setItem('hkbp_buku_nyanyian_db', JSON.stringify(mergedDb));
+      }
+    };
+
     // Sync with server/Firestore DB on mount
     fetchDbFromServer()
       .then(db => {
-        if (db) {
-          if (Array.isArray(db.hkbp_registered_admins) && db.hkbp_registered_admins.length > 0) {
-            setAccountsList(db.hkbp_registered_admins);
-            localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
-          } else {
-            const defaultAdmins: AdminCredentials[] = [
-              {
-                username: 'Pirma 15',
-                email: 'pirmasiahaan12342@gmail.com',
-                password: 'Pirma 08',
-                namaGereja: 'HKBP Hinalang Silalahi',
-                status: 'ruas',
-                isActive: true
-              },
-              {
-                username: 'admin',
-                email: 'admin@hkbp.or.id',
-                password: 'adminpassword123',
-                namaGereja: 'HKBP Hinalang Silalahi',
-                status: 'parhalado',
-                isActive: true
-              }
-            ];
-            setAccountsList(defaultAdmins);
-            localStorage.setItem('hkbp_registered_admins', JSON.stringify(defaultAdmins));
-            saveRegisteredAdminsToServer(defaultAdmins);
-          }
-
-          if (Array.isArray(db.hkbp_deleted_arsip_ids)) {
-            const mergedDeleted = Array.from(new Set([...deletedArsipIdsRef.current, ...db.hkbp_deleted_arsip_ids]));
-            deletedArsipIdsRef.current = mergedDeleted;
-            localStorage.setItem('hkbp_deleted_arsip_ids', JSON.stringify(mergedDeleted));
-          }
-
-          if (Array.isArray(db.hkbp_arsip_pdf)) {
-            const cleanedArsip = db.hkbp_arsip_pdf.filter((a: any) => a && !deletedArsipIdsRef.current.includes(a.id));
-            arsipPdfsRef.current = cleanedArsip;
-            setArsipPdfs(cleanedArsip);
-            localStorage.setItem('hkbp_arsip_pdf', JSON.stringify(cleanedArsip));
-          } else {
-            // Seed server
-            const defaultArsip = [
-              {
-                id: 'arsip-1',
-                judul: 'Tata Gereja HKBP (Amanat & Peraturan)',
-                keterangan: 'Aturan, Peraturan, dan Konfesi resmi HKBP sebagai landasan pelayanan gerejawi.',
-                tanggalUpload: '2026-06-15',
-                fileName: 'tata_gereja_hkbp_2026.pdf',
-                fileSize: '1.24 MB',
-                pdfUrl: 'data:application/pdf;base64,JVBERi0xLjQKJ...'
-              },
-              {
-                id: 'arsip-2',
-                judul: 'Kumpulan Lagu Koor Huria Batak',
-                keterangan: 'Daftar lagu koor koor Batak populer untuk latihan Koor Ama, Ina, dan Remaja.',
-                tanggalUpload: '2026-06-20',
-                fileName: 'kumpulan_koor_batak.pdf',
-                fileSize: '3.12 MB',
-                pdfUrl: ''
-              }
-            ];
-            saveDbKey('hkbp_arsip_pdf', defaultArsip).catch(e => console.error(e));
-          }
-
-          const songMap = new Map<string, BukuSong>();
-          INITIAL_BUKU_NYANYIAN_DB.forEach(s => songMap.set(s.id, s));
-          if (db.hkbp_buku_nyanyian_db && Array.isArray(db.hkbp_buku_nyanyian_db)) {
-            db.hkbp_buku_nyanyian_db.forEach((s: any) => {
-              if (s && s.id && (s.isCustom || !songMap.has(s.id))) {
-                songMap.set(s.id, s);
-              }
-            });
-          }
-          if (db.hkbp_custom_songs && Array.isArray(db.hkbp_custom_songs)) {
-            db.hkbp_custom_songs.forEach((s: any) => {
-              if (s && s.id) {
-                songMap.set(s.id, { ...s, isCustom: true });
-              }
-            });
-          }
-          const mergedDb = Array.from(songMap.values()).sort((a, b) => {
-            if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
-            return a.nomor - b.nomor;
-          });
-          setBukuNyanyianDb(mergedDb);
-          localStorage.setItem('hkbp_buku_nyanyian_db', JSON.stringify(mergedDb));
-        }
+        applyAdminSecondaryDb(db, true);
       })
       .catch(err => console.error('Failed to load registered admins/PDFs:', err))
       .finally(() => setIsArsipHydrated(true));
+
+    const handleDbSynced = (e: Event) => {
+      const detail = (e as CustomEvent<Record<string, any> | undefined>).detail;
+      if (detail) {
+        applyAdminSecondaryDb(detail, false);
+      }
+    };
+    window.addEventListener('hkbp_db_synced', handleDbSynced);
+    return () => {
+      window.removeEventListener('hkbp_db_synced', handleDbSynced);
+    };
   }, []);
 
   // Custom Balance Editing States
@@ -832,7 +859,7 @@ export default function AdminView({
 
   // Auto-backup sinkronisasi semua acara dan warta ke Arsip Berkas & PDF
   useEffect(() => {
-    if (!isArsipHydrated) return;
+    if (!isArsipHydrated || !isDbLoaded) return;
 
     let changed = false;
     const current = [...arsipPdfsRef.current];
@@ -909,7 +936,7 @@ export default function AdminView({
     if (changed) {
       saveArsipPdfs(current);
     }
-  }, [isArsipHydrated, liturgiMinggu, liturgiPartangiangan, wartaList]);
+  }, [isArsipHydrated, isDbLoaded, liturgiMinggu, liturgiPartangiangan, wartaList]);
 
   // ----------------------------------------------------
   // STATE FOR DATABASE BUKU NYANYIAN (BE & BN)
@@ -1316,19 +1343,22 @@ export default function AdminView({
   // ----------------------------------------------------
   // INITIALIZER FOR SUNDAY LITURGY STATE
   // ----------------------------------------------------
-  const [didInitSunday, setDidInitSunday] = useState(false);
+  const lastSyncedSundayJsonRef = useRef<string>('');
   useEffect(() => {
-    if (!didInitSunday && liturgiMinggu && liturgiMinggu.length > 0) {
+    if (editingLiturgyId === null && liturgiMinggu && liturgiMinggu.length > 0) {
       const lit = liturgiMinggu[0];
-      setLitTitle(lit.judul);
-      setLitDate(lit.tanggal);
-      setLitTopik(lit.topik || '');
-      setLitRef(lit.ayatReferensi || '');
-      setLitBacaan(lit.ayatBacaan || '');
-      setLitSteps([...(lit.teksLiturgi || [])]);
-      setDidInitSunday(true);
+      const serialized = JSON.stringify(lit);
+      if (serialized !== lastSyncedSundayJsonRef.current) {
+        lastSyncedSundayJsonRef.current = serialized;
+        setLitTitle(lit.judul);
+        setLitDate(lit.tanggal);
+        setLitTopik(lit.topik || '');
+        setLitRef(lit.ayatReferensi || '');
+        setLitBacaan(lit.ayatBacaan || '');
+        setLitSteps([...(lit.teksLiturgi || [])]);
+      }
     }
-  }, [didInitSunday, liturgiMinggu]);
+  }, [liturgiMinggu, editingLiturgyId]);
 
   // ----------------------------------------------------
   // HELPER TO SHOW RE-USABLE TOASTS
@@ -2349,12 +2379,17 @@ export default function AdminView({
           username: newAccount.username
         })
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Respon server tidak valid (${res.status})`);
+      }
       const data = await res.json();
       if (data.success) {
         setOtpDeliveryStatus('success');
       } else {
         if (data.reason === 'SMTP_NOT_CONFIGURED') {
           setOtpDeliveryStatus('smtp_not_configured');
+          setOtpErrorMessage(data.message || 'Konfigurasi email pengirim (SMTP_USER & SMTP_PASS) belum disetel di server.');
         } else {
           setOtpDeliveryStatus('error');
           setOtpErrorMessage(data.message || 'Email tidak aktif atau tidak ditemukan. Pengiriman kode dibatalkan.');
@@ -2363,7 +2398,7 @@ export default function AdminView({
     } catch (err: any) {
       console.error('Error sending OTP:', err);
       setOtpDeliveryStatus('error');
-      setOtpErrorMessage('Koneksi ke server gagal.');
+      setOtpErrorMessage('Koneksi ke server pengiriman email gagal. Pastikan fungsi API /api/send-otp aktif.');
     }
   };
 
@@ -2425,6 +2460,10 @@ export default function AdminView({
           username: pendingAccountToSave.username
         })
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Respon server tidak valid (${res.status})`);
+      }
       const data = await res.json();
       if (data.success) {
         setOtpDeliveryStatus('success');
@@ -2432,6 +2471,7 @@ export default function AdminView({
       } else {
         if (data.reason === 'SMTP_NOT_CONFIGURED') {
           setOtpDeliveryStatus('smtp_not_configured');
+          setOtpErrorMessage(data.message || 'Konfigurasi email pengirim (SMTP_USER & SMTP_PASS) belum disetel di server.');
         } else {
           setOtpDeliveryStatus('error');
           setOtpErrorMessage(data.message || 'Email tidak aktif atau tidak ditemukan. Pengiriman kode dibatalkan.');
@@ -2439,7 +2479,7 @@ export default function AdminView({
       }
     } catch (err: any) {
       setOtpDeliveryStatus('error');
-      setOtpErrorMessage('Koneksi ke server gagal.');
+      setOtpErrorMessage('Koneksi ke server pengiriman email gagal. Pastikan fungsi API /api/send-otp aktif.');
     }
   };
 

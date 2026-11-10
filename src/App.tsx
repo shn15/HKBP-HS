@@ -4,7 +4,7 @@ import MemberView from './components/MemberView';
 import AdminLogin from './components/AdminLogin';
 import AdminView from './components/AdminView';
 import StandaloneTentang from './components/StandaloneTentang';
-import { fetchDbFromServer, saveDbKey, getLocalClientTimestamp } from './services/dbClient';
+import { fetchDbFromServer, saveDbKey, subscribeToDb, isLocallyPendingWrite } from './services/dbClient';
 import { Liturgi, Warta, Transaksi, Jemaat, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, TentangGerejaItem, WeeklyAttendanceTrend, PartangianganMode } from './types';
 import {
   INITIAL_LITURGI_MINGGU,
@@ -51,6 +51,7 @@ export default function App() {
   const [parhaladoList, setParhaladoList] = useState<ParhaladoMember[]>([]);
   const [attendanceTrends, setAttendanceTrends] = useState<WeeklyAttendanceTrend[]>([]);
   const [partangianganMode, setPartangianganMode] = useState<PartangianganMode>('normal');
+  const [isDbLoaded, setIsDbLoaded] = useState<boolean>(false);
 
   // Helper for safe JSON parsing without throw
   const safeJsonParse = <T,>(val: string | null, fallback: T): T => {
@@ -136,88 +137,103 @@ export default function App() {
     fetchDbFromServer()
       .then(db => {
         if (db && typeof db === 'object' && Object.keys(db).length > 0) {
-          // Update all React state and local storage caches with server state
-          if (db.hkbp_liturgi_minggu !== undefined) {
-            setLiturgiMinggu(db.hkbp_liturgi_minggu);
-            localStorage.setItem('hkbp_liturgi_minggu', JSON.stringify(db.hkbp_liturgi_minggu));
-          }
-          if (db.hkbp_liturgi_partangiangan !== undefined) {
-            setLiturgiPartangiangan(db.hkbp_liturgi_partangiangan);
-            localStorage.setItem('hkbp_liturgi_partangiangan', JSON.stringify(db.hkbp_liturgi_partangiangan));
-          }
-          if (db.hkbp_petugas_minggu !== undefined) {
-            setPetugasMinggu(db.hkbp_petugas_minggu);
-            localStorage.setItem('hkbp_petugas_minggu', JSON.stringify(db.hkbp_petugas_minggu));
-          }
-          if (db.hkbp_partangiangan_attendance !== undefined) {
-            setPartangianganAttendance(db.hkbp_partangiangan_attendance);
-            localStorage.setItem('hkbp_partangiangan_attendance', JSON.stringify(db.hkbp_partangiangan_attendance));
-          }
-          if (db.hkbp_petugas_partangiangan !== undefined) {
-            setPetugasPartangiangan(db.hkbp_petugas_partangiangan);
-            localStorage.setItem('hkbp_petugas_partangiangan', JSON.stringify(db.hkbp_petugas_partangiangan));
-          }
-          if (db.hkbp_partangiangan_attendance_date !== undefined) {
-            setPartangianganAttendanceDate(db.hkbp_partangiangan_attendance_date);
-            localStorage.setItem('hkbp_partangiangan_attendance_date', db.hkbp_partangiangan_attendance_date);
-          }
-          if (db.hkbp_petugas_partangiangan_date !== undefined) {
-            setPetugasPartangianganDate(db.hkbp_petugas_partangiangan_date);
-            localStorage.setItem('hkbp_petugas_partangiangan_date', db.hkbp_petugas_partangiangan_date);
-          }
-          if (db.hkbp_petugas_minggu_date !== undefined) {
-            setPetugasMingguDate(db.hkbp_petugas_minggu_date);
-            localStorage.setItem('hkbp_petugas_minggu_date', db.hkbp_petugas_minggu_date);
-          }
-          if (db.hkbp_partangiangan_mode !== undefined) {
-            setPartangianganMode(db.hkbp_partangiangan_mode as PartangianganMode);
-            localStorage.setItem('hkbp_partangiangan_mode', db.hkbp_partangiangan_mode);
-          }
-          if (db.hkbp_warta_list !== undefined) {
-            setWartaList(db.hkbp_warta_list);
-            localStorage.setItem('hkbp_warta_list', JSON.stringify(db.hkbp_warta_list));
-          }
-          if (db.hkbp_transaksi_list !== undefined) {
-            setTransaksiList(db.hkbp_transaksi_list);
-            localStorage.setItem('hkbp_transaksi_list', JSON.stringify(db.hkbp_transaksi_list));
-          }
-          if (db.hkbp_jemaat_list !== undefined) {
-            setJemaatList(db.hkbp_jemaat_list);
-            localStorage.setItem('hkbp_jemaat_list', JSON.stringify(db.hkbp_jemaat_list));
-          }
-          if (db.hkbp_custom_balance_title !== undefined) {
-            setCustomBalanceTitle(db.hkbp_custom_balance_title);
-            localStorage.setItem('hkbp_custom_balance_title', db.hkbp_custom_balance_title);
-          }
-          if (db.hkbp_custom_balance_value !== undefined) {
-            setCustomBalanceValue(Number(db.hkbp_custom_balance_value));
-            localStorage.setItem('hkbp_custom_balance_value', db.hkbp_custom_balance_value.toString());
-          }
-          if (db.hkbp_jadwal_ibadah !== undefined) {
-            setJadwalIbadah(db.hkbp_jadwal_ibadah);
-            localStorage.setItem('hkbp_jadwal_ibadah', JSON.stringify(db.hkbp_jadwal_ibadah));
-          }
-          if (db.hkbp_tentang_gereja_list !== undefined) {
-            setTentangGerejaList(db.hkbp_tentang_gereja_list);
-            localStorage.setItem('hkbp_tentang_gereja_list', JSON.stringify(db.hkbp_tentang_gereja_list));
-          }
-          if (db.hkbp_parhalado_list !== undefined) {
-            setParhaladoList(db.hkbp_parhalado_list);
-            localStorage.setItem('hkbp_parhalado_list', JSON.stringify(db.hkbp_parhalado_list));
-          }
-          if (db.hkbp_attendance_trends !== undefined) {
-            setAttendanceTrends(db.hkbp_attendance_trends);
-            localStorage.setItem('hkbp_attendance_trends', JSON.stringify(db.hkbp_attendance_trends));
-          }
-          if (db.hkbp_registered_admins !== undefined) {
-            localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
-          }
+          applyServerDb(db, true);
         }
       })
-      .catch(err => console.error('Failed to load DB:', err));
+      .catch(err => console.error('Failed to load DB:', err))
+      .finally(() => setIsDbLoaded(true));
   }, []);
 
-  // Real-time synchronization: cross-tab storage events, focus sync, and multi-device polling
+  // Shared helper to apply server/Firestore DB snapshot to React state & localStorage
+  const applyServerDb = (db: Record<string, any>, forceInitial = false) => {
+    if (!db || typeof db !== 'object') return;
+
+    const shouldApply = (key: string): boolean => {
+      if (forceInitial) return true;
+      return !isLocallyPendingWrite(key);
+    };
+
+    if (db.hkbp_liturgi_minggu !== undefined && shouldApply('hkbp_liturgi_minggu')) {
+      setLiturgiMinggu(db.hkbp_liturgi_minggu);
+      localStorage.setItem('hkbp_liturgi_minggu', JSON.stringify(db.hkbp_liturgi_minggu));
+    }
+    if (db.hkbp_liturgi_partangiangan !== undefined && shouldApply('hkbp_liturgi_partangiangan')) {
+      setLiturgiPartangiangan(db.hkbp_liturgi_partangiangan);
+      localStorage.setItem('hkbp_liturgi_partangiangan', JSON.stringify(db.hkbp_liturgi_partangiangan));
+    }
+    if (db.hkbp_warta_list !== undefined && shouldApply('hkbp_warta_list')) {
+      setWartaList(db.hkbp_warta_list);
+      localStorage.setItem('hkbp_warta_list', JSON.stringify(db.hkbp_warta_list));
+    }
+    if (db.hkbp_petugas_minggu !== undefined && shouldApply('hkbp_petugas_minggu')) {
+      setPetugasMinggu(db.hkbp_petugas_minggu);
+      localStorage.setItem('hkbp_petugas_minggu', JSON.stringify(db.hkbp_petugas_minggu));
+    }
+    if (db.hkbp_partangiangan_attendance !== undefined && shouldApply('hkbp_partangiangan_attendance')) {
+      setPartangianganAttendance(db.hkbp_partangiangan_attendance);
+      localStorage.setItem('hkbp_partangiangan_attendance', JSON.stringify(db.hkbp_partangiangan_attendance));
+    }
+    if (db.hkbp_petugas_partangiangan !== undefined && shouldApply('hkbp_petugas_partangiangan')) {
+      setPetugasPartangiangan(db.hkbp_petugas_partangiangan);
+      localStorage.setItem('hkbp_petugas_partangiangan', JSON.stringify(db.hkbp_petugas_partangiangan));
+    }
+    if (db.hkbp_partangiangan_attendance_date !== undefined && shouldApply('hkbp_partangiangan_attendance_date')) {
+      setPartangianganAttendanceDate(db.hkbp_partangiangan_attendance_date);
+      localStorage.setItem('hkbp_partangiangan_attendance_date', db.hkbp_partangiangan_attendance_date);
+    }
+    if (db.hkbp_petugas_partangiangan_date !== undefined && shouldApply('hkbp_petugas_partangiangan_date')) {
+      setPetugasPartangianganDate(db.hkbp_petugas_partangiangan_date);
+      localStorage.setItem('hkbp_petugas_partangiangan_date', db.hkbp_petugas_partangiangan_date);
+    }
+    if (db.hkbp_petugas_minggu_date !== undefined && shouldApply('hkbp_petugas_minggu_date')) {
+      setPetugasMingguDate(db.hkbp_petugas_minggu_date);
+      localStorage.setItem('hkbp_petugas_minggu_date', db.hkbp_petugas_minggu_date);
+    }
+    if (db.hkbp_partangiangan_mode !== undefined && shouldApply('hkbp_partangiangan_mode')) {
+      setPartangianganMode(db.hkbp_partangiangan_mode as PartangianganMode);
+      localStorage.setItem('hkbp_partangiangan_mode', db.hkbp_partangiangan_mode);
+    }
+    if (db.hkbp_transaksi_list !== undefined && shouldApply('hkbp_transaksi_list')) {
+      setTransaksiList(db.hkbp_transaksi_list);
+      localStorage.setItem('hkbp_transaksi_list', JSON.stringify(db.hkbp_transaksi_list));
+    }
+    if (db.hkbp_jemaat_list !== undefined && shouldApply('hkbp_jemaat_list')) {
+      setJemaatList(db.hkbp_jemaat_list);
+      localStorage.setItem('hkbp_jemaat_list', JSON.stringify(db.hkbp_jemaat_list));
+    }
+    if (db.hkbp_custom_balance_title !== undefined && shouldApply('hkbp_custom_balance_title')) {
+      setCustomBalanceTitle(db.hkbp_custom_balance_title);
+      localStorage.setItem('hkbp_custom_balance_title', db.hkbp_custom_balance_title);
+    }
+    if (db.hkbp_custom_balance_value !== undefined && shouldApply('hkbp_custom_balance_value')) {
+      const val = Number(db.hkbp_custom_balance_value) || 0;
+      setCustomBalanceValue(val);
+      localStorage.setItem('hkbp_custom_balance_value', String(val));
+    }
+    if (db.hkbp_jadwal_ibadah !== undefined && shouldApply('hkbp_jadwal_ibadah')) {
+      setJadwalIbadah(db.hkbp_jadwal_ibadah);
+      localStorage.setItem('hkbp_jadwal_ibadah', JSON.stringify(db.hkbp_jadwal_ibadah));
+    }
+    if (db.hkbp_tentang_gereja_list !== undefined && shouldApply('hkbp_tentang_gereja_list')) {
+      setTentangGerejaList(db.hkbp_tentang_gereja_list);
+      localStorage.setItem('hkbp_tentang_gereja_list', JSON.stringify(db.hkbp_tentang_gereja_list));
+    }
+    if (db.hkbp_parhalado_list !== undefined && shouldApply('hkbp_parhalado_list')) {
+      setParhaladoList(db.hkbp_parhalado_list);
+      localStorage.setItem('hkbp_parhalado_list', JSON.stringify(db.hkbp_parhalado_list));
+    }
+    if (db.hkbp_attendance_trends !== undefined && shouldApply('hkbp_attendance_trends')) {
+      setAttendanceTrends(db.hkbp_attendance_trends);
+      localStorage.setItem('hkbp_attendance_trends', JSON.stringify(db.hkbp_attendance_trends));
+    }
+    if (db.hkbp_registered_admins !== undefined && shouldApply('hkbp_registered_admins')) {
+      localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
+    }
+
+    window.dispatchEvent(new CustomEvent('hkbp_db_synced', { detail: db }));
+  };
+
+  // Real-time synchronization: cross-tab storage events, Firestore onSnapshot, focus/visibility sync
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (!e.newValue) return;
@@ -246,105 +262,37 @@ export default function App() {
     };
 
     const syncFromServer = () => {
-      fetchDbFromServer().then(db => {
-        if (!db || typeof db !== 'object') return;
-
-        // Check if a key was modified/deleted on this client recently
-        const shouldApply = (key: string): boolean => {
-          const localTs = getLocalClientTimestamp(key);
-          const serverTs = Number(db[`updated_at_${key}`] || 0);
-          // If locally edited within the last 15 seconds and server timestamp is older than local, ignore stale server data
-          if (localTs > 0 && Date.now() - localTs < 15000 && serverTs < localTs) {
-            return false;
+      fetchDbFromServer()
+        .then(db => {
+          if (db) {
+            applyServerDb(db, false);
+            setIsDbLoaded(true);
           }
-          return true;
-        };
-
-        if (db.hkbp_liturgi_minggu !== undefined && shouldApply('hkbp_liturgi_minggu')) {
-          setLiturgiMinggu(db.hkbp_liturgi_minggu);
-          localStorage.setItem('hkbp_liturgi_minggu', JSON.stringify(db.hkbp_liturgi_minggu));
-        }
-        if (db.hkbp_liturgi_partangiangan !== undefined && shouldApply('hkbp_liturgi_partangiangan')) {
-          setLiturgiPartangiangan(db.hkbp_liturgi_partangiangan);
-          localStorage.setItem('hkbp_liturgi_partangiangan', JSON.stringify(db.hkbp_liturgi_partangiangan));
-        }
-        if (db.hkbp_warta_list !== undefined && shouldApply('hkbp_warta_list')) {
-          setWartaList(db.hkbp_warta_list);
-          localStorage.setItem('hkbp_warta_list', JSON.stringify(db.hkbp_warta_list));
-        }
-        if (db.hkbp_petugas_minggu !== undefined && shouldApply('hkbp_petugas_minggu')) {
-          setPetugasMinggu(db.hkbp_petugas_minggu);
-          localStorage.setItem('hkbp_petugas_minggu', JSON.stringify(db.hkbp_petugas_minggu));
-        }
-        if (db.hkbp_partangiangan_attendance !== undefined && shouldApply('hkbp_partangiangan_attendance')) {
-          setPartangianganAttendance(db.hkbp_partangiangan_attendance);
-          localStorage.setItem('hkbp_partangiangan_attendance', JSON.stringify(db.hkbp_partangiangan_attendance));
-        }
-        if (db.hkbp_petugas_partangiangan !== undefined && shouldApply('hkbp_petugas_partangiangan')) {
-          setPetugasPartangiangan(db.hkbp_petugas_partangiangan);
-          localStorage.setItem('hkbp_petugas_partangiangan', JSON.stringify(db.hkbp_petugas_partangiangan));
-        }
-        if (db.hkbp_partangiangan_attendance_date !== undefined && shouldApply('hkbp_partangiangan_attendance_date')) {
-          setPartangianganAttendanceDate(db.hkbp_partangiangan_attendance_date);
-          localStorage.setItem('hkbp_partangiangan_attendance_date', db.hkbp_partangiangan_attendance_date);
-        }
-        if (db.hkbp_petugas_partangiangan_date !== undefined && shouldApply('hkbp_petugas_partangiangan_date')) {
-          setPetugasPartangianganDate(db.hkbp_petugas_partangiangan_date);
-          localStorage.setItem('hkbp_petugas_partangiangan_date', db.hkbp_petugas_partangiangan_date);
-        }
-        if (db.hkbp_petugas_minggu_date !== undefined && shouldApply('hkbp_petugas_minggu_date')) {
-          setPetugasMingguDate(db.hkbp_petugas_minggu_date);
-          localStorage.setItem('hkbp_petugas_minggu_date', db.hkbp_petugas_minggu_date);
-        }
-        if (db.hkbp_partangiangan_mode !== undefined && shouldApply('hkbp_partangiangan_mode')) {
-          setPartangianganMode(db.hkbp_partangiangan_mode as PartangianganMode);
-          localStorage.setItem('hkbp_partangiangan_mode', db.hkbp_partangiangan_mode);
-        }
-        if (db.hkbp_transaksi_list !== undefined && shouldApply('hkbp_transaksi_list')) {
-          setTransaksiList(db.hkbp_transaksi_list);
-          localStorage.setItem('hkbp_transaksi_list', JSON.stringify(db.hkbp_transaksi_list));
-        }
-        if (db.hkbp_jemaat_list !== undefined && shouldApply('hkbp_jemaat_list')) {
-          setJemaatList(db.hkbp_jemaat_list);
-          localStorage.setItem('hkbp_jemaat_list', JSON.stringify(db.hkbp_jemaat_list));
-        }
-        if (db.hkbp_custom_balance_title !== undefined && shouldApply('hkbp_custom_balance_title')) {
-          setCustomBalanceTitle(db.hkbp_custom_balance_title);
-          localStorage.setItem('hkbp_custom_balance_title', db.hkbp_custom_balance_title);
-        }
-        if (db.hkbp_custom_balance_value !== undefined && shouldApply('hkbp_custom_balance_value')) {
-          setCustomBalanceValue(Number(db.hkbp_custom_balance_value));
-          localStorage.setItem('hkbp_custom_balance_value', db.hkbp_custom_balance_value.toString());
-        }
-        if (db.hkbp_jadwal_ibadah !== undefined && shouldApply('hkbp_jadwal_ibadah')) {
-          setJadwalIbadah(db.hkbp_jadwal_ibadah);
-          localStorage.setItem('hkbp_jadwal_ibadah', JSON.stringify(db.hkbp_jadwal_ibadah));
-        }
-        if (db.hkbp_tentang_gereja_list !== undefined && shouldApply('hkbp_tentang_gereja_list')) {
-          setTentangGerejaList(db.hkbp_tentang_gereja_list);
-          localStorage.setItem('hkbp_tentang_gereja_list', JSON.stringify(db.hkbp_tentang_gereja_list));
-        }
-        if (db.hkbp_parhalado_list !== undefined && shouldApply('hkbp_parhalado_list')) {
-          setParhaladoList(db.hkbp_parhalado_list);
-          localStorage.setItem('hkbp_parhalado_list', JSON.stringify(db.hkbp_parhalado_list));
-        }
-        if (db.hkbp_attendance_trends !== undefined && shouldApply('hkbp_attendance_trends')) {
-          setAttendanceTrends(db.hkbp_attendance_trends);
-          localStorage.setItem('hkbp_attendance_trends', JSON.stringify(db.hkbp_attendance_trends));
-        }
-        if (db.hkbp_registered_admins !== undefined && shouldApply('hkbp_registered_admins')) {
-          localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
-        }
-      }).catch(() => {});
+        })
+        .catch(() => {});
     };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        syncFromServer();
+      }
+    };
+
+    const unsubscribe = subscribeToDb((db) => {
+      applyServerDb(db, false);
+      setIsDbLoaded(true);
+    });
 
     window.addEventListener('storage', handleStorage);
     window.addEventListener('focus', syncFromServer);
-    const interval = setInterval(syncFromServer, 8000);
+    document.addEventListener('visibilitychange', handleVisibility);
+    const interval = setInterval(syncFromServer, 20000);
 
     return () => {
+      unsubscribe();
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('focus', syncFromServer);
+      document.removeEventListener('visibilitychange', handleVisibility);
       clearInterval(interval);
     };
   }, []);
@@ -601,6 +549,7 @@ export default function App() {
               attendanceTrends={attendanceTrends}
               onUpdateAttendanceTrends={handleUpdateAttendanceTrends}
               onLogout={handleLogout}
+              isDbLoaded={isDbLoaded}
             />
           )}
         </div>

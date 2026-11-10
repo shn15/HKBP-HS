@@ -96,14 +96,19 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
           </div>
         )}
 
-        {/* Error Status (Email tidak aktif / tidak ditemukan / dibatalkan) */}
-        {otpDeliveryStatus === 'error' && (
+        {/* Error Status (Email tidak aktif / tidak ditemukan / SMTP belum dikonfigurasi / dibatalkan) */}
+        {(otpDeliveryStatus === 'error' || otpDeliveryStatus === 'smtp_not_configured') && (
           <div className="flex items-start space-x-3 text-xs font-semibold text-slate-800 bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-300">
             <AlertTriangle className="w-5 h-5 text-[#0F2447] shrink-0 mt-0.5" />
             <div className="leading-relaxed">
-              <p className="font-bold text-[#0F2447]">Pengiriman Kode Dibatalkan</p>
+              <p className="font-bold text-[#0F2447]">
+                {otpDeliveryStatus === 'smtp_not_configured' ? 'Konfigurasi Server Email Belum Lengkap' : 'Pengiriman Kode Dibatalkan'}
+              </p>
               <p className="text-[11px] text-slate-600 font-normal mt-0.5">
-                {otpErrorMessage || 'Email tidak aktif atau tidak ditemukan. Pengiriman kode dibatalkan.'}
+                {otpErrorMessage ||
+                  (otpDeliveryStatus === 'smtp_not_configured'
+                    ? 'SMTP_USER / SMTP_PASS belum dikonfigurasi pada Environment Variables server.'
+                    : 'Email tidak aktif atau tidak ditemukan. Pengiriman kode dibatalkan.')}
               </p>
             </div>
           </div>

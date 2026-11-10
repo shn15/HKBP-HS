@@ -35,50 +35,60 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
 
   React.useEffect(() => {
+    const syncAdmins = (db: Record<string, any> | null) => {
+      if (!db) return;
+      if (Array.isArray(db.hkbp_registered_admins) && db.hkbp_registered_admins.length > 0) {
+        localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
+        setIsDbEmpty(false);
+      } else {
+        const defaultAdmins: AdminCredentials[] = [
+          {
+            username: 'Pirma 15',
+            email: 'pirmasiahaan12342@gmail.com',
+            password: 'Pirma 08',
+            namaGereja: 'HKBP Hinalang Silalahi',
+            status: 'ruas',
+            isActive: true
+          },
+          {
+            username: 'admin',
+            email: 'admin@hkbp.or.id',
+            password: 'adminpassword123',
+            namaGereja: 'HKBP Hinalang Silalahi',
+            status: 'parhalado',
+            isActive: true
+          }
+        ];
+        localStorage.setItem('hkbp_registered_admins', JSON.stringify(defaultAdmins));
+        setIsDbEmpty(false);
+        saveDbKey('hkbp_registered_admins', defaultAdmins).catch(() => {});
+      }
+    };
+
     fetchDbFromServer()
       .then(db => {
-        let admins: AdminCredentials[] = [];
-        if (db && Array.isArray(db.hkbp_registered_admins) && db.hkbp_registered_admins.length > 0) {
-          admins = db.hkbp_registered_admins;
+        if (db) {
+          syncAdmins(db);
         } else {
-          const localData = localStorage.getItem('hkbp_registered_admins');
-          if (localData) {
-            try {
-              admins = JSON.parse(localData);
-            } catch {}
-          }
+          const parsed = getRegisteredAdmins();
+          setIsDbEmpty(parsed.length === 0);
         }
-
-        if (!admins || admins.length === 0) {
-          admins = [
-            {
-              username: 'Pirma 15',
-              email: 'pirmasiahaan12342@gmail.com',
-              password: 'Pirma 08',
-              namaGereja: 'HKBP Hinalang Silalahi',
-              status: 'ruas',
-              isActive: true
-            },
-            {
-              username: 'admin',
-              email: 'admin@hkbp.or.id',
-              password: 'adminpassword123',
-              namaGereja: 'HKBP Hinalang Silalahi',
-              status: 'parhalado',
-              isActive: true
-            }
-          ];
-          saveDbKey('hkbp_registered_admins', admins).catch(() => {});
-        }
-
-        localStorage.setItem('hkbp_registered_admins', JSON.stringify(admins));
-        setIsDbEmpty(admins.length === 0);
       })
       .catch(err => {
         console.error('Failed to load registered admins:', err);
         const parsed = getRegisteredAdmins();
         setIsDbEmpty(parsed.length === 0);
       });
+
+    const handleDbSynced = (e: Event) => {
+      const db = (e as CustomEvent).detail;
+      if (db && Array.isArray(db.hkbp_registered_admins) && db.hkbp_registered_admins.length > 0) {
+        localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
+        setIsDbEmpty(false);
+      }
+    };
+    window.addEventListener('hkbp_db_synced', handleDbSynced);
+    return () => window.removeEventListener('hkbp_db_synced', handleDbSynced);
   }, []);
 
   const getRegisteredAdmins = (): AdminCredentials[] => {
@@ -90,7 +100,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!username || !email || !password) {
@@ -99,14 +109,31 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
       return;
     }
 
-    const registeredAdmins = getRegisteredAdmins();
-
-    const matchedAdmin = registeredAdmins.find(
+    let registeredAdmins = getRegisteredAdmins();
+    let matchedAdmin = registeredAdmins.find(
       (admin) =>
         admin.username.trim().toLowerCase() === username.trim().toLowerCase() &&
         admin.email.trim().toLowerCase() === email.trim().toLowerCase() &&
         admin.password === password
     );
+
+    if (!matchedAdmin) {
+      try {
+        const freshDb = await fetchDbFromServer();
+        if (freshDb && Array.isArray(freshDb.hkbp_registered_admins) && freshDb.hkbp_registered_admins.length > 0) {
+          registeredAdmins = freshDb.hkbp_registered_admins;
+          localStorage.setItem('hkbp_registered_admins', JSON.stringify(registeredAdmins));
+          matchedAdmin = registeredAdmins.find(
+            (admin) =>
+              admin.username.trim().toLowerCase() === username.trim().toLowerCase() &&
+              admin.email.trim().toLowerCase() === email.trim().toLowerCase() &&
+              admin.password === password
+          );
+        }
+      } catch {
+        // ignore network fallback failure
+      }
+    }
 
     if (matchedAdmin) {
       if (matchedAdmin.isActive === false) {
@@ -179,12 +206,19 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           username: newAccount.username
         })
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        setOtpDeliveryStatus('error');
+        setOtpErrorMessage('Server pengiriman OTP (/api/send-otp) tidak mengembalikan JSON. Pastikan API Vercel berjalan.');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setOtpDeliveryStatus('success');
       } else {
         if (data.reason === 'SMTP_NOT_CONFIGURED') {
           setOtpDeliveryStatus('smtp_not_configured');
+          setOtpErrorMessage(data.message || 'SMTP_USER / SMTP_PASS belum dikonfigurasi pada server.');
         } else {
           setOtpDeliveryStatus('error');
           setOtpErrorMessage(data.message || 'Email tidak aktif atau tidak ditemukan. Pengiriman kode dibatalkan.');
@@ -256,12 +290,19 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           username: pendingAccountToSave.username
         })
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        setOtpDeliveryStatus('error');
+        setOtpErrorMessage('Server pengiriman OTP (/api/send-otp) tidak mengembalikan JSON. Pastikan API Vercel berjalan.');
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setOtpDeliveryStatus('success');
       } else {
         if (data.reason === 'SMTP_NOT_CONFIGURED') {
           setOtpDeliveryStatus('smtp_not_configured');
+          setOtpErrorMessage(data.message || 'SMTP_USER / SMTP_PASS belum dikonfigurasi pada server.');
         } else {
           setOtpDeliveryStatus('error');
           setOtpErrorMessage(data.message || 'Email tidak aktif atau tidak ditemukan. Pengiriman kode dibatalkan.');

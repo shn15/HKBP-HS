@@ -34,13 +34,22 @@ export async function fetchBatchFromApi(start: number, end: number, kategori: 'B
     const isKJ = katUpper === 'KJ';
     const path = isBN ? '/api/bn/batch' : isKJ ? '/api/kj/batch' : '/api/be/batch';
     const res = await fetch(`${path}?start=${start}&end=${end}`);
-    if (!res.ok) return [];
-    const json = await res.json();
-    if (json.status && Array.isArray(json.songs)) {
-      return json.songs;
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
+      const json = await res.json();
+      if (json.status && Array.isArray(json.songs)) {
+        return json.songs;
+      }
     }
   } catch (err) {
-    console.error(`Failed to fetch batch from ${kategori} API:`, err);
+    console.warn(`Batch endpoint unavailable for ${kategori}, falling back to direct HKBP fetch:`, err);
   }
-  return [];
+
+  // Fallback directly to official HKBP API
+  const songs: BukuSong[] = [];
+  for (let n = start; n <= end; n++) {
+    const song = await fetchOfficialSongFromHkbp(n, kategori);
+    if (song) songs.push(song);
+  }
+  return songs;
 }
