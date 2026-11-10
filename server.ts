@@ -4,6 +4,7 @@ import { createServer as createViteServer } from "vite";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import fs from "fs";
+import dns from "dns";
 // Load environment variables
 dotenv.config();
 
@@ -36,8 +37,8 @@ function parseDocument(doc: any): any {
   if (!doc || !doc.fields) return {};
   const data: any = {};
   for (const [key, valueObj] of Object.entries(doc.fields)) {
-    const rawValue = (valueObj as any).stringValue;
-    if (rawValue) {
+    const rawValue = (valueObj as any)?.stringValue;
+    if (rawValue !== undefined && rawValue !== null) {
       try {
         if (rawValue.startsWith("{") || rawValue.startsWith("[")) {
           data[key] = JSON.parse(rawValue);
@@ -52,59 +53,7 @@ function parseDocument(doc: any): any {
   return data;
 }
 
-// Helper to serialize standard JavaScript object to Firestore REST API fields
-function serializeFields(data: any): any {
-  const fields: any = {};
-  for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined && value !== null) {
-      // Don't send giant static song database in single kv_store document (>1MB limit)
-      if (key === "hkbp_buku_nyanyian_db" && Array.isArray(value)) {
-        const customOnly = value.filter((s: any) => s && s.isCustom);
-        if (customOnly.length > 0) {
-          fields["hkbp_custom_songs"] = { stringValue: JSON.stringify(customOnly) };
-        }
-        continue;
-      }
-
-      const stringValue = typeof value === "object" ? JSON.stringify(value) : String(value);
-      // Safety check: Firestore single document field max size limit
-      if (stringValue.length < 800000) {
-        fields[key] = { stringValue };
-      } else {
-        console.warn(`Skipping key '${key}' in single Firestore document payload as string length (${stringValue.length}) exceeds safety limit.`);
-      }
-    }
-  }
-  return fields;
-}
-
-// Helper to read database with Firestore integration
-async function readDb() {
-  const url = getFirestoreUrl();
-  if (url) {
-    try {
-      const response = await fetch(url);
-      if (response.status === 200) {
-        const doc = await response.json();
-        const data = parseDocument(doc);
-        return data;
-      } else if (response.status === 404) {
-        console.log("Firestore document 'all_data' not found. Seeding from db.json...");
-        const localDb = readLocalDb();
-        if (Object.keys(localDb).length > 0) {
-          await writeDb(localDb);
-          return localDb;
-        }
-      } else {
-        const errText = await response.text();
-        console.warn(`Reading from Firestore REST API: Status ${response.status}`, errText);
-      }
-    } catch (err) {
-      console.warn("Error reading from Firestore REST API:", err);
-    }
-  }
-  return readLocalDb();
-}
+let inMemoryDb: any = null;
 
 function readLocalDb() {
   try {
@@ -118,49 +67,6 @@ function readLocalDb() {
   return {};
 }
 
-// Helper to write database with Firestore integration
-async function writeDb(data: any) {
-  writeLocalDb(data);
-
-  const url = getFirestoreUrl();
-  if (url) {
-    try {
-      const fields = serializeFields(data);
-      const response = await fetch(url, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fields })
-      });
-      if (response.ok) {
-        console.log("Successfully synchronized database to Firestore REST API.");
-        return true;
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        console.warn(`Firestore REST API write status ${response.status}:`, errData?.error?.message || errData);
-        return false;
-      }
-    } catch (err) {
-      console.warn("Error writing to Firestore REST API:", err);
-      return false;
-    }
-  }
-  return true;
-}
-
-// Write a single key-value pair to Firestore
-async function writeDbKey(key: string, value: any) {
-  const data = await readDb();
-  data[key] = value;
-  return await writeDb(data);
-}
-
-// Write batch keys to Firestore
-async function writeDbBatch(batchData: any) {
-  const data = await readDb();
-  Object.assign(data, batchData);
-  return await writeDb(data);
-}
-
 function writeLocalDb(data: any) {
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
@@ -169,6 +75,138 @@ function writeLocalDb(data: any) {
     console.error("Error writing database file:", err);
     return false;
   }
+}
+
+// Pre-load in-memory database
+inMemoryDb = readLocalDb();
+
+// Asynchronously load and merge from Firestore REST API on boot
+async function initFirestoreSync() {
+  const url = getFirestoreUrl();
+  if (url) {
+    try {
+      const response = await fetch(url);
+      if (response.status === 200) {
+        const doc = await response.json();
+        const firestoreData = parseDocument(doc);
+        if (firestoreData && Object.keys(firestoreData).length > 0) {
+          inMemoryDb = Object.assign({}, inMemoryDb, firestoreData);
+          writeLocalDb(inMemoryDb);
+          console.log("Database successfully synced from Firestore REST API on server start.");
+        }
+      }
+    } catch (err) {
+      console.warn("Initial Firestore sync check error:", err);
+    }
+  }
+}
+const firestoreInitPromise = initFirestoreSync();
+
+// Helper to read database with in-memory immediacy after initial Firestore sync
+async function readDb() {
+  await firestoreInitPromise;
+  if (inMemoryDb && Object.keys(inMemoryDb).length > 0) {
+    return inMemoryDb;
+  }
+  inMemoryDb = readLocalDb();
+  return inMemoryDb;
+}
+
+// Write a single key-value pair to memory, disk, and Firestore with atomic updateMask
+async function writeDbKey(key: string, value: any) {
+  await firestoreInitPromise;
+  if (!inMemoryDb) {
+    inMemoryDb = readLocalDb();
+  }
+  const timestamp = Date.now();
+  inMemoryDb[key] = value;
+  inMemoryDb[`updated_at_${key}`] = timestamp;
+  writeLocalDb(inMemoryDb);
+
+  const baseUrl = getFirestoreUrl();
+  if (baseUrl) {
+    try {
+      let targetKey = key;
+      let targetValue = value;
+      if (key === "hkbp_buku_nyanyian_db" && Array.isArray(value)) {
+        const customOnly = value.filter((s: any) => s && s.isCustom);
+        if (customOnly.length === 0) return true;
+        targetKey = "hkbp_custom_songs";
+        targetValue = customOnly;
+      }
+      const fieldVal = typeof targetValue === "object" ? JSON.stringify(targetValue) : String(targetValue);
+      if (fieldVal.length < 800000) {
+        const patchFields: any = {
+          [targetKey]: { stringValue: fieldVal },
+          [`updated_at_${targetKey}`]: { stringValue: String(timestamp) }
+        };
+        const patchUrl = `${baseUrl}&updateMask.fieldPaths=${encodeURIComponent(targetKey)}&updateMask.fieldPaths=updated_at_${encodeURIComponent(targetKey)}`;
+        const patchRes = await fetch(patchUrl, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fields: patchFields })
+        });
+        if (!patchRes.ok) {
+          console.warn(`Firestore REST API key write returned ${patchRes.status} for ${targetKey}`);
+        }
+      }
+    } catch (err) {
+      console.warn(`Firestore REST API key write error for ${key}:`, err);
+    }
+  }
+  return true;
+}
+
+// Write batch keys to memory, disk, and Firestore
+async function writeDbBatch(batchData: any) {
+  await firestoreInitPromise;
+  if (!inMemoryDb) {
+    inMemoryDb = readLocalDb();
+  }
+  const timestamp = Date.now();
+  const patchFields: any = {};
+  const maskPaths: string[] = [];
+
+  for (const [k, v] of Object.entries(batchData)) {
+    inMemoryDb[k] = v;
+    inMemoryDb[`updated_at_${k}`] = timestamp;
+
+    let targetKey = k;
+    let targetValue = v;
+    if (k === "hkbp_buku_nyanyian_db" && Array.isArray(v)) {
+      const customOnly = v.filter((s: any) => s && s.isCustom);
+      if (customOnly.length === 0) continue;
+      targetKey = "hkbp_custom_songs";
+      targetValue = customOnly;
+    }
+
+    const fieldVal = typeof targetValue === "object" ? JSON.stringify(targetValue) : String(targetValue);
+    if (fieldVal.length < 800000) {
+      patchFields[targetKey] = { stringValue: fieldVal };
+      patchFields[`updated_at_${targetKey}`] = { stringValue: String(timestamp) };
+      maskPaths.push(`updateMask.fieldPaths=${encodeURIComponent(targetKey)}`);
+      maskPaths.push(`updateMask.fieldPaths=updated_at_${encodeURIComponent(targetKey)}`);
+    }
+  }
+  writeLocalDb(inMemoryDb);
+
+  const baseUrl = getFirestoreUrl();
+  if (baseUrl && maskPaths.length > 0) {
+    try {
+      const patchUrl = `${baseUrl}&${maskPaths.join('&')}`;
+      const patchRes = await fetch(patchUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fields: patchFields })
+      });
+      if (!patchRes.ok) {
+        console.warn(`Firestore REST API batch write returned ${patchRes.status}`);
+      }
+    } catch (err) {
+      console.warn("Firestore REST API batch write error:", err);
+    }
+  }
+  return true;
 }
 
 async function startServer() {
@@ -180,8 +218,11 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   // API database endpoints for data synchronization
-  app.get("/api/db", async (req, res) => {
+  app.get("/api/db", async (_req, res) => {
     try {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       const db = await readDb();
       res.json(db);
     } catch (err: any) {
@@ -207,7 +248,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/db/reset", async (req, res) => {
+  app.post("/api/db/reset", async (_req, res) => {
     try {
       let success = false;
       const url = getFirestoreUrl();
@@ -223,6 +264,7 @@ async function startServer() {
           console.error("Error deleting Firestore document:", err);
         }
       }
+      inMemoryDb = {};
       const localSuccess = writeLocalDb({});
       res.json({ success: success || localSuccess });
     } catch (err: any) {
@@ -318,7 +360,7 @@ async function startServer() {
   }
 
   // Endpoint to get official catalog list from https://hkbp.or.id/buku-ende
-  app.get('/api/be/catalog', (req, res) => {
+  app.get('/api/be/catalog', (_req, res) => {
     try {
       const catalogPath = path.join(process.cwd(), 'src', 'data', 'bukuEndeCatalog.json');
       if (fs.existsSync(catalogPath)) {
@@ -344,10 +386,10 @@ async function startServer() {
       }
 
       const num = parseInt(String(songNumber), 10);
-      if (isNaN(num) || num <= 0 || num > 864) {
+      if (isNaN(num) || num <= 0 || num > 867) {
         return res.status(400).json({
           status: false,
-          message: 'Nomor lagu Buku Ende tidak valid (1 - 864)',
+          message: 'Nomor lagu Buku Ende tidak valid (1 - 867)',
           data: null
         });
       }
@@ -392,8 +434,8 @@ async function startServer() {
   app.get('/api/be/song/:nomor', async (req, res) => {
     try {
       const num = parseInt(req.params.nomor, 10);
-      if (isNaN(num) || num <= 0 || num > 864) {
-        return res.status(400).json({ success: false, message: 'Nomor lagu Buku Ende harus antara 1 dan 864' });
+      if (isNaN(num) || num <= 0 || num > 867) {
+        return res.status(400).json({ success: false, message: 'Nomor lagu Buku Ende harus antara 1 dan 867' });
       }
 
       const song = await fetchBukuEndeFromSource(num);
@@ -423,7 +465,7 @@ async function startServer() {
       const end = parseInt(String(req.query.end || '10'), 10);
 
       const startNum = Math.max(1, isNaN(start) ? 1 : start);
-      const endNum = Math.min(864, isNaN(end) ? 10 : end);
+      const endNum = Math.min(867, isNaN(end) ? 10 : end);
 
       const songs = [];
       for (let n = startNum; n <= endNum; n++) {
@@ -540,7 +582,7 @@ async function startServer() {
   }
 
   // Endpoint to get official catalog list from https://hkbp.or.id/buku-nyanyian
-  app.get('/api/bn/catalog', (req, res) => {
+  app.get('/api/bn/catalog', (_req, res) => {
     try {
       const catalogPath = path.join(process.cwd(), 'src', 'data', 'bukuNyanyianCatalog.json');
       if (fs.existsSync(catalogPath)) {
@@ -765,7 +807,7 @@ async function startServer() {
   }
 
   // Endpoint to get official catalog list from https://hkbp.or.id/kidung
-  app.get('/api/kj/catalog', (req, res) => {
+  app.get('/api/kj/catalog', (_req, res) => {
     try {
       const catalogPath = path.join(process.cwd(), 'src', 'data', 'kidungJemaatCatalog.json');
       if (fs.existsSync(catalogPath)) {
@@ -911,45 +953,126 @@ async function startServer() {
       });
     }
 
-    const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
-    const smtpPort = parseInt(process.env.SMTP_PORT || "587", 10);
-    const smtpUser = process.env.SMTP_USER || "hkbphinalangsilalahi@gmail.com";
-    const smtpPass = process.env.SMTP_PASS;
+    const emailStr = String(email).trim().toLowerCase();
 
-    // Check if SMTP is configured
-    if (!smtpUser || !smtpPass) {
+    // 1. Validasi format penulisan email
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+    if (!emailRegex.test(emailStr) || emailStr.includes("..")) {
+      console.warn(`[HKBP OTP] Format penulisan email tidak valid: ${emailStr}`);
+      return res.status(400).json({
+        success: false,
+        reason: "INVALID_EMAIL_FORMAT",
+        message: "Format penulisan email tidak valid. Pengiriman kode dibatalkan."
+      });
+    }
+
+    const domain = emailStr.split("@")[1];
+    if (!domain || !domain.includes(".")) {
+      console.warn(`[HKBP OTP] Domain email tidak valid: ${domain}`);
+      return res.status(400).json({
+        success: false,
+        reason: "INVALID_DOMAIN",
+        message: "Domain email tidak valid. Pengiriman kode dibatalkan."
+      });
+    }
+
+    // 2. Deteksi apakah email / domain tersebut aktif (DNS MX Record lookup)
+    try {
+      const mxRecords = await dns.promises.resolveMx(domain);
+      if (!mxRecords || mxRecords.length === 0) {
+        console.warn(`[HKBP OTP] Domain ${domain} tidak memiliki mail server (MX record). Pengiriman kode dibatalkan.`);
+        return res.status(400).json({
+          success: false,
+          reason: "EMAIL_INACTIVE",
+          message: `Email tidak aktif atau domain @${domain} tidak memiliki server email aktif. Pengiriman kode dibatalkan.`
+        });
+      }
+
+      // Pastikan ada mail exchange yang aktif (bukan null MX RFC 7505)
+      const validMx = mxRecords.filter((r) => r.exchange && r.exchange !== "." && r.exchange !== "");
+      if (validMx.length === 0) {
+        console.warn(`[HKBP OTP] Domain ${domain} menolak penerimaan email (Null MX). Pengiriman kode dibatalkan.`);
+        return res.status(400).json({
+          success: false,
+          reason: "EMAIL_INACTIVE",
+          message: `Email tidak aktif (domain @${domain} tidak menerima email). Pengiriman kode dibatalkan.`
+        });
+      }
+    } catch (dnsErr: any) {
+      console.warn(`[HKBP OTP] Deteksi DNS MX gagal untuk domain @${domain}:`, dnsErr.code || dnsErr.message);
+      return res.status(400).json({
+        success: false,
+        reason: "EMAIL_NOT_FOUND",
+        message: `Email tidak aktif atau domain @${domain} tidak ditemukan. Pengiriman kode dibatalkan.`
+      });
+    }
+
+    const rawPass = process.env.SMTP_PASS || "";
+    const cleanPass = rawPass.trim().replace(/\s+/g, "");
+    
+    // Requested temporary sender by user: pirmasiahaan1234@gmail.com
+    let senderUser = "pirmasiahaan1234@gmail.com";
+    if (process.env.SMTP_USER && process.env.SMTP_USER.includes("@")) {
+      senderUser = process.env.SMTP_USER.trim();
+    }
+
+    // Check if SMTP pass is configured
+    if (!cleanPass) {
       console.warn("SMTP credentials are not configured in environment variables. Falling back to simulation mode.");
       return res.json({
         success: false,
         reason: "SMTP_NOT_CONFIGURED",
         message: "SMTP belum dikonfigurasi lengkap di Environment Variables (Secrets). Masukkan SMTP_USER dan SMTP_PASS di panel Settings.",
-        code: code
+        code: code,
+        fallbackCode: code,
+        sender: senderUser
       });
     }
 
+    console.log(`[HKBP OTP] Domain valid terdeteksi (@${domain}). Mengirim kode autentikasi ${code} ke ${emailStr}`);
+
     try {
-      // Create reusable transporter object using SMTP transport
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465, // true for 465, false for other ports
-        auth: {
-          user: smtpUser,
-          pass: smtpPass,
-        },
-        connectionTimeout: 10000, // 10 seconds timeout
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
-        tls: {
-          rejectUnauthorized: false // Avoid self-signed certificate failures
+      // Helper function to create Gmail or standard SMTP transporter
+      const createTransporterForUser = (user: string) => {
+        return nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: user,
+            pass: cleanPass,
+          },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000,
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+      };
+
+      // Try primary sender, fallback to pirmasiahaan1234@gmail.com if credentials match the user's requested email
+      let activeSender = senderUser;
+      let transporter = createTransporterForUser(activeSender);
+
+      // Verify connection; if fails with 535 BadCredentials and senderUser != pirmasiahaan1234@gmail.com, switch to pirmasiahaan1234@gmail.com
+      try {
+        await transporter.verify();
+      } catch (verifyErr: any) {
+        if (activeSender !== "pirmasiahaan1234@gmail.com") {
+          console.warn(`Verify failed for ${activeSender}, trying requested fallback pirmasiahaan1234@gmail.com:`, verifyErr.message);
+          activeSender = "pirmasiahaan1234@gmail.com";
+          transporter = createTransporterForUser(activeSender);
+          await transporter.verify();
+        } else {
+          throw verifyErr;
         }
-      });
+      }
 
       // Send mail with defined transport object
       const mailOptions = {
-        from: `"Sistem Pelayanan Digital HKBP" <${smtpUser}>`,
-        to: email,
-        subject: `[HKBP] Kode Validator Aktivasi Akun - ${code}`,
+        from: `"Sistem Pelayanan Digital HKBP" <${activeSender}>`,
+        to: emailStr,
+        subject: `[HKBP] Kode Autentikasi Verifikasi Akun - ${code}`,
+        text: `Syalom, user admin '${username}'\nKode dibawah merupakan kode autentikasi untuk verifikasi akun anda pada portal HKBP Hinalang Silalahi\n\nKode: ${code}\n\nSilahkan memasukkan kode di atas pada kolom yang tersedia di portal verifikasi\n\nHKBP Hinalang Silalahi`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 20px; background-color: #ffffff;">
             <div style="text-align: center; margin-bottom: 25px;">
@@ -958,23 +1081,22 @@ async function startServer() {
             </div>
             <hr style="border: 0; border-top: 1px solid #f1f5f9; margin-bottom: 25px;" />
             
-            <p style="font-size: 14px; color: #1e293b; line-height: 1.6; margin-bottom: 12px;">Shalom, Pelayan/Jemaat <strong>${username}</strong>.</p>
-            <p style="font-size: 14px; color: #334155; line-height: 1.6; margin-bottom: 20px;">
-              Anda menerima pesan ini karena pihak Admin Gereja sedang mendaftarkan atau menyunting kredensial akun Anda di portal database administrasi gereja.
+            <p style="font-size: 15px; color: #1e293b; line-height: 1.6; margin-bottom: 8px; font-weight: bold;">
+              Syalom, user admin '${username}'
+            </p>
+            <p style="font-size: 14px; color: #334155; line-height: 1.6; margin-bottom: 22px;">
+              Kode dibawah merupakan kode autentikasi untuk verifikasi akun anda pada portal HKBP Hinalang Silalahi
             </p>
             
             <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin: 25px 0;">
-              <p style="font-size: 12px; font-weight: bold; color: #64748b; margin: 0 0 10px 0; uppercase; letter-spacing: 1px;">KODE VALIDATOR AKTIF (6 DIGIT)</p>
+              <p style="font-size: 12px; font-weight: bold; color: #64748b; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">KODE AUTENTIKASI (6 DIGIT)</p>
               <div style="display: inline-block; background-color: #ffffff; border: 2px solid #cbd5e1; border-radius: 12px; padding: 10px 24px; font-size: 28px; font-weight: 800; letter-spacing: 8px; color: #0f172a; font-family: 'Courier New', Courier, monospace; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                 ${code}
               </div>
-              <p style="font-size: 11px; color: #94a3b8; margin: 12px 0 0 0; line-height: 1.4;">
-                Gunakan kode di atas untuk memvalidasi bahwa email Anda aktif dan berwenang digunakan dalam sistem.
-              </p>
             </div>
             
-            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin-top: 20px;">
-              Mohon beritahukan kode 6 digit di atas kepada Admin Gereja yang sedang melayani pendaftaran Anda.
+            <p style="font-size: 14px; color: #1e293b; line-height: 1.6; margin-top: 22px; font-weight: 600; text-align: center;">
+              Silahkan memasukkan kode di atas pada kolom yang tersedia di portal verifikasi
             </p>
             
             <hr style="border: 0; border-top: 1px solid #f1f5f9; margin-top: 30px; margin-bottom: 15px;" />
@@ -987,7 +1109,7 @@ async function startServer() {
       };
 
       await transporter.sendMail(mailOptions);
-      console.log(`Successfully sent verification email with OTP ${code} to ${email}`);
+      console.log(`Successfully sent authentication email with code ${code} to ${emailStr}`);
       return res.json({ success: true, message: "Email sent successfully." });
     } catch (err: any) {
       console.error("Failed to send email via SMTP:", err);
@@ -995,7 +1117,6 @@ async function startServer() {
         success: false, 
         message: "Failed to send email via SMTP server.", 
         error: err.message,
-        // fallback so developer can still check it if email config is wrong/rejected
         fallbackCode: code
       });
     }
@@ -1013,7 +1134,7 @@ async function startServer() {
     // Serve production static assets
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (req, res) => {
+    app.get("*", (_req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
     console.log("Production static files serving enabled.");

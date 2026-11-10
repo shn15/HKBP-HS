@@ -22,7 +22,7 @@ function parseFirestoreDoc(doc: any): any {
   const data: any = {};
   for (const [key, valueObj] of Object.entries(doc.fields)) {
     const rawValue = (valueObj as any)?.stringValue;
-    if (rawValue) {
+    if (rawValue !== undefined && rawValue !== null) {
       try {
         if (rawValue.startsWith('{') || rawValue.startsWith('[')) {
           data[key] = JSON.parse(rawValue);
@@ -62,14 +62,26 @@ function serializeFields(data: any): any {
   return fields;
 }
 
+// In-memory record of local modifications on this client
+const localClientTimestamps: Record<string, number> = {};
+
+export function getLocalClientTimestamp(key: string): number {
+  return localClientTimestamps[key] || 0;
+}
+
 /**
  * Fetch database records from either Express backend or direct Firestore REST API.
  * This guarantees loading data on Vercel even when server.ts is not running.
  */
 export async function fetchDbFromServer(): Promise<any> {
+  const cacheBuster = `_t=${Date.now()}`;
+
   // 1. Try Express backend endpoint
   try {
-    const res = await fetch('/api/db');
+    const res = await fetch(`/api/db?${cacheBuster}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+    });
     const contentType = res.headers.get('content-type') || '';
     if (res.ok && contentType.includes('application/json')) {
       const data = await res.json();
@@ -83,11 +95,14 @@ export async function fetchDbFromServer(): Promise<any> {
 
   // 2. Direct Firestore REST API (works on Vercel, Netlify, and client-side)
   try {
-    const res = await fetch(FIRESTORE_URL);
+    const firestoreUrlWithBuster = `${FIRESTORE_URL}&${cacheBuster}`;
+    const res = await fetch(firestoreUrlWithBuster, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+    });
     if (res.status === 200) {
       const doc = await res.json();
       const parsed = parseFirestoreDoc(doc);
-      console.log('Successfully fetched database directly from Firestore REST API.');
       return parsed;
     }
   } catch (err) {
@@ -102,6 +117,9 @@ export async function fetchDbFromServer(): Promise<any> {
  * Updates localStorage first, then tries backend /api/db, with seamless fallback to Firestore REST API for Vercel.
  */
 export async function saveDbKey(key: string, value: any): Promise<boolean> {
+  const timestamp = Date.now();
+  localClientTimestamps[key] = timestamp;
+
   // Always update localStorage first for instantaneous client state
   try {
     if (typeof value === 'object') {
@@ -109,6 +127,7 @@ export async function saveDbKey(key: string, value: any): Promise<boolean> {
     } else {
       localStorage.setItem(key, String(value));
     }
+    localStorage.setItem(`updated_at_${key}`, String(timestamp));
   } catch (e) {
     console.error('LocalStorage write failed:', e);
   }
@@ -118,6 +137,7 @@ export async function saveDbKey(key: string, value: any): Promise<boolean> {
   try {
     const res = await fetch('/api/db', {
       method: 'POST',
+      cache: 'no-store',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, value })
     });
@@ -134,23 +154,30 @@ export async function saveDbKey(key: string, value: any): Promise<boolean> {
   // 2. Direct Firestore fallback (essential for Vercel deployment)
   if (!savedToBackend) {
     try {
-      let currentData: any = {};
-      const getRes = await fetch(FIRESTORE_URL);
-      if (getRes.status === 200) {
-        const doc = await getRes.json();
-        currentData = parseFirestoreDoc(doc);
+      let targetKey = key;
+      let targetValue = value;
+      if (key === 'hkbp_buku_nyanyian_db' && Array.isArray(value)) {
+        const customOnly = value.filter((s: any) => s && s.isCustom);
+        if (customOnly.length === 0) return true;
+        targetKey = 'hkbp_custom_songs';
+        targetValue = customOnly;
       }
-      currentData[key] = value;
-
-      const fields = serializeFields(currentData);
-      const patchRes = await fetch(FIRESTORE_URL, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields })
-      });
-      if (patchRes.ok) {
-        console.log(`Saved ${key} directly to Firestore on Vercel.`);
-        return true;
+      const stringValue = typeof targetValue === 'object' ? JSON.stringify(targetValue) : String(targetValue);
+      if (stringValue.length < 800000) {
+        const fields = {
+          [targetKey]: { stringValue },
+          [`updated_at_${targetKey}`]: { stringValue: String(timestamp) }
+        };
+        const patchUrl = `${FIRESTORE_URL}&updateMask.fieldPaths=${encodeURIComponent(targetKey)}&updateMask.fieldPaths=updated_at_${encodeURIComponent(targetKey)}`;
+        const patchRes = await fetch(patchUrl, {
+          method: 'PATCH',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields })
+        });
+        if (patchRes.ok) {
+          return true;
+        }
       }
     } catch (err) {
       console.error('Direct Firestore save failed:', err);
@@ -164,14 +191,17 @@ export async function saveDbKey(key: string, value: any): Promise<boolean> {
  * Save batch updates to database.
  */
 export async function saveDbBatch(batchData: Record<string, any>): Promise<boolean> {
-  // Update localStorage
+  const timestamp = Date.now();
+  // Update localStorage & client timestamps
   try {
     for (const [k, v] of Object.entries(batchData)) {
+      localClientTimestamps[k] = timestamp;
       if (typeof v === 'object') {
         localStorage.setItem(k, JSON.stringify(v));
       } else {
         localStorage.setItem(k, String(v));
       }
+      localStorage.setItem(`updated_at_${k}`, String(timestamp));
     }
   } catch (e) {
     console.error('LocalStorage batch write failed:', e);
@@ -194,25 +224,27 @@ export async function saveDbBatch(batchData: Record<string, any>): Promise<boole
     console.info('Backend /api/db unavailable for batch. Proceeding with direct Firestore.');
   }
 
-  // 2. Direct Firestore fallback
+  // 2. Direct Firestore fallback with atomic updateMask
   if (!savedToBackend) {
     try {
-      let currentData: any = {};
-      const getRes = await fetch(FIRESTORE_URL);
-      if (getRes.status === 200) {
-        const doc = await getRes.json();
-        currentData = parseFirestoreDoc(doc);
+      const payloadWithTimestamps: Record<string, any> = { ...batchData };
+      for (const k of Object.keys(batchData)) {
+        if (k !== 'hkbp_buku_nyanyian_db') {
+          payloadWithTimestamps[`updated_at_${k}`] = timestamp;
+        }
       }
-      Object.assign(currentData, batchData);
-
-      const fields = serializeFields(currentData);
-      const patchRes = await fetch(FIRESTORE_URL, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields })
-      });
-      if (patchRes.ok) {
-        return true;
+      const fields = serializeFields(payloadWithTimestamps);
+      const maskPaths = Object.keys(fields).map(k => `updateMask.fieldPaths=${encodeURIComponent(k)}`);
+      if (maskPaths.length > 0) {
+        const patchUrl = `${FIRESTORE_URL}&${maskPaths.join('&')}`;
+        const patchRes = await fetch(patchUrl, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields })
+        });
+        if (patchRes.ok) {
+          return true;
+        }
       }
     } catch (err) {
       console.error('Direct Firestore batch save failed:', err);

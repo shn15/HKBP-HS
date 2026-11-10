@@ -1,13 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion } from 'motion/react';
 import * as XLSX from 'xlsx';
 import { fetchDbFromServer, saveDbKey } from '../services/dbClient';
+
+function safeJsonParse<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
 import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -54,13 +61,15 @@ import {
   AlertTriangle,
   Eye,
   EyeOff,
-  Music
+  Music,
+  Copy
 } from 'lucide-react';
 import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, TransaksiTipe, LiturgiSection, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, AdminCredentials, TentangGerejaItem, WeeklyAttendanceTrend, PartangianganMode } from '../types';
 import { INITIAL_ATTENDANCE_TRENDS } from '../data/mockData';
-import { BukuSong, INITIAL_BUKU_NYANYIAN_DB, parseSongFromLabel, findSongAndFormatLyrics, parseVerseRange, normalizeSongImport, fetchOfficialSongFromHkbp, BUKU_ENDE_CATALOG, BUKU_NYANYIAN_CATALOG } from '../data/bukuNyanyianData';
+import { BukuSong, INITIAL_BUKU_NYANYIAN_DB, parseSongFromLabel, findSongAndFormatLyrics, parseVerseRange, normalizeSongImport, fetchOfficialSongFromHkbp, BUKU_ENDE_CATALOG } from '../data/bukuNyanyianData';
 import { fetchSongFromApi, fetchBatchFromApi } from '../services/bukuEndeService';
 import { fetchAndFormatScriptureFromLabel, parseAlkitabReference, ALKITAB_BOOKS_CATALOG, fetchDualAlkitabChapter } from '../services/alkitabService';
+import { OtpVerificationModal } from './OtpVerificationModal';
 
 interface AdminViewProps {
   liturgiMinggu: Liturgi[];
@@ -189,98 +198,111 @@ export default function AdminView({
   };
 
   useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem('hkbp_admin_user');
-      if (stored) {
-        setLoggedAdmin(JSON.parse(stored));
-      }
-      const rawAccounts = localStorage.getItem('hkbp_registered_admins');
-      if (rawAccounts) {
-        setAccountsList(JSON.parse(rawAccounts));
-      } else {
-        const defaultAdmins: AdminCredentials[] = [
-          {
-            username: 'Pirma 15',
-            email: 'pirmasiahaan12342@gmail.com',
-            password: 'Pirma 08',
-            namaGereja: 'HKBP Hinalang Silalahi',
-            status: 'ruas'
-          }
-        ];
-        localStorage.setItem('hkbp_registered_admins', JSON.stringify(defaultAdmins));
-        setAccountsList(defaultAdmins);
-      }
-
-      // Sync with server/Firestore DB on mount
-      fetchDbFromServer()
-        .then(db => {
-          if (db) {
-            if (db.hkbp_registered_admins) {
-              setAccountsList(db.hkbp_registered_admins);
-              localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
-            } else {
-              // Seed server
-              const currentAdmins = rawAccounts ? JSON.parse(rawAccounts) : [
-                {
-                  username: 'Pirma 15',
-                  email: 'pirmasiahaan12342@gmail.com',
-                  password: 'Pirma 08',
-                  namaGereja: 'HKBP Hinalang Silalahi',
-                  status: 'ruas'
-                }
-              ];
-              saveRegisteredAdminsToServer(currentAdmins);
-            }
-
-            if (db.hkbp_arsip_pdf) {
-              setArsipPdfs(db.hkbp_arsip_pdf);
-              localStorage.setItem('hkbp_arsip_pdf', JSON.stringify(db.hkbp_arsip_pdf));
-            } else {
-              // Seed server
-              const defaultArsip = [
-                {
-                  id: 'arsip-1',
-                  judul: 'Tata Gereja HKBP (Amanat & Peraturan)',
-                  keterangan: 'Aturan, Peraturan, dan Konfesi resmi HKBP sebagai landasan pelayanan gerejawi.',
-                  tanggalUpload: '2026-06-15',
-                  fileName: 'tata_gereja_hkbp_2026.pdf',
-                  fileSize: '1.24 MB',
-                  pdfUrl: 'data:application/pdf;base64,JVBERi0xLjQKJ...'
-                },
-                {
-                  id: 'arsip-2',
-                  judul: 'Kumpulan Lagu Koor Huria Batak',
-                  keterangan: 'Daftar lagu koor koor Batak populer untuk latihan Koor Ama, Ina, dan Remaja.',
-                  tanggalUpload: '2026-06-20',
-                  fileName: 'kumpulan_koor_batak.pdf',
-                  fileSize: '3.12 MB',
-                  pdfUrl: ''
-                }
-              ];
-              saveDbKey('hkbp_arsip_pdf', defaultArsip).catch(e => console.error(e));
-            }
-
-            const songMap = new Map<string, BukuSong>();
-            if (db.hkbp_buku_nyanyian_db && Array.isArray(db.hkbp_buku_nyanyian_db)) {
-              db.hkbp_buku_nyanyian_db.forEach((s: any) => {
-                if (s && s.id) songMap.set(s.id, s);
-              });
-            }
-            // Official songs from https://hkbp.or.id/buku-ende take precedence
-            INITIAL_BUKU_NYANYIAN_DB.forEach(s => songMap.set(s.id, s));
-            const mergedDb = Array.from(songMap.values()).sort((a, b) => {
-              if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
-              return a.nomor - b.nomor;
-            });
-            setBukuNyanyianDb(mergedDb);
-            localStorage.setItem('hkbp_buku_nyanyian_db', JSON.stringify(mergedDb));
-            saveDbKey('hkbp_buku_nyanyian_db', mergedDb).catch(e => console.error(e));
-          }
-        })
-        .catch(err => console.error('Failed to load registered admins/PDFs:', err));
-    } catch (e) {
-      console.error(e);
+    const stored = sessionStorage.getItem('hkbp_admin_user');
+    const parsedLogged = safeJsonParse<{ username: string; email: string; namaGereja?: string; status?: string } | null>(stored, null);
+    if (parsedLogged) {
+      setLoggedAdmin(parsedLogged);
     }
+
+    const rawAccounts = localStorage.getItem('hkbp_registered_admins');
+    const parsedAccounts = safeJsonParse<AdminCredentials[]>(rawAccounts, []);
+    if (Array.isArray(parsedAccounts) && parsedAccounts.length > 0) {
+      setAccountsList(parsedAccounts);
+    }
+
+    // Sync with server/Firestore DB on mount
+    fetchDbFromServer()
+      .then(db => {
+        if (db) {
+          if (Array.isArray(db.hkbp_registered_admins) && db.hkbp_registered_admins.length > 0) {
+            setAccountsList(db.hkbp_registered_admins);
+            localStorage.setItem('hkbp_registered_admins', JSON.stringify(db.hkbp_registered_admins));
+          } else {
+            const defaultAdmins: AdminCredentials[] = [
+              {
+                username: 'Pirma 15',
+                email: 'pirmasiahaan12342@gmail.com',
+                password: 'Pirma 08',
+                namaGereja: 'HKBP Hinalang Silalahi',
+                status: 'ruas',
+                isActive: true
+              },
+              {
+                username: 'admin',
+                email: 'admin@hkbp.or.id',
+                password: 'adminpassword123',
+                namaGereja: 'HKBP Hinalang Silalahi',
+                status: 'parhalado',
+                isActive: true
+              }
+            ];
+            setAccountsList(defaultAdmins);
+            localStorage.setItem('hkbp_registered_admins', JSON.stringify(defaultAdmins));
+            saveRegisteredAdminsToServer(defaultAdmins);
+          }
+
+          if (Array.isArray(db.hkbp_deleted_arsip_ids)) {
+            const mergedDeleted = Array.from(new Set([...deletedArsipIdsRef.current, ...db.hkbp_deleted_arsip_ids]));
+            deletedArsipIdsRef.current = mergedDeleted;
+            localStorage.setItem('hkbp_deleted_arsip_ids', JSON.stringify(mergedDeleted));
+          }
+
+          if (Array.isArray(db.hkbp_arsip_pdf)) {
+            const cleanedArsip = db.hkbp_arsip_pdf.filter((a: any) => a && !deletedArsipIdsRef.current.includes(a.id));
+            arsipPdfsRef.current = cleanedArsip;
+            setArsipPdfs(cleanedArsip);
+            localStorage.setItem('hkbp_arsip_pdf', JSON.stringify(cleanedArsip));
+          } else {
+            // Seed server
+            const defaultArsip = [
+              {
+                id: 'arsip-1',
+                judul: 'Tata Gereja HKBP (Amanat & Peraturan)',
+                keterangan: 'Aturan, Peraturan, dan Konfesi resmi HKBP sebagai landasan pelayanan gerejawi.',
+                tanggalUpload: '2026-06-15',
+                fileName: 'tata_gereja_hkbp_2026.pdf',
+                fileSize: '1.24 MB',
+                pdfUrl: 'data:application/pdf;base64,JVBERi0xLjQKJ...'
+              },
+              {
+                id: 'arsip-2',
+                judul: 'Kumpulan Lagu Koor Huria Batak',
+                keterangan: 'Daftar lagu koor koor Batak populer untuk latihan Koor Ama, Ina, dan Remaja.',
+                tanggalUpload: '2026-06-20',
+                fileName: 'kumpulan_koor_batak.pdf',
+                fileSize: '3.12 MB',
+                pdfUrl: ''
+              }
+            ];
+            saveDbKey('hkbp_arsip_pdf', defaultArsip).catch(e => console.error(e));
+          }
+
+          const songMap = new Map<string, BukuSong>();
+          INITIAL_BUKU_NYANYIAN_DB.forEach(s => songMap.set(s.id, s));
+          if (db.hkbp_buku_nyanyian_db && Array.isArray(db.hkbp_buku_nyanyian_db)) {
+            db.hkbp_buku_nyanyian_db.forEach((s: any) => {
+              if (s && s.id && (s.isCustom || !songMap.has(s.id))) {
+                songMap.set(s.id, s);
+              }
+            });
+          }
+          if (db.hkbp_custom_songs && Array.isArray(db.hkbp_custom_songs)) {
+            db.hkbp_custom_songs.forEach((s: any) => {
+              if (s && s.id) {
+                songMap.set(s.id, { ...s, isCustom: true });
+              }
+            });
+          }
+          const mergedDb = Array.from(songMap.values()).sort((a, b) => {
+            if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+            return a.nomor - b.nomor;
+          });
+          setBukuNyanyianDb(mergedDb);
+          localStorage.setItem('hkbp_buku_nyanyian_db', JSON.stringify(mergedDb));
+        }
+      })
+      .catch(err => console.error('Failed to load registered admins/PDFs:', err))
+      .finally(() => setIsArsipHydrated(true));
   }, []);
 
   // Custom Balance Editing States
@@ -339,7 +361,7 @@ export default function AdminView({
 
 
   // Helper functions for cash classification
-  const getTipeKasOfTransaction = (t: Transaksi, customTitle: string): 'Kas Huria' | 'Kas Pembangunan' | 'Kas Diakonia' | 'Kas Kustom' => {
+  const getTipeKasOfTransaction = (t: Transaksi): 'Kas Huria' | 'Kas Pembangunan' | 'Kas Diakonia' | 'Kas Kustom' => {
     if (t.tipeKas) {
       if (t.tipeKas === 'Kas Huria') return 'Kas Huria';
       if (t.tipeKas === 'Kas Pembangunan') return 'Kas Pembangunan';
@@ -367,10 +389,10 @@ export default function AdminView({
   };
 
   const getTipeKasDisplayClass = (resolved: 'Kas Huria' | 'Kas Pembangunan' | 'Kas Diakonia' | 'Kas Kustom') => {
-    if (resolved === 'Kas Huria') return 'bg-blue-50 text-blue-700 border-blue-200';
-    if (resolved === 'Kas Pembangunan') return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-    if (resolved === 'Kas Diakonia') return 'bg-pink-50 text-pink-700 border-pink-200';
-    return 'bg-amber-50 text-amber-700 border-amber-200';
+    if (resolved === 'Kas Huria') return 'bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]';
+    if (resolved === 'Kas Pembangunan') return 'bg-[#F4F6FA] text-[#1D3B6E] border-slate-300';
+    if (resolved === 'Kas Diakonia') return 'bg-slate-100 text-slate-700 border-slate-300';
+    return 'bg-white text-[#0F2447] border-[#0F2447]/30';
   };
 
   // Computed financial metrics
@@ -391,55 +413,55 @@ export default function AdminView({
 
   const saldoKasHuria = useMemo(() => {
     const pemasukan = transaksiList
-      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Huria')
+      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t) === 'Kas Huria')
       .reduce((sum, t) => {
         const pct = t.sentralisasiPersen || 0;
         return sum + (t.jumlah * (1 - pct / 100));
       }, 0);
     const pengeluaran = transaksiList
-      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Huria')
+      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t) === 'Kas Huria')
       .reduce((sum, t) => sum + t.jumlah, 0);
     return pemasukan - pengeluaran;
-  }, [transaksiList, customBalanceTitle]);
+  }, [transaksiList]);
 
   const saldoKasPembangunan = useMemo(() => {
     const pemasukan = transaksiList
-      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Pembangunan')
+      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t) === 'Kas Pembangunan')
       .reduce((sum, t) => {
         const pct = t.sentralisasiPersen || 0;
         return sum + (t.jumlah * (1 - pct / 100));
       }, 0);
     const pengeluaran = transaksiList
-      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Pembangunan')
+      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t) === 'Kas Pembangunan')
       .reduce((sum, t) => sum + t.jumlah, 0);
     return pemasukan - pengeluaran;
-  }, [transaksiList, customBalanceTitle]);
+  }, [transaksiList]);
 
   const saldoDiakoniaSosial = useMemo(() => {
     const pemasukan = transaksiList
-      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Diakonia')
+      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t) === 'Kas Diakonia')
       .reduce((sum, t) => {
         const pct = t.sentralisasiPersen || 0;
         return sum + (t.jumlah * (1 - pct / 100));
       }, 0);
     const pengeluaran = transaksiList
-      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Diakonia')
+      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t) === 'Kas Diakonia')
       .reduce((sum, t) => sum + t.jumlah, 0);
     return pemasukan - pengeluaran;
-  }, [transaksiList, customBalanceTitle]);
+  }, [transaksiList]);
 
   const activeCustomBalanceValue = useMemo(() => {
     const pemasukan = transaksiList
-      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Kustom')
+      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t) === 'Kas Kustom')
       .reduce((sum, t) => {
         const pct = t.sentralisasiPersen || 0;
         return sum + (t.jumlah * (1 - pct / 100));
       }, 0);
     const pengeluaran = transaksiList
-      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Kustom')
+      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t) === 'Kas Kustom')
       .reduce((sum, t) => sum + t.jumlah, 0);
     return customBalanceValue + pemasukan - pengeluaran;
-  }, [transaksiList, customBalanceValue, customBalanceTitle]);
+  }, [transaksiList, customBalanceValue]);
   
   // Save Feedback state
   const [savedSuccessMessage, setSavedSuccessMessage] = useState('');
@@ -574,13 +596,13 @@ export default function AdminView({
     try {
       const getBreakdownForKas = (kasType: 'Kas Huria' | 'Kas Pembangunan' | 'Kas Diakonia' | 'Kas Kustom') => {
         const pemasukan = transaksiList
-          .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t, customBalanceTitle) === kasType)
+          .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t) === kasType)
           .reduce((sum, t) => {
             const pct = t.sentralisasiPersen || 0;
             return sum + (t.jumlah * (1 - pct / 100));
           }, 0);
         const pengeluaran = transaksiList
-          .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t, customBalanceTitle) === kasType)
+          .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t) === kasType)
           .reduce((sum, t) => sum + t.jumlah, 0);
         return { pemasukan, pengeluaran };
       };
@@ -637,7 +659,7 @@ export default function AdminView({
       ];
 
       transaksiList.forEach((t, index) => {
-        const resolved = getTipeKasOfTransaction(t, customBalanceTitle);
+        const resolved = getTipeKasOfTransaction(t);
         const kasLabel = getTipeKasLabel(resolved, customBalanceTitle);
         const sentralisasiPersen = t.sentralisasiPersen || 0;
         const potongan = t.tipe === 'pemasukan' ? (t.jumlah * sentralisasiPersen / 100) : 0;
@@ -679,9 +701,12 @@ export default function AdminView({
   // ----------------------------------------------------
   // STATE FOR PDF ARCHIVE & CUSTOM DOCUMENTS
   // ----------------------------------------------------
+  const [isArsipHydrated, setIsArsipHydrated] = useState(false);
+  const deletedArsipIdsRef = useRef<string[]>(safeJsonParse<string[]>(localStorage.getItem('hkbp_deleted_arsip_ids'), []));
   const [arsipPdfs, setArsipPdfs] = useState<any[]>(() => {
-    const local = localStorage.getItem('hkbp_arsip_pdf');
-    return local ? JSON.parse(local) : [
+    const parsed = safeJsonParse<any[] | null>(localStorage.getItem('hkbp_arsip_pdf'), null);
+    if (Array.isArray(parsed)) return parsed;
+    return [
       {
         id: 'arsip-1',
         judul: 'Tata Gereja HKBP (Amanat & Peraturan)',
@@ -702,6 +727,10 @@ export default function AdminView({
       }
     ];
   });
+  const arsipPdfsRef = useRef<any[]>(arsipPdfs);
+  useEffect(() => {
+    arsipPdfsRef.current = arsipPdfs;
+  }, [arsipPdfs]);
 
   const [newArsipJudul, setNewArsipJudul] = useState('');
   const [newArsipKet, setNewArsipKet] = useState('');
@@ -746,36 +775,159 @@ export default function AdminView({
     });
   };
 
-  const [previewManualLit, setPreviewManualLit] = useState<Liturgi | null>(null);
+  const [previewManualLit, setPreviewManualLit] = useState<any | null>(null);
 
-  const saveArsipPdfs = (data: any[]) => {
-    setArsipPdfs(data);
-    saveDbKey('hkbp_arsip_pdf', data).catch(err => console.error('Failed to sync arsip PDF:', err));
+  const saveArsipPdfs = (dataOrUpdater: any[] | ((prev: any[]) => any[])) => {
+    const next = typeof dataOrUpdater === 'function' ? dataOrUpdater(arsipPdfsRef.current) : dataOrUpdater;
+    arsipPdfsRef.current = next;
+    setArsipPdfs(next);
+    localStorage.setItem('hkbp_arsip_pdf', JSON.stringify(next));
+    saveDbKey('hkbp_arsip_pdf', next).catch(err => console.error('Failed to sync arsip PDF:', err));
   };
+
+  // Helper untuk mem-backup otomatis semua jenis input ke Arsip Berkas & PDF
+  const backupToArsip = (item: {
+    id: string;
+    judul: string;
+    keterangan: string;
+    tanggalUpload?: string;
+    tanggalMinggu?: string;
+    kategori: 'acara' | 'petugas' | 'warta' | 'keuangan';
+    isPdfMode?: boolean;
+    fileName?: string;
+    fileSize?: string;
+    pdfUrl?: string;
+    teksLiturgi?: any[];
+    isiWarta?: string;
+    penulis?: string;
+    petugasMingguData?: any[];
+    petugasPartangianganData?: any[];
+    attendanceData?: any[];
+    transaksiData?: any;
+    [key: string]: any;
+  }) => {
+    if (deletedArsipIdsRef.current.includes(item.id)) {
+      const nextDeleted = deletedArsipIdsRef.current.filter(id => id !== item.id);
+      deletedArsipIdsRef.current = nextDeleted;
+      localStorage.setItem('hkbp_deleted_arsip_ids', JSON.stringify(nextDeleted));
+      saveDbKey('hkbp_deleted_arsip_ids', nextDeleted).catch(err => console.error('Failed to sync deleted arsip IDs:', err));
+    }
+
+    const fullItem = {
+      tanggalUpload: new Date().toISOString().split('T')[0],
+      isPdfMode: item.isPdfMode ?? false,
+      ...item
+    };
+
+    saveArsipPdfs((prev) => {
+      const existingIndex = prev.findIndex(a => a.id === item.id);
+      if (existingIndex !== -1) {
+        const updatedArsip = [...prev];
+        updatedArsip[existingIndex] = { ...updatedArsip[existingIndex], ...fullItem };
+        return updatedArsip;
+      }
+      return [fullItem, ...prev];
+    });
+  };
+
+  // Auto-backup sinkronisasi semua acara dan warta ke Arsip Berkas & PDF
+  useEffect(() => {
+    if (!isArsipHydrated) return;
+
+    let changed = false;
+    const current = [...arsipPdfsRef.current];
+
+    // Sinkronisasi Liturgi Minggu
+    liturgiMinggu.forEach((lit) => {
+      const archId = `arsip-liturgi-${lit.id}`;
+      if (!deletedArsipIdsRef.current.includes(archId) && !current.some(a => a.id === archId)) {
+        current.push({
+          id: archId,
+          judul: lit.judul,
+          keterangan: `Tata Ibadah Minggu (${lit.isPdfMode ? 'Berkas PDF' : 'Teks Manual'}) untuk ${lit.tanggal}`,
+          tanggalUpload: new Date().toISOString().split('T')[0],
+          tanggalMinggu: lit.tanggal,
+          fileName: lit.isPdfMode ? (lit.uploadedPdfName || 'tata_ibadah.pdf') : undefined,
+          fileSize: lit.isPdfMode ? (lit.uploadedPdfSize || '1.5 MB') : undefined,
+          pdfUrl: lit.isPdfMode ? (lit.pdfUrl || '') : '',
+          isPdfMode: lit.isPdfMode ?? false,
+          teksLiturgi: !lit.isPdfMode ? lit.teksLiturgi : undefined,
+          ayatReferensi: lit.ayatReferensi,
+          ayatBacaan: lit.ayatBacaan,
+          kategori: 'acara',
+          category: 'minggu'
+        });
+        changed = true;
+      }
+    });
+
+    // Sinkronisasi Liturgi Partangiangan
+    liturgiPartangiangan.forEach((lit) => {
+      const archId = `arsip-liturgi-${lit.id}`;
+      if (!deletedArsipIdsRef.current.includes(archId) && !current.some(a => a.id === archId)) {
+        current.push({
+          id: archId,
+          judul: lit.judul,
+          keterangan: `Tata Ibadah Partangiangan (${lit.isPdfMode ? 'Berkas PDF' : 'Teks Manual'}) untuk ${lit.tanggal}`,
+          tanggalUpload: new Date().toISOString().split('T')[0],
+          tanggalMinggu: lit.tanggal,
+          fileName: lit.isPdfMode ? (lit.uploadedPdfName || 'tata_ibadah.pdf') : undefined,
+          fileSize: lit.isPdfMode ? (lit.uploadedPdfSize || '1.5 MB') : undefined,
+          pdfUrl: lit.isPdfMode ? (lit.pdfUrl || '') : '',
+          isPdfMode: lit.isPdfMode ?? false,
+          teksLiturgi: !lit.isPdfMode ? lit.teksLiturgi : undefined,
+          ayatReferensi: lit.ayatReferensi,
+          ayatBacaan: lit.ayatBacaan,
+          kategori: 'acara',
+          category: 'partangiangan'
+        });
+        changed = true;
+      }
+    });
+
+    // Sinkronisasi Warta Jemaat
+    wartaList.forEach((w) => {
+      const archId = `arsip-warta-${w.id}`;
+      if (!deletedArsipIdsRef.current.includes(archId) && !current.some(a => a.id === archId)) {
+        current.push({
+          id: archId,
+          judul: `Warta: ${w.judul}`,
+          keterangan: w.isi ? (w.isi.length > 160 ? w.isi.slice(0, 160) + '...' : w.isi) : 'Warta Jemaat Resmi HKBP Hinalang Silalahi',
+          tanggalUpload: new Date().toISOString().split('T')[0],
+          tanggalMinggu: w.tanggal || new Date().toISOString().split('T')[0],
+          kategori: 'warta',
+          isPdfMode: false,
+          isiWarta: w.isi,
+          penulis: w.penulis,
+          kategoriWarta: w.kategori,
+          prioritas: w.prioritas
+        });
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      saveArsipPdfs(current);
+    }
+  }, [isArsipHydrated, liturgiMinggu, liturgiPartangiangan, wartaList]);
 
   // ----------------------------------------------------
   // STATE FOR DATABASE BUKU NYANYIAN (BE & BN)
   // ----------------------------------------------------
   const [bukuNyanyianDb, setBukuNyanyianDb] = useState<BukuSong[]>(() => {
-    const local = localStorage.getItem('hkbp_buku_nyanyian_db');
-    if (local) {
-      try {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const map = new Map<string, BukuSong>();
-          parsed.forEach((s: any) => {
-            if (s && s.id) map.set(s.id, s);
-          });
-          // Official songs from https://hkbp.or.id/buku-ende take precedence
-          INITIAL_BUKU_NYANYIAN_DB.forEach(s => map.set(s.id, s));
-          return Array.from(map.values()).sort((a, b) => {
-            if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
-            return a.nomor - b.nomor;
-          });
+    const parsed = safeJsonParse<any[] | null>(localStorage.getItem('hkbp_buku_nyanyian_db'), null);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const map = new Map<string, BukuSong>();
+      INITIAL_BUKU_NYANYIAN_DB.forEach(s => map.set(s.id, s));
+      parsed.forEach((s: any) => {
+        if (s && s.id && (s.isCustom || !map.has(s.id))) {
+          map.set(s.id, s);
         }
-      } catch (e) {
-        console.error(e);
-      }
+      });
+      return Array.from(map.values()).sort((a, b) => {
+        if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
+        return a.nomor - b.nomor;
+      });
     }
     return INITIAL_BUKU_NYANYIAN_DB;
   });
@@ -934,17 +1086,11 @@ export default function AdminView({
   const [litRef, setLitRef] = useState('');
   const [litBacaan, setLitBacaan] = useState('');
   const [litSteps, setLitSteps] = useState<LiturgiSection[]>([]);
-  // PDF values
-  const [litPdfMode, setLitPdfMode] = useState(false);
-  const [litPdfUrl, setLitPdfUrl] = useState('');
-  const [litUploadedPdfName, setLitUploadedPdfName] = useState<string | null>(null);
-  const [litUploadedPdfSize, setLitUploadedPdfSize] = useState<string | null>(null);
 
   // ----------------------------------------------------
   // STATE FOR PETUGAS EDITING (SPREADSHEET FOR MINGGU)
   // ----------------------------------------------------
   const [adminPetugasSubTab, setAdminPetugasSubTab] = useState<'minggu' | 'partangiangan'>('minggu');
-  const [tempSteps, setTempSteps] = useState<LiturgiSection[]>([]);
   const [tempPetugasMinggu, setTempPetugasMinggu] = useState<PetugasMingguRow[]>([]);
   const [tempPartangianganAttendance, setTempPartangianganAttendance] = useState<PartangianganAttendanceRow[]>([]);
   const [tempPetugasPartangiangan, setTempPetugasPartangiangan] = useState<PetugasPartangianganRow[]>([]);
@@ -968,22 +1114,6 @@ export default function AdminView({
     }
   }, [petugasPartangiangan]);
 
-  useEffect(() => {
-    const liturgiList = adminPetugasSubTab === 'minggu' ? liturgiMinggu : liturgiPartangiangan;
-    const activeLit = liturgiList?.[0] || null;
-    if (activeLit) {
-      setTempSteps(activeLit.teksLiturgi || []);
-    } else {
-      setTempSteps([]);
-    }
-  }, [adminPetugasSubTab, liturgiMinggu, liturgiPartangiangan]);
-
-  const handleUpdateTempPetugas = (index: number, value: string) => {
-    const updated = [...tempSteps];
-    updated[index] = { ...updated[index], pembaca: value };
-    setTempSteps(updated);
-  };
-
   const handleCellChange = (rowIndex: number, colKey: 'tugas' | 'shift1' | 'shift2' | 'sekolahMinggu', value: string) => {
     const updated = [...tempPetugasMinggu];
     updated[rowIndex] = {
@@ -1006,25 +1136,21 @@ export default function AdminView({
 
   const handleSavePetugasMinggu = () => {
     onUpdatePetugasMinggu(tempPetugasMinggu);
-    setSavedSuccessMessage('Data Petugas Minggu berhasil diperbarui!');
-    setTimeout(() => setSavedSuccessMessage(''), 3000);
-  };
 
-  const handleSavePetugasPartangiangan = () => {
-    const liturgiList = liturgiPartangiangan;
-    const activeLit = liturgiList?.[0] || null;
-    if (!activeLit) return;
+    // Automatically backup Petugas Minggu to arsipPdfs (Arsip Berkas & PDF)
+    backupToArsip({
+      id: `arsip-petugas-minggu-${petugasMingguDate.replace(/\s+/g, '_')}`,
+      judul: `Jadwal Pelayan Ibadah Minggu - ${petugasMingguDate}`,
+      keterangan: `Daftar pelayan ibadah minggu (Shift 1, Shift 2, Sekolah Minggu) tanggal ${petugasMingguDate}`,
+      tanggalUpload: new Date().toISOString().split('T')[0],
+      tanggalMinggu: new Date().toISOString().split('T')[0],
+      kategori: 'petugas',
+      isPdfMode: false,
+      petugasMingguData: tempPetugasMinggu,
+      tanggalPetugas: petugasMingguDate
+    });
 
-    const updatedLit: Liturgi = {
-      ...activeLit,
-      teksLiturgi: tempSteps
-    };
-
-    const updatedList = [...liturgiPartangiangan];
-    updatedList[0] = updatedLit;
-    onUpdateLiturgiPartangiangan(updatedList);
-
-    setSavedSuccessMessage('Petugas Partangiangan berhasil diperbarui!');
+    setSavedSuccessMessage('Data Petugas Minggu berhasil diperbarui & dicadangkan ke Arsip!');
     setTimeout(() => setSavedSuccessMessage(''), 3000);
   };
 
@@ -1053,7 +1179,21 @@ export default function AdminView({
 
   const handleSavePartangianganAttendance = () => {
     onUpdatePartangianganAttendance(tempPartangianganAttendance);
-    setSavedSuccessMessage('Tabel Kehadiran Partangiangan berhasil disimpan!');
+
+    // Automatically backup Attendance to arsipPdfs (Arsip Berkas & PDF)
+    backupToArsip({
+      id: `arsip-kehadiran-partangiangan-${partangianganAttendanceDate.replace(/\s+/g, '_')}`,
+      judul: `Statistik Kehadiran Partangiangan - ${partangianganAttendanceDate}`,
+      keterangan: `Rekapitulasi kehadiran jemaat (Ama, Ina, SM, Rena, Parhalado) partangiangan lingkungan ${partangianganAttendanceDate}`,
+      tanggalUpload: new Date().toISOString().split('T')[0],
+      tanggalMinggu: new Date().toISOString().split('T')[0],
+      kategori: 'petugas',
+      isPdfMode: false,
+      attendanceData: tempPartangianganAttendance,
+      tanggalKehadiran: partangianganAttendanceDate
+    });
+
+    setSavedSuccessMessage('Tabel Kehadiran Partangiangan berhasil disimpan & dicadangkan ke Arsip!');
     setTimeout(() => setSavedSuccessMessage(''), 3000);
   };
 
@@ -1068,7 +1208,21 @@ export default function AdminView({
 
   const handleSavePetugasPartangianganTable = () => {
     onUpdatePetugasPartangiangan(tempPetugasPartangiangan);
-    setSavedSuccessMessage('Tabel Petugas Partangiangan berhasil disimpan!');
+
+    // Automatically backup Petugas Partangiangan to arsipPdfs (Arsip Berkas & PDF)
+    backupToArsip({
+      id: `arsip-petugas-partangiangan-${petugasPartangianganDate.replace(/\s+/g, '_')}`,
+      judul: `Jadwal Petugas Partangiangan - ${petugasPartangianganDate}`,
+      keterangan: `Daftar pelayan & tuan rumah ibadah partangiangan lingkungan untuk ${petugasPartangianganDate}`,
+      tanggalUpload: new Date().toISOString().split('T')[0],
+      tanggalMinggu: new Date().toISOString().split('T')[0],
+      kategori: 'petugas',
+      isPdfMode: false,
+      petugasPartangianganData: tempPetugasPartangiangan,
+      tanggalPetugas: petugasPartangianganDate
+    });
+
+    setSavedSuccessMessage('Tabel Petugas Partangiangan berhasil disimpan & dicadangkan ke Arsip!');
     setTimeout(() => setSavedSuccessMessage(''), 3000);
   };
 
@@ -1163,20 +1317,18 @@ export default function AdminView({
   // INITIALIZER FOR SUNDAY LITURGY STATE
   // ----------------------------------------------------
   const [didInitSunday, setDidInitSunday] = useState(false);
-  if (!didInitSunday && liturgiMinggu && liturgiMinggu.length > 0) {
-    const lit = liturgiMinggu[0];
-    setLitTitle(lit.judul);
-    setLitDate(lit.tanggal);
-    setLitTopik(lit.topik || '');
-    setLitRef(lit.ayatReferensi || '');
-    setLitBacaan(lit.ayatBacaan || '');
-    setLitSteps([...(lit.teksLiturgi || [])]);
-    setLitPdfMode(lit.isPdfMode);
-    setLitPdfUrl(lit.pdfUrl || '');
-    setLitUploadedPdfName(lit.uploadedPdfName || null);
-    setLitUploadedPdfSize(lit.uploadedPdfSize || null);
-    setDidInitSunday(true);
-  }
+  useEffect(() => {
+    if (!didInitSunday && liturgiMinggu && liturgiMinggu.length > 0) {
+      const lit = liturgiMinggu[0];
+      setLitTitle(lit.judul);
+      setLitDate(lit.tanggal);
+      setLitTopik(lit.topik || '');
+      setLitRef(lit.ayatReferensi || '');
+      setLitBacaan(lit.ayatBacaan || '');
+      setLitSteps([...(lit.teksLiturgi || [])]);
+      setDidInitSunday(true);
+    }
+  }, [didInitSunday, liturgiMinggu]);
 
   // ----------------------------------------------------
   // HELPER TO SHOW RE-USABLE TOASTS
@@ -1209,10 +1361,6 @@ export default function AdminView({
     setLitRef(lit.ayatReferensi || '');
     setLitBacaan(lit.ayatBacaan || '');
     setLitSteps([...lit.teksLiturgi]);
-    setLitPdfMode(lit.isPdfMode);
-    setLitPdfUrl(lit.pdfUrl || '');
-    setLitUploadedPdfName(lit.uploadedPdfName || null);
-    setLitUploadedPdfSize(lit.uploadedPdfSize || null);
   };
 
   const startNewLiturgy = (tipe: 'minggu' | 'partangiangan') => {
@@ -1227,10 +1375,6 @@ export default function AdminView({
       { id: 'step-1', label: '01. Bernyanyi BE No. ...', isi: 'Lirik Lagu Ende...', pembaca: 'Song Leader' },
       { id: 'step-2', label: '02. Votum - Introitus - Doa', isi: 'Marhitehite Goar ni Debata Ama...', pembaca: 'Pendeta' }
     ]);
-    setLitPdfMode(false);
-    setLitPdfUrl('');
-    setLitUploadedPdfName(null);
-    setLitUploadedPdfSize(null);
   };
 
   const handleApplyPartangianganToMain = (lit: Liturgi) => {
@@ -1272,17 +1416,17 @@ export default function AdminView({
       onUpdateLiturgiPartangiangan(updatedList);
     }
 
-    // Automatically store in arsipPdfs (Arsip Berkas)
-    const archiveId = `arsip-liturgi-${newLiturgy.id}`;
+    // Automatically backup to arsipPdfs (Arsip Berkas & PDF)
     const descText = newLiturgy.isPdfMode 
       ? `Tata Ibadah ${litType === 'minggu' ? 'Minggu' : 'Partangiangan'} (Berkas PDF) untuk tanggal ${newLiturgy.tanggal}.`
       : `Tata Ibadah ${litType === 'minggu' ? 'Minggu' : 'Partangiangan'} (Teks Manual) untuk tanggal ${newLiturgy.tanggal}.`;
 
-    const archiveItem = {
-      id: archiveId,
+    backupToArsip({
+      id: `arsip-liturgi-${newLiturgy.id}`,
       judul: newLiturgy.judul,
       keterangan: descText,
       tanggalUpload: new Date().toISOString().split('T')[0],
+      tanggalMinggu: newLiturgy.tanggal,
       fileName: newLiturgy.isPdfMode ? (newLiturgy.uploadedPdfName || 'tata_ibadah.pdf') : undefined,
       fileSize: newLiturgy.isPdfMode ? (newLiturgy.uploadedPdfSize || '1.5 MB') : undefined,
       pdfUrl: newLiturgy.isPdfMode ? (newLiturgy.pdfUrl || '') : '',
@@ -1290,17 +1434,9 @@ export default function AdminView({
       teksLiturgi: !newLiturgy.isPdfMode ? newLiturgy.teksLiturgi : undefined,
       ayatReferensi: newLiturgy.ayatReferensi,
       ayatBacaan: newLiturgy.ayatBacaan,
+      kategori: 'acara',
       category: litType
-    };
-
-    const existingIndex = arsipPdfs.findIndex(item => item.id === archiveId);
-    let updatedArsip = [...arsipPdfs];
-    if (existingIndex !== -1) {
-      updatedArsip[existingIndex] = archiveItem;
-    } else {
-      updatedArsip = [archiveItem, ...updatedArsip];
-    }
-    saveArsipPdfs(updatedArsip);
+    });
 
     setEditingLiturgyId(null);
     showToast('✓ Acara Berhasil Disimpan & Langsung Diterapkan ke Halaman Utama!');
@@ -1557,7 +1693,8 @@ export default function AdminView({
       kategori: newSongKategori,
       nomor: nomorNum,
       judul: newSongJudul.trim(),
-      ayatList
+      ayatList,
+      isCustom: true
     };
 
     const existingIdx = bukuNyanyianDb.findIndex(s => s.id === songId);
@@ -1613,13 +1750,15 @@ export default function AdminView({
       return;
     }
 
+    const customSongs = songs.map(s => ({ ...s, isCustom: true }));
+
     let finalDb: BukuSong[] = [];
     if (importDbMode === 'replace') {
-      finalDb = songs;
+      finalDb = customSongs;
     } else {
       const map = new Map<string, BukuSong>();
       bukuNyanyianDb.forEach(s => map.set(s.id, s));
-      songs.forEach(s => map.set(s.id, s));
+      customSongs.forEach(s => map.set(s.id, s));
       finalDb = Array.from(map.values()).sort((a, b) => {
         if (a.kategori !== b.kategori) return a.kategori.localeCompare(b.kategori);
         return a.nomor - b.nomor;
@@ -1737,8 +1876,24 @@ export default function AdminView({
     }
 
     onUpdateWarta(list);
+
+    // Automatically backup Warta to arsipPdfs (Arsip Berkas & PDF)
+    backupToArsip({
+      id: `arsip-warta-${newW.id}`,
+      judul: `Warta: ${newW.judul}`,
+      keterangan: newW.isi ? (newW.isi.length > 160 ? newW.isi.slice(0, 160) + '...' : newW.isi) : 'Warta Jemaat Resmi HKBP Hinalang Silalahi',
+      tanggalUpload: new Date().toISOString().split('T')[0],
+      tanggalMinggu: newW.tanggal,
+      kategori: 'warta',
+      isPdfMode: false,
+      isiWarta: newW.isi,
+      penulis: newW.penulis,
+      kategoriWarta: newW.kategori,
+      prioritas: newW.prioritas
+    });
+
     setEditingWartaId(null);
-    showToast('Warta Jemaat Berhasil Disimpan!');
+    showToast('Warta Jemaat Berhasil Disimpan & Dicadangkan ke Arsip!');
   };
 
   const handleDeleteWarta = (id: string) => {
@@ -1763,7 +1918,7 @@ export default function AdminView({
     setTxJumlah(t.jumlah);
     setTxTanggal(t.tanggal);
     setTxKeterangan(t.keterangan);
-    setTxTipeKas(t.tipeKas || getTipeKasOfTransaction(t, customBalanceTitle));
+    setTxTipeKas(t.tipeKas || getTipeKasOfTransaction(t));
     setTxSentralisasiPersen(t.sentralisasiPersen || 0);
   };
 
@@ -1799,8 +1954,21 @@ export default function AdminView({
     }
 
     onUpdateTransaksi(list);
+
+    // Automatically backup Transaksi Keuangan to arsipPdfs (Arsip Berkas & PDF)
+    backupToArsip({
+      id: `arsip-transaksi-${newT.id}`,
+      judul: `Catatan Kas (${newT.tipe.toUpperCase()}): ${newT.kategori}`,
+      keterangan: `${newT.keterangan || 'Transaksi kas gereja'} - Nilai: Rp ${Number(newT.jumlah || 0).toLocaleString('id-ID')} (${newT.tipeKas || 'Kas Huria'})`,
+      tanggalUpload: new Date().toISOString().split('T')[0],
+      tanggalMinggu: newT.tanggal || new Date().toISOString().split('T')[0],
+      kategori: 'keuangan',
+      isPdfMode: false,
+      transaksiData: newT
+    });
+
     setEditingTransaksiId(null);
-    showToast('Transaksi Keuangan Tersimpan!');
+    showToast('Transaksi Keuangan Tersimpan & Dicadangkan ke Arsip!');
   };
 
   const handleDeleteTransaksi = (id: string) => {
@@ -2114,137 +2282,6 @@ export default function AdminView({
     showToast(`Berhasil mengimpor ${parsedJemaatList.length} data jemaat dari Excel!`);
   };
 
-  // Database Akun (Excel/CSV) helper functions
-  const handleExportAccountsCSV = () => {
-    const listToExport = accountsList.length > 0 ? accountsList : [
-      {
-        username: 'Pirma 15',
-        email: 'pirmasiahaan12342@gmail.com',
-        password: 'Pirma 08',
-        namaGereja: 'HKBP Hinalang Silalahi',
-        status: 'ruas' as const
-      }
-    ];
-
-    const headers = ['Username', 'Email', 'Password', 'Nama Gereja', 'Status'];
-    const csvRows = [headers.join(',')];
-
-    listToExport.forEach(admin => {
-      const row = [
-        `"${admin.username.replace(/"/g, '""')}"`,
-        `"${admin.email.replace(/"/g, '""')}"`,
-        `"${(admin.password || '').replace(/"/g, '""')}"`,
-        `"${(admin.namaGereja || 'HKBP Hinalang Silalahi').replace(/"/g, '""')}"`,
-        `"${admin.status || 'parhalado'}"`
-      ];
-      csvRows.push(row.join(','));
-    });
-
-    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'database_akun_hkbp.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showToast('Berhasil mengekspor database akun ke format Excel (.csv)!');
-  };
-
-  const handleImportAccountsCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target?.result as string;
-        if (!text) return;
-
-        const lines = text.split(/\r?\n/);
-        if (lines.length < 2) {
-          alert('File CSV kosong atau tidak memiliki data.');
-          return;
-        }
-
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-        const usernameIndex = headers.indexOf('username');
-        const emailIndex = headers.indexOf('email');
-        const passwordIndex = headers.indexOf('password');
-        const namaGerejaIndex = headers.indexOf('nama gereja') !== -1 ? headers.indexOf('nama gereja') : headers.indexOf('namagereja');
-        const statusIndex = headers.indexOf('status');
-
-        if (usernameIndex === -1 || emailIndex === -1 || passwordIndex === -1) {
-          alert('Format CSV salah. Header wajib: Username, Email, Password, Nama Gereja, Status');
-          return;
-        }
-
-        const parsedAdmins: AdminCredentials[] = [];
-        for (let i = 1; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (!line) continue;
-
-          const columns = line.split(',').map(col => {
-            return col.trim().replace(/^["']|["']$/g, '');
-          });
-
-          if (columns.length < 3) continue;
-
-          const username = columns[usernameIndex];
-          const email = columns[emailIndex];
-          const password = columns[passwordIndex];
-          const namaGereja = namaGerejaIndex !== -1 ? columns[namaGerejaIndex] : 'HKBP Hinalang Silalahi';
-          const statusRaw = statusIndex !== -1 ? columns[statusIndex].toLowerCase() : 'ruas';
-          const status: 'ruas' | 'parhalado' = (statusRaw === 'parhalado' || statusRaw === 'admin') ? 'parhalado' : 'ruas';
-
-          if (username && email && password) {
-            parsedAdmins.push({
-              username,
-              email,
-              password,
-              namaGereja: namaGereja || 'HKBP Hinalang Silalahi',
-              status
-            });
-          }
-        }
-
-        if (parsedAdmins.length === 0) {
-          alert('Tidak ada data akun valid yang ditemukan di file CSV.');
-          return;
-        }
-
-        const existing = [...accountsList];
-        let addedCount = 0;
-        let updatedCount = 0;
-
-        parsedAdmins.forEach(parsed => {
-          const existingIdx = existing.findIndex(admin => admin.email.toLowerCase() === parsed.email.toLowerCase() || admin.username.toLowerCase() === parsed.username.toLowerCase());
-          if (existingIdx !== -1) {
-            existing[existingIdx] = parsed;
-            updatedCount++;
-          } else {
-            existing.push(parsed);
-            addedCount++;
-          }
-        });
-
-        localStorage.setItem('hkbp_registered_admins', JSON.stringify(existing));
-        setAccountsList(existing);
-        saveRegisteredAdminsToServer(existing);
-        showToast(`Impor Excel Berhasil! ${addedCount} baru, ${updatedCount} diperbarui.`);
-        
-        if (e.target) {
-          e.target.value = '';
-        }
-      } catch (err) {
-        alert('Gagal membaca file CSV. Pastikan format file sesuai.');
-      }
-    };
-    reader.readAsText(file);
-  };
-
   const handleSaveAccount = async () => {
     if (!accountFormUsername || !accountFormEmail || !accountFormPassword || !accountFormNamaGereja) {
       alert('Mohon isi seluruh data akun!');
@@ -2276,7 +2313,8 @@ export default function AdminView({
       email: emailTrimmed,
       password: accountFormPassword,
       namaGereja: accountFormNamaGereja.trim(),
-      status: accountFormStatus
+      status: accountFormStatus,
+      isActive: editingAccountIdx !== null && accountsList[editingAccountIdx]?.isActive !== undefined ? accountsList[editingAccountIdx].isActive : true
     };
 
     // If it's a new account, check for duplicates
@@ -2292,16 +2330,65 @@ export default function AdminView({
       }
     }
 
-    // Direct save to localStorage
+    // Generate 6 digit OTP Code & trigger verification email
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setVerificationCode(code);
+    setUserTypedCode('');
+    setPendingAccountToSave(newAccount);
+    setIsVerifying(true);
+    setOtpDeliveryStatus('sending');
+    setOtpErrorMessage('');
+
+    try {
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: newAccount.email,
+          code: code,
+          username: newAccount.username
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOtpDeliveryStatus('success');
+      } else {
+        if (data.reason === 'SMTP_NOT_CONFIGURED') {
+          setOtpDeliveryStatus('smtp_not_configured');
+        } else {
+          setOtpDeliveryStatus('error');
+          setOtpErrorMessage(data.message || 'Email tidak aktif atau tidak ditemukan. Pengiriman kode dibatalkan.');
+        }
+      }
+    } catch (err: any) {
+      console.error('Error sending OTP:', err);
+      setOtpDeliveryStatus('error');
+      setOtpErrorMessage('Koneksi ke server gagal.');
+    }
+  };
+
+  const handleConfirmVerificationCode = () => {
+    if (!userTypedCode.trim()) {
+      alert('Mohon masukkan 6 digit kode verifikasi!');
+      return;
+    }
+    const isValid = userTypedCode.trim() === verificationCode.trim();
+
+    if (!isValid) {
+      alert('Kode verifikasi tidak cocok! Silakan periksa kembali email Anda.');
+      return;
+    }
+    if (!pendingAccountToSave) return;
+
     const updated = [...accountsList];
     if (editingAccountIdx !== null) {
       // Update existing
-      updated[editingAccountIdx] = newAccount;
-      showToast('Akun berhasil diperbarui!');
+      updated[editingAccountIdx] = pendingAccountToSave;
+      showToast('Akun berhasil diverifikasi & diperbarui!');
     } else {
       // Add new
-      updated.push(newAccount);
-      showToast('Akun baru berhasil ditambahkan!');
+      updated.push(pendingAccountToSave);
+      showToast('Akun baru berhasil diverifikasi & ditambahkan!');
     }
 
     localStorage.setItem('hkbp_registered_admins', JSON.stringify(updated));
@@ -2316,40 +2403,97 @@ export default function AdminView({
     setAccountFormStatus('ruas');
     setIsAddingAccount(false);
     setEditingAccountIdx(null);
+    setIsVerifying(false);
+    setPendingAccountToSave(null);
+    setUserTypedCode('');
   };
 
-  const handleDeleteAccount = (idx: number) => {
-    const target = accountsList[idx];
-    if (target.username === 'admin') {
-      alert('Akun admin utama tidak boleh dihapus demi keamanan!');
-      return;
+  const handleResendOtp = async () => {
+    if (!pendingAccountToSave) return;
+    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setVerificationCode(newCode);
+    setUserTypedCode('');
+    setOtpDeliveryStatus('sending');
+    setOtpErrorMessage('');
+    try {
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: pendingAccountToSave.email,
+          code: newCode,
+          username: pendingAccountToSave.username
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOtpDeliveryStatus('success');
+        showToast('Kode baru telah dikirimkan ke email!');
+      } else {
+        if (data.reason === 'SMTP_NOT_CONFIGURED') {
+          setOtpDeliveryStatus('smtp_not_configured');
+        } else {
+          setOtpDeliveryStatus('error');
+          setOtpErrorMessage(data.message || 'Email tidak aktif atau tidak ditemukan. Pengiriman kode dibatalkan.');
+        }
+      }
+    } catch (err: any) {
+      setOtpDeliveryStatus('error');
+      setOtpErrorMessage('Koneksi ke server gagal.');
     }
+  };
 
+  const handleToggleAccountActive = (idx: number) => {
+    const target = accountsList[idx];
+    const isCurrentlyActive = target.isActive !== false;
+
+    if (isCurrentlyActive) {
+      // "Nonaktifkan Akun"
+      triggerConfirm(
+        'Nonaktifkan Akun',
+        `Apakah Anda yakin ingin menonaktifkan akun "${target.username}"? Akun ini akan berstatus nonaktif dan tidak dapat login ke sistem.`,
+        () => {
+          const updated = [...accountsList];
+          updated[idx] = { ...target, isActive: false };
+          localStorage.setItem('hkbp_registered_admins', JSON.stringify(updated));
+          setAccountsList(updated);
+          saveRegisteredAdminsToServer(updated);
+          showToast(`Akun "${target.username}" telah dinonaktifkan.`);
+        }
+      );
+    } else {
+      // "Aktifkan Kembali"
+      const updated = [...accountsList];
+      updated[idx] = { ...target, isActive: true };
+      localStorage.setItem('hkbp_registered_admins', JSON.stringify(updated));
+      setAccountsList(updated);
+      saveRegisteredAdminsToServer(updated);
+      showToast(`Akun "${target.username}" telah diaktifkan kembali.`);
+    }
+  };
+
+  const handlePermanentDeleteAccount = (idx: number) => {
+    const target = accountsList[idx];
     triggerConfirm(
-      'Hapus Akun',
-      `Apakah Anda yakin ingin menghapus akun "${target.username}"? Akun ini tidak akan bisa digunakan lagi untuk login.`,
+      'Hapus Akun Permanen',
+      `Hapus permanen akun "${target.username}" dari seluruh database? Tindakan ini tidak dapat dibatalkan.`,
       () => {
         const updated = accountsList.filter((_, i) => i !== idx);
         localStorage.setItem('hkbp_registered_admins', JSON.stringify(updated));
         setAccountsList(updated);
         saveRegisteredAdminsToServer(updated);
-        showToast('Akun berhasil dihapus!');
+        showToast(`Akun "${target.username}" berhasil dihapus permanen.`);
       }
     );
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col md:flex-row font-sans overflow-x-hidden relative">
-      {/* Decorative ambiance blur circles */}
-      <div className="absolute top-10 left-12 w-64 h-64 bg-blue-600/5 rounded-full blur-[80px] pointer-events-none"></div>
-      <div className="absolute top-1/2 right-10 w-80 h-80 bg-purple-600/5 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-10 left-1/3 w-96 h-96 bg-indigo-600/5 rounded-full blur-[120px] pointer-events-none"></div>
-
-      {/* SIDEBAR NAVIGATION - Optimized for Desktop as requested */}
+    <div className="min-h-screen bg-[#F4F6FA] text-slate-800 flex flex-col md:flex-row font-sans overflow-x-hidden relative">
+      {/* SIDEBAR NAVIGATION */}
       <aside className="w-full md:w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 p-5 relative z-10 shadow-sm">
         <div className="space-y-6">
           <div className="flex items-start space-x-3 pb-5 border-b border-slate-200">
-            <div className="w-11 h-11 rounded-xl overflow-hidden bg-slate-50 border border-slate-200 flex items-center justify-center p-0.5 shadow-sm shrink-0">
+            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-white border border-slate-200/80 flex items-center justify-center p-1.5 shadow-sm shrink-0">
               <img
                 src="/hkbp.png"
                 alt="HKBP Logo"
@@ -2358,13 +2502,13 @@ export default function AdminView({
               />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-black tracking-tight text-slate-900 leading-none truncate">
+              <h2 className="text-sm font-black tracking-tight text-[#0F2447] leading-none truncate">
                 {loggedAdmin?.username || 'Admin'}
               </h2>
               <span className="text-[10px] text-slate-500 font-medium block mt-1 leading-tight truncate">
                 {loggedAdmin?.namaGereja || 'HKBP Hinalang Silalahi'}
               </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 mt-1.5 leading-none">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA] mt-1.5 leading-none">
                 {loggedAdmin?.status === 'ruas' ? 'Ruas Jemaat' : 'Parhalado'}
               </span>
             </div>
@@ -2377,11 +2521,11 @@ export default function AdminView({
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'dashboard'
-                  ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
               }`}
             >
-              <Activity className="w-4 h-4 shrink-0 text-indigo-500" />
+              <Activity className="w-4 h-4 shrink-0" />
               <span>Dashboard Tren</span>
             </button>
 
@@ -2392,8 +2536,8 @@ export default function AdminView({
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'liturgi'
-                  ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
               }`}
             >
               <FileText className="w-4 h-4 shrink-0" />
@@ -2406,8 +2550,8 @@ export default function AdminView({
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'petugas'
-                  ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
               }`}
             >
               <Users className="w-4 h-4 shrink-0" />
@@ -2421,8 +2565,8 @@ export default function AdminView({
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'warta'
-                  ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
               }`}
             >
               <Mail className="w-4 h-4 shrink-0" />
@@ -2436,8 +2580,8 @@ export default function AdminView({
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'keuangan'
-                  ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
               }`}
             >
               <DollarSign className="w-4 h-4 shrink-0" />
@@ -2451,8 +2595,8 @@ export default function AdminView({
               }}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'jemaat'
-                  ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
               }`}
             >
               <div className="flex items-center space-x-3">
@@ -2460,7 +2604,7 @@ export default function AdminView({
                 <span>Daftar Jemaat</span>
               </div>
               <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
-                activeSubTab === 'jemaat' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                activeSubTab === 'jemaat' ? 'bg-white/20 text-white' : 'bg-[#EDF2F9] text-[#0F2447]'
               }`}>
                 {jemaatList.length}
               </span>
@@ -2472,11 +2616,11 @@ export default function AdminView({
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'arsip_pdf'
-                  ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
               }`}
             >
-              <Archive className="w-4 h-4 shrink-0 text-amber-500" />
+              <Archive className="w-4 h-4 shrink-0" />
               <span>Arsip Berkas & PDF</span>
             </button>
           </nav>
@@ -2490,8 +2634,8 @@ export default function AdminView({
             onClick={() => setActiveSubTab('jadwal')}
             className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all text-left cursor-pointer border ${
               activeSubTab === 'jadwal'
-                ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
             }`}
           >
             <Calendar className="w-4 h-4 shrink-0" />
@@ -2502,8 +2646,8 @@ export default function AdminView({
             onClick={() => setActiveSubTab('sejarah')}
             className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all text-left cursor-pointer border ${
               activeSubTab === 'sejarah'
-                ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
             }`}
           >
             <BookOpen className="w-4 h-4 shrink-0" />
@@ -2514,8 +2658,8 @@ export default function AdminView({
             onClick={() => setActiveSubTab('parhalado')}
             className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all text-left cursor-pointer border ${
               activeSubTab === 'parhalado'
-                ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
             }`}
           >
             <Users className="w-4 h-4 shrink-0" />
@@ -2526,20 +2670,20 @@ export default function AdminView({
             onClick={() => setActiveSubTab('database_akun')}
             className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all text-left cursor-pointer border ${
               activeSubTab === 'database_akun'
-                ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-transparent text-white shadow shadow-blue-500/20'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
+                : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
             }`}
           >
-            <Database className="w-4 h-4 shrink-0 text-emerald-600" />
+            <Database className="w-4 h-4 shrink-0" />
             <span>Database Akun Pengguna</span>
           </button>
         </div>
 
         {/* LOGOUT FOOTER BUTTON */}
-        <div className="pt-4 border-t border-slate-250">
+        <div className="pt-4 border-t border-slate-200">
           <button
             onClick={onLogout}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-red-50 hover:bg-red-100/80 border border-red-200 text-red-600 font-bold text-xs rounded-xl uppercase tracking-wide transition-all cursor-pointer"
+            className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-white hover:bg-[#EDF2F9] border border-[#0F2447] text-[#0F2447] font-bold text-xs rounded-xl uppercase tracking-wide transition-all cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span>Keluar Sesi</span>
@@ -2552,7 +2696,7 @@ export default function AdminView({
         
         {/* RE-USABLE TOAST FEEDBACK ALERT */}
         {savedSuccessMessage && (
-          <div className="fixed top-4 right-4 z-50 bg-emerald-600 border border-emerald-500 text-white text-xs font-bold px-4 py-3 rounded-xl flex items-center space-x-2 shadow-2xl animate-bounce">
+          <div className="fixed top-4 right-4 z-50 bg-[#0F2447] border border-[#1D3B6E] text-white text-xs font-bold px-4 py-3 rounded-xl flex items-center space-x-2 shadow-2xl animate-fadeIn">
             <Check className="w-4 h-4" />
             <span>{savedSuccessMessage}</span>
           </div>
@@ -2561,10 +2705,10 @@ export default function AdminView({
         {/* HEADER BRAND */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5 mb-6">
           <div>
-            <span className="text-[10px] text-blue-700 font-extrabold uppercase tracking-widest bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
+            <span className="text-[10px] text-[#0F2447] font-extrabold uppercase tracking-widest bg-[#EDF2F9] border border-[#CBD7EA] px-2.5 py-1 rounded-lg">
               Sistem Pengelola Data Huria (CRUD)
             </span>
-            <h1 className="text-2xl font-black text-slate-900 mt-2.5 tracking-tight">
+            <h1 className="text-2xl font-black text-[#0F2447] mt-2.5 tracking-tight">
               {activeSubTab === 'dashboard' && 'Dashboard Analisis & Tren Kehadiran'}
               {activeSubTab === 'liturgi' && 'Manajemen Liturgi & Tata Ibadah'}
               {activeSubTab === 'petugas' && 'Manajemen Petugas & Pelayan Ibadah'}
@@ -2608,76 +2752,72 @@ export default function AdminView({
             {/* KPI STATS CARD GRID */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* CARD 1: SUNDAY ATTENDANCE */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-105 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl"></div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div>
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Kebaktian Minggu Terbaru</span>
-                  <h3 className="text-2xl font-black text-slate-900 mt-1 flex items-baseline gap-2">
+                  <h3 className="text-2xl font-black text-[#0F2447] mt-1 flex items-baseline gap-2">
                     {kpis.latestSunday} <span className="text-xs font-semibold text-slate-500">Jemaat</span>
                   </h3>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-[10px] text-slate-500 font-medium">Rata-rata: {kpis.avgSunday}</span>
-                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold ${kpis.sundayGrowth >= 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]">
                     {kpis.sundayGrowth >= 0 ? '+' : ''}{kpis.sundayGrowth.toFixed(1)}%
                   </span>
                 </div>
               </div>
 
               {/* CARD 2: PARTANGIANGAN ATTENDANCE */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-105 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-full blur-2xl"></div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div>
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Partangiangan Sektor Terbaru</span>
-                  <h3 className="text-2xl font-black text-slate-900 mt-1 flex items-baseline gap-2">
+                  <h3 className="text-2xl font-black text-[#0F2447] mt-1 flex items-baseline gap-2">
                     {kpis.latestPartangiangan} <span className="text-xs font-semibold text-slate-500">Jemaat</span>
                   </h3>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-[10px] text-slate-500 font-medium">Rata-rata: {kpis.avgPartangiangan}</span>
-                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold ${kpis.partangianganGrowth >= 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]">
                     {kpis.partangianganGrowth >= 0 ? '+' : ''}{kpis.partangianganGrowth.toFixed(1)}%
                   </span>
                 </div>
               </div>
 
               {/* CARD 3: COMBINED AVERAGE */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-105 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl"></div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div>
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Rata-rata Kebaktian Minggu</span>
-                  <h3 className="text-2xl font-black text-slate-900 mt-1">
+                  <h3 className="text-2xl font-black text-[#0F2447] mt-1">
                     {kpis.avgSunday} <span className="text-xs font-semibold text-slate-500">Jemaat / Minggu</span>
                   </h3>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-[10px] text-slate-500 font-medium">Periode: 4 Minggu Terakhir</span>
-                  <span className="text-[10px] text-blue-600 font-extrabold bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-100">Aktif</span>
+                  <span className="text-[10px] text-[#0F2447] font-extrabold bg-[#EDF2F9] px-1.5 py-0.5 rounded-md border border-[#CBD7EA]">Aktif</span>
                 </div>
               </div>
 
               {/* CARD 4: COMBINED AVERAGE PARTANGIANGAN */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-105 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl"></div>
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div>
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Rata-rata Partangiangan Sektor</span>
-                  <h3 className="text-2xl font-black text-slate-900 mt-1">
+                  <h3 className="text-2xl font-black text-[#0F2447] mt-1">
                     {kpis.avgPartangiangan} <span className="text-xs font-semibold text-slate-500">Jemaat / Minggu</span>
                   </h3>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-[10px] text-slate-500 font-medium">Periode: 4 Minggu Terakhir</span>
-                  <span className="text-[10px] text-teal-600 font-extrabold bg-teal-50 px-1.5 py-0.5 rounded-md border border-teal-100">Sektor I-VI</span>
+                  <span className="text-[10px] text-[#0F2447] font-extrabold bg-[#EDF2F9] px-1.5 py-0.5 rounded-md border border-[#CBD7EA]">Sektor I-VI</span>
                 </div>
               </div>
             </div>
 
             {/* CHART VIEW CARD */}
-            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-105 shadow-sm space-y-6">
+            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-sm font-black text-slate-800 flex items-center space-x-2">
-                    <span className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse"></span>
+                  <h2 className="text-sm font-black text-[#0F2447] flex items-center space-x-2">
+                    <span className="w-2.5 h-2.5 bg-[#0F2447] rounded-full"></span>
                     <span>Tren Tingkat Kehadiran Jemaat</span>
                   </h2>
                   <p className="text-[11px] text-slate-500 mt-0.5">
@@ -2686,22 +2826,22 @@ export default function AdminView({
                 </div>
 
                 {/* CHART TAB SELECTOR */}
-                <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
+                <div className="flex items-center space-x-1 bg-[#E8EEF6] border border-[#D4DFEE] p-1 rounded-xl self-start sm:self-auto">
                   <button
                     onClick={() => setChartTab('total')}
-                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'total' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}
+                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'total' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'}`}
                   >
                     Ikhtisar Tren
                   </button>
                   <button
                     onClick={() => setChartTab('minggu')}
-                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'minggu' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}
+                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'minggu' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'}`}
                   >
                     Detail Minggu
                   </button>
                   <button
                     onClick={() => setChartTab('partangiangan')}
-                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'partangiangan' ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-800'}`}
+                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'partangiangan' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'}`}
                   >
                     Detail Partangiangan
                   </button>
@@ -2715,57 +2855,57 @@ export default function AdminView({
                     <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorMinggu" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#0F2447" stopOpacity={0.22}/>
+                          <stop offset="95%" stopColor="#0F2447" stopOpacity={0}/>
                         </linearGradient>
                         <linearGradient id="colorPartangiangan" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#4C6B9E" stopOpacity={0.22}/>
+                          <stop offset="95%" stopColor="#4C6B9E" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="weekLabel" stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} />
-                      <YAxis stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} />
+                      <XAxis dataKey="weekLabel" stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
+                      <YAxis stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
                       <Tooltip
-                        contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
-                        labelStyle={{ fontWeight: 'bold', color: '#1e293b', fontSize: '12px' }}
+                        contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #CBD7EA', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
+                        labelStyle={{ fontWeight: 'bold', color: '#0F2447', fontSize: '12px' }}
                         itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
                       />
                       <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                      <Area type="monotone" name="Kebaktian Minggu (Total)" dataKey="Total Kebaktian Minggu" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorMinggu)" />
-                      <Area type="monotone" name="Partangiangan Sektor (Total)" dataKey="Total Partangiangan" stroke="#059669" strokeWidth={3} fillOpacity={1} fill="url(#colorPartangiangan)" />
+                      <Area type="monotone" name="Kebaktian Minggu (Total)" dataKey="Total Kebaktian Minggu" stroke="#0F2447" strokeWidth={3} fillOpacity={1} fill="url(#colorMinggu)" />
+                      <Area type="monotone" name="Partangiangan Sektor (Total)" dataKey="Total Partangiangan" stroke="#4C6B9E" strokeWidth={3} fillOpacity={1} fill="url(#colorPartangiangan)" />
                     </AreaChart>
                   ) : chartTab === 'minggu' ? (
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="weekLabel" stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} />
-                      <YAxis stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} />
+                      <XAxis dataKey="weekLabel" stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
+                      <YAxis stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
                       <Tooltip
-                        contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
-                        labelStyle={{ fontWeight: 'bold', color: '#1e293b', fontSize: '12px' }}
+                        contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #CBD7EA', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
+                        labelStyle={{ fontWeight: 'bold', color: '#0F2447', fontSize: '12px' }}
                         itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
                       />
                       <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                      <Bar dataKey="Shift 1 (Minggu)" name="Shift 1" stackId="a" fill="#2563eb" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Shift 2 (Minggu)" name="Shift 2" stackId="a" fill="#ec4899" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Sekolah Minggu (Minggu)" name="Sekolah Minggu" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Shift 1 (Minggu)" name="Shift 1" stackId="a" fill="#0F2447" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Shift 2 (Minggu)" name="Shift 2" stackId="a" fill="#4C6B9E" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Sekolah Minggu (Minggu)" name="Sekolah Minggu" stackId="a" fill="#8CA3C7" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   ) : (
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="weekLabel" stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} />
-                      <YAxis stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} />
+                      <XAxis dataKey="weekLabel" stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
+                      <YAxis stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
                       <Tooltip
-                        contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
-                        labelStyle={{ fontWeight: 'bold', color: '#1e293b', fontSize: '12px' }}
+                        contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #CBD7EA', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
+                        labelStyle={{ fontWeight: 'bold', color: '#0F2447', fontSize: '12px' }}
                         itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
                       />
                       <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                      <Bar dataKey="Ama (Partangiangan)" name="Ama" stackId="b" fill="#0284c7" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Ina (Partangiangan)" name="Ina" stackId="b" fill="#f43f5e" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Sekolah Minggu (Partangiangan)" name="Sekolah Minggu" stackId="b" fill="#eab308" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Remaja/Naposo (Partangiangan)" name="Remaja/Naposo" stackId="b" fill="#a855f7" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Parhalado (Partangiangan)" name="Parhalado" stackId="b" fill="#475569" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Ama (Partangiangan)" name="Ama" stackId="b" fill="#0F2447" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Ina (Partangiangan)" name="Ina" stackId="b" fill="#1D3E75" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Sekolah Minggu (Partangiangan)" name="Sekolah Minggu" stackId="b" fill="#4C6B9E" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Remaja/Naposo (Partangiangan)" name="Remaja/Naposo" stackId="b" fill="#6D89B8" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Parhalado (Partangiangan)" name="Parhalado" stackId="b" fill="#B4C4DC" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   )}
                 </ResponsiveContainer>
@@ -2773,11 +2913,11 @@ export default function AdminView({
             </div>
 
             {/* SPREADSHEET EDITOR SECTION */}
-            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-105 shadow-sm space-y-4">
+            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-black text-slate-800 flex items-center space-x-2">
-                    <span className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></span>
+                  <h3 className="text-sm font-black text-[#0F2447] flex items-center space-x-2">
+                    <span className="w-2.5 h-2.5 bg-[#0F2447] rounded-full"></span>
                     <span>Atur & Input Data Tren Kehadiran (Lembar Kerja 4 Minggu)</span>
                   </h3>
                   <p className="text-[11px] text-slate-500 mt-0.5">
@@ -2787,7 +2927,7 @@ export default function AdminView({
 
                 <button
                   onClick={handleSaveAttendanceTrends}
-                  className="px-5 py-2.5 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-black text-white rounded-xl shadow transition flex items-center justify-center space-x-2 cursor-pointer self-start md:self-auto"
+                  className="px-5 py-2.5 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-black text-white rounded-xl shadow-sm transition flex items-center justify-center space-x-2 cursor-pointer self-start md:self-auto"
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan</span>
@@ -2795,19 +2935,19 @@ export default function AdminView({
               </div>
 
               {/* GRID EDITOR SPREADSHEET */}
-              <div className="overflow-x-auto border border-slate-150 rounded-xl">
+              <div className="overflow-x-auto border border-slate-200 rounded-xl">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50 text-slate-700 uppercase tracking-wider text-[10px] font-extrabold border-b border-slate-150">
-                      <th className="px-3 py-3 font-black text-slate-900 bg-slate-100/50 w-[16%]">Kategori / Minggu</th>
-                      <th className="px-2 py-3 text-center bg-blue-50/50 text-blue-800 font-extrabold w-[10%]">Minggu: Shift 1</th>
-                      <th className="px-2 py-3 text-center bg-blue-50/50 text-blue-800 font-extrabold w-[10%]">Minggu: Shift 2</th>
-                      <th className="px-2 py-3 text-center bg-blue-50/50 text-blue-800 font-extrabold w-[10%]">Minggu: Sek. Minggu</th>
-                      <th className="px-2 py-3 text-center bg-emerald-50/30 text-emerald-800 font-extrabold w-[10%] border-l border-slate-200">Part.: Ama</th>
-                      <th className="px-2 py-3 text-center bg-emerald-50/30 text-emerald-800 font-extrabold w-[8%]">Part.: Ina</th>
-                      <th className="px-2 py-3 text-center bg-emerald-50/30 text-emerald-800 font-extrabold w-[8%]">Part.: SM</th>
-                      <th className="px-2 py-3 text-center bg-emerald-50/30 text-emerald-800 font-extrabold w-[8%]">Part.: ReNa</th>
-                      <th className="px-2 py-3 text-center bg-emerald-50/30 text-emerald-800 font-extrabold w-[8%]">Part.: Prhd</th>
+                    <tr className="bg-[#0F2447] text-white uppercase tracking-wider text-[10px] font-extrabold border-b border-[#1D3B6E]">
+                      <th className="px-3 py-3 font-black text-white bg-[#091731] w-[16%]">Kategori / Minggu</th>
+                      <th className="px-2 py-3 text-center text-white font-extrabold w-[10%]">Minggu: Shift 1</th>
+                      <th className="px-2 py-3 text-center text-white font-extrabold w-[10%]">Minggu: Shift 2</th>
+                      <th className="px-2 py-3 text-center text-white font-extrabold w-[10%]">Minggu: Sek. Minggu</th>
+                      <th className="px-2 py-3 text-center text-white font-extrabold w-[10%] border-l border-[#1D3B6E]">Part.: Ama</th>
+                      <th className="px-2 py-3 text-center text-white font-extrabold w-[8%]">Part.: Ina</th>
+                      <th className="px-2 py-3 text-center text-white font-extrabold w-[8%]">Part.: SM</th>
+                      <th className="px-2 py-3 text-center text-white font-extrabold w-[8%]">Part.: ReNa</th>
+                      <th className="px-2 py-3 text-center text-white font-extrabold w-[8%]">Part.: Prhd</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-150">
@@ -2821,114 +2961,114 @@ export default function AdminView({
                               type="text"
                               value={trend.weekLabel}
                               onChange={(e) => handleTrendCellChange(idx, 'weekLabel', e.target.value)}
-                              className="w-full bg-transparent font-black text-slate-800 text-[11px] focus:bg-white border-0 focus:border border-slate-250 focus:ring-1 focus:ring-blue-500 rounded px-1.5 py-0.5 outline-none"
+                              className="w-full bg-transparent font-black text-slate-800 text-[11px] focus:bg-white border-0 focus:border border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] rounded px-1.5 py-0.5 outline-none"
                               placeholder="Minggu Ke-X"
                             />
                             <input
                               type="text"
                               value={trend.tanggalRange}
                               onChange={(e) => handleTrendCellChange(idx, 'tanggalRange', e.target.value)}
-                              className="w-full bg-transparent text-[9px] text-slate-500 focus:bg-white border-0 focus:border border-slate-250 focus:ring-1 focus:ring-blue-500 rounded px-1.5 py-0.5 outline-none font-medium mt-0.5"
+                              className="w-full bg-transparent text-[9px] text-slate-500 focus:bg-white border-0 focus:border border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] rounded px-1.5 py-0.5 outline-none font-medium mt-0.5"
                               placeholder="Tgl: Contoh 14 Juni 2026"
                             />
                             {isLatestWeek && (
-                              <span className="inline-block mt-1.5 px-2 py-0.5 bg-emerald-100 text-emerald-850 font-extrabold text-[8px] uppercase tracking-wider rounded-md border border-emerald-200">
+                              <span className="inline-block mt-1.5 px-2 py-0.5 bg-[#EDF2F9] text-[#0F2447] font-extrabold text-[8px] uppercase tracking-wider rounded-md border border-[#CBD7EA]">
                                 Minggu Terbaru
                               </span>
                             )}
                           </td>
 
                           {/* MINGGU BREAKDOWN INPUTS */}
-                          <td className="px-1.5 py-2 text-center bg-blue-50/10">
+                          <td className="px-1.5 py-2 text-center bg-slate-50/30">
                             <input
                               type="number"
                               value={trend.mingguAma || 0}
                               onChange={(e) => handleTrendCellChange(idx, 'mingguAma', e.target.value)}
-                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] outline-none"
                             />
                           </td>
-                          <td className="px-1.5 py-2 text-center bg-blue-50/10">
+                          <td className="px-1.5 py-2 text-center bg-slate-50/30">
                             <input
                               type="number"
                               value={trend.mingguIna || 0}
                               onChange={(e) => handleTrendCellChange(idx, 'mingguIna', e.target.value)}
-                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] outline-none"
                             />
                           </td>
-                          <td className="px-1.5 py-2 text-center bg-blue-50/10">
+                          <td className="px-1.5 py-2 text-center bg-slate-50/30">
                             <input
                               type="number"
                               value={trend.mingguSm || 0}
                               onChange={(e) => handleTrendCellChange(idx, 'mingguSm', e.target.value)}
-                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] outline-none"
                             />
                           </td>
 
                           {/* PARTANGIANGAN BREAKDOWN INPUTS */}
-                          <td className="px-1.5 py-2 text-center bg-emerald-50/5 border-l border-slate-200">
+                          <td className="px-1.5 py-2 text-center bg-[#EDF2F9]/30 border-l border-slate-200">
                             <div className="relative inline-block">
                               <input
                                 type="number"
                                 value={trend.partangianganAma || 0}
                                 onChange={(e) => handleTrendCellChange(idx, 'partangianganAma', e.target.value)}
-                                className={`w-16 border rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:ring-1 outline-none transition ${
+                                className={`w-16 border rounded px-2 py-1 text-center text-xs font-bold text-[#0F2447] focus:ring-1 outline-none transition ${
                                   isLatestWeek
-                                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900 focus:border-emerald-500 focus:ring-emerald-550'
-                                    : 'bg-white border-slate-200/80 focus:border-teal-500 focus:ring-teal-500'
+                                    ? 'bg-[#EDF2F9] border-[#CBD7EA] focus:border-[#0F2447] focus:ring-[#0F2447]'
+                                    : 'bg-white border-slate-200/80 focus:border-[#0F2447] focus:ring-[#0F2447]'
                                 }`}
                               />
                             </div>
                           </td>
-                          <td className="px-1.5 py-2 text-center bg-emerald-50/5">
+                          <td className="px-1.5 py-2 text-center bg-[#EDF2F9]/30">
                             <input
                               type="number"
                               value={trend.partangianganIna || 0}
                               onChange={(e) => handleTrendCellChange(idx, 'partangianganIna', e.target.value)}
-                              className={`w-16 border rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:ring-1 outline-none transition ${
+                              className={`w-16 border rounded px-2 py-1 text-center text-xs font-bold text-[#0F2447] focus:ring-1 outline-none transition ${
                                 isLatestWeek
-                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900 focus:border-emerald-500 focus:ring-emerald-550'
-                                  : 'bg-white border-slate-200/80 focus:border-teal-500 focus:ring-teal-500'
+                                  ? 'bg-[#EDF2F9] border-[#CBD7EA] focus:border-[#0F2447] focus:ring-[#0F2447]'
+                                  : 'bg-white border-slate-200/80 focus:border-[#0F2447] focus:ring-[#0F2447]'
                               }`}
                             />
                           </td>
-                          <td className="px-1.5 py-2 text-center bg-emerald-50/5">
+                          <td className="px-1.5 py-2 text-center bg-[#EDF2F9]/30">
                             <input
                               type="number"
                               value={trend.partangianganSm || 0}
                               onChange={(e) => handleTrendCellChange(idx, 'partangianganSm', e.target.value)}
-                              className={`w-16 border rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:ring-1 outline-none transition ${
+                              className={`w-16 border rounded px-2 py-1 text-center text-xs font-bold text-[#0F2447] focus:ring-1 outline-none transition ${
                                 isLatestWeek
-                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900 focus:border-emerald-500 focus:ring-emerald-550'
-                                  : 'bg-white border-slate-200/80 focus:border-teal-500 focus:ring-teal-500'
+                                  ? 'bg-[#EDF2F9] border-[#CBD7EA] focus:border-[#0F2447] focus:ring-[#0F2447]'
+                                  : 'bg-white border-slate-200/80 focus:border-[#0F2447] focus:ring-[#0F2447]'
                               }`}
                             />
                           </td>
-                          <td className="px-1.5 py-2 text-center bg-emerald-50/5">
+                          <td className="px-1.5 py-2 text-center bg-[#EDF2F9]/30">
                             <input
                               type="number"
                               value={trend.partangianganRena || 0}
                               onChange={(e) => handleTrendCellChange(idx, 'partangianganRena', e.target.value)}
-                              className={`w-16 border rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:ring-1 outline-none transition ${
+                              className={`w-16 border rounded px-2 py-1 text-center text-xs font-bold text-[#0F2447] focus:ring-1 outline-none transition ${
                                 isLatestWeek
-                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900 focus:border-emerald-500 focus:ring-emerald-550'
-                                  : 'bg-white border-slate-200/80 focus:border-teal-500 focus:ring-teal-500'
+                                  ? 'bg-[#EDF2F9] border-[#CBD7EA] focus:border-[#0F2447] focus:ring-[#0F2447]'
+                                  : 'bg-white border-slate-200/80 focus:border-[#0F2447] focus:ring-[#0F2447]'
                               }`}
                             />
                           </td>
-                          <td className="px-1.5 py-2 text-center bg-emerald-50/5">
+                          <td className="px-1.5 py-2 text-center bg-[#EDF2F9]/30">
                             <div className="flex flex-col items-center space-y-1">
                               <input
                                 type="number"
                                 value={trend.partangianganParhalado || 0}
                                 onChange={(e) => handleTrendCellChange(idx, 'partangianganParhalado', e.target.value)}
-                                className={`w-14 border rounded px-1.5 py-1 text-center text-xs font-bold text-slate-800 focus:ring-1 outline-none transition ${
+                                className={`w-14 border rounded px-1.5 py-1 text-center text-xs font-bold text-[#0F2447] focus:ring-1 outline-none transition ${
                                   isLatestWeek
-                                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900 focus:border-emerald-500 focus:ring-emerald-550'
-                                    : 'bg-white border-slate-200/80 focus:border-teal-500 focus:ring-teal-500'
+                                    ? 'bg-[#EDF2F9] border-[#CBD7EA] focus:border-[#0F2447] focus:ring-[#0F2447]'
+                                    : 'bg-white border-slate-200/80 focus:border-[#0F2447] focus:ring-[#0F2447]'
                                 }`}
                               />
                               {isLatestWeek && (
-                                <span className="text-[8px] text-emerald-800 font-extrabold uppercase bg-emerald-100 px-1 py-0.5 rounded leading-none">
+                                <span className="text-[8px] text-[#0F2447] font-extrabold uppercase bg-[#EDF2F9] border border-[#CBD7EA] px-1 py-0.5 rounded leading-none">
                                   ✓ Auto
                                 </span>
                               )}
@@ -2949,7 +3089,7 @@ export default function AdminView({
         {/* ======================================================== */}
         {activeSubTab === 'liturgi' && (
           <div className="space-y-6">
-            <div className="flex items-center space-x-2 bg-slate-200/60 p-1.5 rounded-lg border border-slate-200 inline-block">
+            <div className="flex items-center space-x-1.5 bg-[#E8EEF6] p-1.5 rounded-xl border border-[#D4DFEE] inline-flex">
               <button
                 onClick={() => {
                   setLiturgiEditMode('minggu');
@@ -2959,14 +3099,10 @@ export default function AdminView({
                     setLitDate(lit.tanggal);
                     setLitRef(lit.ayatReferensi || '');
                     setLitSteps([...(lit.teksLiturgi || [])]);
-                    setLitPdfMode(lit.isPdfMode);
-                    setLitPdfUrl(lit.pdfUrl || '');
-                    setLitUploadedPdfName(lit.uploadedPdfName || null);
-                    setLitUploadedPdfSize(lit.uploadedPdfSize || null);
                   }
                 }}
-                className={`px-4 py-1.5 rounded-md text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
-                  liturgiEditMode === 'minggu' ? 'bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow' : 'text-slate-600 hover:text-slate-900'
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
+                  liturgiEditMode === 'minggu' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'
                 }`}
               >
                 Ibadah Minggu
@@ -2976,8 +3112,8 @@ export default function AdminView({
                   setLiturgiEditMode('partangiangan');
                   setEditingLiturgyId(null);
                 }}
-                className={`px-4 py-1.5 rounded-md text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
-                  liturgiEditMode === 'partangiangan' ? 'bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow' : 'text-slate-600 hover:text-slate-900'
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
+                  liturgiEditMode === 'partangiangan' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'
                 }`}
               >
                 Ibadah Partangiangan
@@ -2989,10 +3125,10 @@ export default function AdminView({
               <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
                 <div className="border-b border-slate-200 pb-3.5 flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Pengaturan Kebaktian Minggu Jemaat</h3>
+                    <h3 className="text-sm font-black text-[#0F2447] uppercase tracking-tight">Pengaturan Kebaktian Minggu Jemaat</h3>
                     <p className="text-[10px] text-slate-500 mt-1">Satu panel utama untuk mengunggah PDF dan menyusun langkah acara liturgi manual secara real-time.</p>
                   </div>
-                  <span className="text-[9px] bg-blue-50 border border-blue-200 text-blue-700 font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                  <span className="text-[9px] bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider">
                     Satu Pengaturan Utama
                   </span>
                 </div>
@@ -3004,7 +3140,7 @@ export default function AdminView({
                       type="text"
                       value={litTitle}
                       onChange={(e) => setLitTitle(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
                       placeholder="Contoh: Ibadah Minggu V Dung Trinitatis"
                     />
                   </div>
@@ -3015,7 +3151,7 @@ export default function AdminView({
                       type="date"
                       value={litDate}
                       onChange={(e) => setLitDate(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all"
                     />
                   </div>
 
@@ -3025,7 +3161,7 @@ export default function AdminView({
                       type="text"
                       value={litTopik}
                       onChange={(e) => setLitTopik(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
                       placeholder="Contoh: Menjadi Terang dan Garam bagi Dunia"
                     />
                   </div>
@@ -3051,7 +3187,7 @@ export default function AdminView({
                             }
                           }
                         }}
-                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
                         placeholder="Contoh: Mateus 5 : 13 - 16 atau Yohanes 3:16"
                       />
                       <button
@@ -3068,11 +3204,11 @@ export default function AdminView({
                           setScripturePickerTarget({ type: 'epistel' });
                           handleUpdateScripturePickerPreview(bId, chap, vRange);
                         }}
-                        className="px-3 py-2.5 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1"
+                        className="px-3 py-2.5 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white border border-[#1D3B6E] font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1.5"
                         title="Pilih Kitab, Pasal, dan Ayat Alkitab untuk Epistel"
                       >
-                        <BookOpen className="w-3.5 h-3.5 text-blue-200" />
-                        <span>📖 Pilih Kitab</span>
+                        <BookOpen className="w-3.5 h-3.5 text-white/85" />
+                        <span>Pilih Kitab</span>
                       </button>
                     </div>
                   </div>
@@ -3084,7 +3220,7 @@ export default function AdminView({
                         type="text"
                         value={litBacaan}
                         onChange={(e) => setLitBacaan(e.target.value)}
-                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
                         placeholder="Contoh: Johanes 3 : 16 atau 1 Musa 1:1-3"
                       />
                       <button
@@ -3101,11 +3237,11 @@ export default function AdminView({
                           setScripturePickerTarget({ type: 'khotbah' });
                           handleUpdateScripturePickerPreview(bId, chap, vRange);
                         }}
-                        className="px-3 py-2.5 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1"
+                        className="px-3 py-2.5 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white border border-[#1D3B6E] font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1.5"
                         title="Pilih Kitab, Pasal, dan Ayat Alkitab untuk Khotbah"
                       >
-                        <BookOpen className="w-3.5 h-3.5 text-blue-200" />
-                        <span>📖 Pilih Kitab</span>
+                        <BookOpen className="w-3.5 h-3.5 text-white/85" />
+                        <span>Pilih Kitab</span>
                       </button>
                     </div>
                   </div>
@@ -3146,10 +3282,10 @@ export default function AdminView({
                                     setSongPickerAyat('1-2');
                                   }
                                 }}
-                                className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[10px] font-bold flex items-center space-x-1 cursor-pointer transition"
+                                className="px-2.5 py-1 bg-[#EDF2F9] hover:bg-[#E8EEF6] text-[#0F2447] border border-[#CBD7EA] rounded-md text-[10px] font-bold flex items-center space-x-1 cursor-pointer transition"
                                 title="Pilih nomor & ayat lagu dari Buku Ende / Buku Nyanyian"
                               >
-                                <Music className="w-3 h-3 text-blue-600" />
+                                <Music className="w-3 h-3 text-[#0F2447]" />
                                 <span>Pilih Lagu</span>
                               </button>
 
@@ -3167,17 +3303,17 @@ export default function AdminView({
                                   setScripturePickerTarget({ type: 'step', index });
                                   handleUpdateScripturePickerPreview(bId, chap, vRange);
                                 }}
-                                className="px-2 py-1 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 rounded text-[10px] font-extrabold flex items-center space-x-1 cursor-pointer transition shadow-2xs"
+                                className="px-2.5 py-1 bg-[#0F2447] hover:bg-[#173361] text-white border border-[#1D3B6E] rounded-md text-[10px] font-extrabold flex items-center space-x-1 cursor-pointer transition shadow-2xs"
                                 title="Pilih Kitab, Pasal, dan Ayat Alkitab"
                               >
-                                <BookOpen className="w-3 h-3 text-blue-200" />
-                                <span>📖 Pilih Kitab</span>
+                                <BookOpen className="w-3 h-3 text-white/85" />
+                                <span>Pilih Kitab</span>
                               </button>
                             </div>
                             <button
                               type="button"
                               onClick={() => deleteStepRow(index)}
-                              className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
+                              className="p-1 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                               title="Hapus Baris Acara Ini"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -3194,7 +3330,7 @@ export default function AdminView({
                                 handleAutoDetectAndFillStep(index, (e.target as HTMLInputElement).value);
                               }
                             }}
-                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-blue-500"
+                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-[#0F2447]"
                             placeholder="Ketik lagu/nats (contoh: 'BE No. 10:1-2', 'Yohanes 3:16', '1 Musa 1:1-3', 'Psalmen 23:1-6')..."
                           />
                         </div>
@@ -3218,7 +3354,7 @@ export default function AdminView({
                                 el.style.height = `${el.scrollHeight}px`;
                               }
                             }}
-                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono outline-none focus:border-blue-500 leading-relaxed overflow-hidden resize-none"
+                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono outline-none focus:border-[#0F2447] leading-relaxed overflow-hidden resize-none"
                             placeholder="Isi lirik lagu atau ayat Alkitab (Bahasa Indonesia & Batak Toba) akan otomatis terisi saat memasukkan judul di atas..."
                           />
                         </div>
@@ -3231,7 +3367,7 @@ export default function AdminView({
                   <button
                     type="button"
                     onClick={addStepRow}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] hover:bg-[#E8EEF6] rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Tambah Baris Acara</span>
@@ -3255,9 +3391,22 @@ export default function AdminView({
                       };
                       const rest = liturgiMinggu.length > 0 ? liturgiMinggu.slice(1) : [];
                       onUpdateLiturgiMinggu([updatedSunday, ...rest]);
+                      backupToArsip({
+                        id: `arsip-liturgi-${updatedSunday.id}`,
+                        judul: updatedSunday.judul,
+                        keterangan: `Tata Ibadah Minggu (Teks Manual) untuk tanggal ${updatedSunday.tanggal}.`,
+                        tanggalUpload: new Date().toISOString().split('T')[0],
+                        tanggalMinggu: updatedSunday.tanggal,
+                        isPdfMode: false,
+                        teksLiturgi: updatedSunday.teksLiturgi,
+                        ayatReferensi: updatedSunday.ayatReferensi,
+                        ayatBacaan: updatedSunday.ayatBacaan,
+                        kategori: 'acara',
+                        category: 'minggu'
+                      });
                       showToast('✓ Acara Ibadah Minggu Berhasil Disimpan & Diterapkan ke Halaman Utama!');
                     }}
-                    className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-xl transition flex items-center justify-center space-x-2 cursor-pointer shadow shadow-blue-500/20"
+                    className="w-full sm:w-auto px-6 py-2.5 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-extrabold text-white rounded-xl transition flex items-center justify-center space-x-2 cursor-pointer shadow-sm"
                   >
                     <Save className="w-4 h-4" />
                     <span>Simpan Perubahan</span>
@@ -3270,16 +3419,16 @@ export default function AdminView({
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {liturgiPartangiangan.map((lit, pIdx) => (
-                      <div key={lit.id} className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between hover:border-slate-300 hover:shadow-md transition shadow-sm font-sans">
+                      <div key={lit.id} className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between hover:border-[#CBD7EA] hover:shadow-md transition shadow-sm font-sans">
                         <div>
                           <div className="flex items-center justify-between mb-3 text-sans">
                             <div className="flex items-center space-x-1.5 flex-wrap gap-1">
-                              <span className="text-[9px] bg-blue-50 border border-blue-200 text-blue-700 font-extrabold px-2 py-0.5 rounded tracking-wide uppercase">
+                              <span className="text-[9px] bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] font-extrabold px-2 py-0.5 rounded tracking-wide uppercase">
                                 Partangiangan
                               </span>
                               {pIdx === 0 && (
-                                <span className="text-[9px] bg-emerald-50 border border-emerald-300 text-emerald-800 font-extrabold px-2 py-0.5 rounded tracking-wide flex items-center space-x-1 shadow-2xs">
-                                  <Check className="w-3 h-3 text-emerald-600" />
+                                <span className="text-[9px] bg-[#0F2447] border border-[#0F2447] text-white font-extrabold px-2 py-0.5 rounded tracking-wide flex items-center space-x-1 shadow-2xs">
+                                  <Check className="w-3 h-3 text-white" />
                                   <span>Aktif di Halaman Utama</span>
                                 </span>
                               )}
@@ -3294,24 +3443,24 @@ export default function AdminView({
                             <button
                               type="button"
                               onClick={() => handleApplyPartangianganToMain(lit)}
-                              className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-black text-xs py-1.5 px-3 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer"
+                              className="w-full bg-[#EDF2F9] hover:bg-[#E8EEF6] text-[#0F2447] border border-[#CBD7EA] font-black text-xs py-1.5 px-3 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer"
                               title="Terapkan acara ini agar langsung tampil di Halaman Utama"
                             >
-                              <Check className="w-3.5 h-3.5 text-emerald-700" />
+                              <Check className="w-3.5 h-3.5 text-[#0F2447]" />
                               <span>Terapkan ke Halaman Utama</span>
                             </button>
                           )}
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => startEditLiturgy(lit, 'partangiangan')}
-                              className="flex-1 bg-gradient-to-r from-blue-700 to-blue-600 hover:brightness-105 text-white font-bold text-xs py-2 px-3 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-sm shadow-blue-500/10"
+                              className="flex-1 bg-[#0F2447] hover:bg-[#173361] text-white font-bold text-xs py-2 px-3 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-xs"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                               <span>Ubah Acara</span>
                             </button>
                             <button
                               onClick={() => handleDeleteLiturgy(lit.id, 'partangiangan')}
-                              className="p-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg transition shrink-0 cursor-pointer"
+                              className="p-2 bg-white hover:bg-[#EDF2F9] text-[#0F2447] border border-slate-200 rounded-lg transition shrink-0 cursor-pointer"
                               title="Hapus Liturgi"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -3323,10 +3472,10 @@ export default function AdminView({
 
                     <button
                       onClick={() => startNewLiturgy('partangiangan')}
-                      className="border-2 border-dashed border-slate-300 rounded-xl p-5 flex flex-col items-center justify-center text-center hover:border-blue-500 hover:bg-slate-50 transition cursor-pointer group"
+                      className="border-2 border-dashed border-slate-300 rounded-xl p-5 flex flex-col items-center justify-center text-center hover:border-[#0F2447] hover:bg-[#EDF2F9]/50 transition cursor-pointer group"
                     >
-                      <Plus className="w-8 h-8 text-slate-400 group-hover:text-blue-600 shrink-0 mb-2 transition" />
-                      <span className="text-xs font-bold text-slate-500 group-hover:text-blue-700 transition uppercase">
+                      <Plus className="w-8 h-8 text-slate-400 group-hover:text-[#0F2447] shrink-0 mb-2 transition" />
+                      <span className="text-xs font-bold text-slate-500 group-hover:text-[#0F2447] transition uppercase">
                         Tambah Partangiangan Baru
                       </span>
                     </button>
@@ -3336,12 +3485,12 @@ export default function AdminView({
                 /* DETAILED FORM FOR PARTANGIANGAN EDITING */
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
                   <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-                    <h3 className="text-base font-bold text-slate-900 uppercase tracking-tight">
+                    <h3 className="text-base font-bold text-[#0F2447] uppercase tracking-tight">
                       {editingLiturgyId === 'new' ? 'Buat Partangiangan Baru' : 'Modifikasi Partangiangan'}
                     </h3>
                     <button
                       onClick={() => setEditingLiturgyId(null)}
-                      className="p-2 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded-md transition cursor-pointer"
+                      className="p-2 hover:bg-[#EDF2F9] text-slate-500 hover:text-[#0F2447] rounded-md transition cursor-pointer"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -3354,7 +3503,7 @@ export default function AdminView({
                         type="text"
                         value={litTitle}
                         onChange={(e) => setLitTitle(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
                         placeholder="Contoh: Partangiangan Sektor I"
                       />
                     </div>
@@ -3365,7 +3514,7 @@ export default function AdminView({
                         type="date"
                         value={litDate}
                         onChange={(e) => setLitDate(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
                       />
                     </div>
 
@@ -3376,7 +3525,7 @@ export default function AdminView({
                           type="text"
                           value={litRef}
                           onChange={(e) => setLitRef(e.target.value)}
-                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
                           placeholder="Contoh: Mateus 5 : 13 - 16"
                         />
                         <button
@@ -3393,11 +3542,11 @@ export default function AdminView({
                             setScripturePickerTarget({ type: 'epistel' });
                             handleUpdateScripturePickerPreview(bId, chap, vRange);
                           }}
-                          className="px-3 py-2.5 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1"
+                          className="px-3 py-2.5 bg-[#0F2447] hover:bg-[#173361] text-white border border-[#1D3B6E] font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1.5"
                           title="Pilih Kitab, Pasal, dan Ayat Alkitab untuk Epistel"
                         >
-                          <BookOpen className="w-3.5 h-3.5 text-blue-200" />
-                          <span>📖 Pilih Kitab</span>
+                          <BookOpen className="w-3.5 h-3.5 text-white/85" />
+                          <span>Pilih Kitab</span>
                         </button>
                       </div>
                     </div>
@@ -3409,7 +3558,7 @@ export default function AdminView({
                           type="text"
                           value={litBacaan}
                           onChange={(e) => setLitBacaan(e.target.value)}
-                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all font-semibold"
+                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
                           placeholder="Contoh: Johanes 3 : 16"
                         />
                         <button
@@ -3426,11 +3575,11 @@ export default function AdminView({
                             setScripturePickerTarget({ type: 'khotbah' });
                             handleUpdateScripturePickerPreview(bId, chap, vRange);
                           }}
-                          className="px-3 py-2.5 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1"
+                          className="px-3 py-2.5 bg-[#0F2447] hover:bg-[#173361] text-white border border-[#1D3B6E] font-extrabold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0 flex items-center space-x-1.5"
                           title="Pilih Kitab, Pasal, dan Ayat Alkitab untuk Khotbah"
                         >
-                          <BookOpen className="w-3.5 h-3.5 text-blue-200" />
-                          <span>📖 Pilih Kitab</span>
+                          <BookOpen className="w-3.5 h-3.5 text-white/85" />
+                          <span>Pilih Kitab</span>
                         </button>
                       </div>
                     </div>
@@ -3468,10 +3617,10 @@ export default function AdminView({
                                       setSongPickerAyat('1-2');
                                     }
                                   }}
-                                  className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded text-[10px] font-bold flex items-center space-x-1 cursor-pointer transition"
+                                  className="px-2.5 py-1 bg-[#EDF2F9] hover:bg-[#E8EEF6] text-[#0F2447] border border-[#CBD7EA] rounded-md text-[10px] font-bold flex items-center space-x-1 cursor-pointer transition"
                                   title="Pilih nomor & ayat lagu dari Buku Ende"
                                 >
-                                  <Music className="w-3 h-3 text-blue-600" />
+                                  <Music className="w-3 h-3 text-[#0F2447]" />
                                   <span>Pilih Lagu & Ayat</span>
                                 </button>
 
@@ -3489,17 +3638,17 @@ export default function AdminView({
                                     setScripturePickerTarget({ type: 'step', index });
                                     handleUpdateScripturePickerPreview(bId, chap, vRange);
                                   }}
-                                  className="px-2 py-1 bg-gradient-to-r from-blue-950 via-indigo-950 to-rose-950 hover:from-blue-900 hover:to-rose-900 text-white border border-blue-800/80 rounded text-[10px] font-extrabold flex items-center space-x-1 cursor-pointer transition shadow-2xs"
+                                  className="px-2.5 py-1 bg-[#0F2447] hover:bg-[#173361] text-white border border-[#1D3B6E] rounded-md text-[10px] font-extrabold flex items-center space-x-1 cursor-pointer transition shadow-2xs"
                                   title="Pilih Kitab, Pasal, dan Ayat Alkitab"
                                 >
-                                  <BookOpen className="w-3 h-3 text-blue-200" />
-                                  <span>📖 Pilih Kitab</span>
+                                  <BookOpen className="w-3 h-3 text-white/85" />
+                                  <span>Pilih Kitab</span>
                                 </button>
                               </div>
                               <button
                                 type="button"
                                 onClick={() => deleteStepRow(index)}
-                                className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
+                                className="p-1 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                 title="Hapus Baris Acara Ini"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -3516,7 +3665,7 @@ export default function AdminView({
                                   handleAutoFillSongLyrics(index, (e.target as HTMLInputElement).value, true);
                                 }
                               }}
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-blue-500"
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-[#0F2447]"
                               placeholder="Contoh: 01. Marende BE No. 93 : 1+3 atau 1,2+5..."
                             />
                           </div>
@@ -3540,7 +3689,7 @@ export default function AdminView({
                                   el.style.height = `${el.scrollHeight}px`;
                                 }
                               }}
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono outline-none focus:border-blue-500 leading-relaxed overflow-hidden resize-none"
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono outline-none focus:border-[#0F2447] leading-relaxed overflow-hidden resize-none"
                               placeholder="Ketik isi liturgi, doa responsif, atau lirik ayat lagu di sini..."
                             />
                           </div>
@@ -3553,7 +3702,7 @@ export default function AdminView({
                     <button
                       type="button"
                       onClick={addStepRow}
-                      className="w-full sm:w-auto px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer"
+                      className="w-full sm:w-auto px-4 py-2 bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] hover:bg-[#E8EEF6] rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Tambah Baris Acara</span>
@@ -3562,13 +3711,13 @@ export default function AdminView({
                     <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">
                       <button
                         onClick={() => setEditingLiturgyId(null)}
-                        className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-800 rounded-lg transition"
+                        className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-[#0F2447] rounded-lg transition cursor-pointer"
                       >
                         Batal
                       </button>
                       <button
                         onClick={handleSaveLiturgy}
-                        className="px-5 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-lg transition flex items-center space-x-2"
+                        className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-extrabold text-white rounded-lg transition flex items-center space-x-2 cursor-pointer"
                       >
                         <Save className="w-4 h-4" />
                         <span>Simpan Perubahan</span>
@@ -3587,13 +3736,13 @@ export default function AdminView({
         {activeSubTab === 'petugas' && (
           <div className="space-y-6">
             {/* Segmented Sub-tab Toggle */}
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-sm max-w-md">
+            <div className="flex bg-[#E8EEF6] p-1 rounded-xl border border-[#D4DFEE] max-w-md">
               <button
                 onClick={() => setAdminPetugasSubTab('minggu')}
-                className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+                className={`flex-1 py-2 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                   adminPetugasSubTab === 'minggu'
-                    ? 'bg-blue-600 text-white shadow shadow-blue-500/10'
-                    : 'text-slate-600 hover:text-slate-950'
+                    ? 'bg-[#0F2447] text-white shadow-sm'
+                    : 'text-slate-600 hover:text-[#0F2447]'
                 }`}
               >
                 <Users className="w-4 h-4" />
@@ -3601,10 +3750,10 @@ export default function AdminView({
               </button>
               <button
                 onClick={() => setAdminPetugasSubTab('partangiangan')}
-                className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+                className={`flex-1 py-2 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                   adminPetugasSubTab === 'partangiangan'
-                    ? 'bg-blue-600 text-white shadow shadow-blue-500/10'
-                    : 'text-slate-600 hover:text-slate-950'
+                    ? 'bg-[#0F2447] text-white shadow-sm'
+                    : 'text-slate-600 hover:text-[#0F2447]'
                 }`}
               >
                 <Users className="w-4 h-4" />
@@ -3616,10 +3765,10 @@ export default function AdminView({
               /* SPREADSHEET / FILE-LIKE STRUCTURE FOR PETUGAS MINGGU */
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                 {/* Spreadsheet header banner */}
-                <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="bg-[#F4F6FA] border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
-                    <h3 className="text-sm font-black text-slate-800 flex items-center space-x-2">
-                      <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <h3 className="text-sm font-bold text-[#0F2447] flex items-center space-x-2">
+                      <span className="w-2 h-2 bg-[#0F2447] rounded-full"></span>
                       <span>Petugas Ibadah Minggu </span>
                     </h3>
                     <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
@@ -3633,7 +3782,7 @@ export default function AdminView({
                         type="text"
                         value={petugasMingguDate}
                         onChange={(e) => onUpdatePetugasMingguDate(e.target.value)}
-                        className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-bold focus:ring-1 focus:ring-emerald-400 outline-none max-w-xs"
+                        className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
                         placeholder="Contoh: Minggu, 14 Juni 2026"
                       />
                     </div>
@@ -3642,14 +3791,14 @@ export default function AdminView({
                     <button
                       type="button"
                       onClick={handleAddPetugasMingguRow}
-                      className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl border border-blue-200 transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                      className="px-4 py-2 bg-white hover:bg-[#EDF2F9] text-[#0F2447] text-xs font-semibold rounded-xl border border-slate-300 transition flex items-center justify-center space-x-1.5 cursor-pointer"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Tambah Tugas</span>
                     </button>
                     <button
                       onClick={handleSavePetugasMinggu}
-                      className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-105 active:scale-[0.99] text-xs font-black text-white rounded-xl shadow transition flex items-center justify-center space-x-2 cursor-pointer"
+                      className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-semibold text-white rounded-xl shadow-sm transition flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <Save className="w-4 h-4" />
                       <span>Simpan</span>
@@ -3661,25 +3810,25 @@ export default function AdminView({
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white border-b border-blue-800">
-                        <th rowSpan={2} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-800 min-w-[160px] bg-blue-900 text-white">
+                      <tr className="bg-[#0F2447] text-white border-b border-[#1D3B6E]">
+                        <th rowSpan={2} className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[160px] bg-[#0F2447] text-white">
                           Tugas
                         </th>
-                        <th colSpan={3} className="px-4 py-2 text-center text-xs font-black uppercase tracking-wider border-b border-blue-800 bg-blue-900 text-white">
+                        <th colSpan={3} className="px-4 py-2 text-center text-xs font-bold uppercase tracking-wider border-b border-[#1D3B6E] bg-[#0F2447] text-white">
                           Petugas Ibadah
                         </th>
-                        <th rowSpan={2} className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider bg-blue-900 text-white min-w-[60px]">
+                        <th rowSpan={2} className="px-3 py-3 text-center text-xs font-bold uppercase tracking-wider bg-[#0F2447] text-white min-w-[60px]">
                           Aksi
                         </th>
                       </tr>
-                      <tr className="bg-blue-800 text-blue-100 border-b border-blue-700">
-                        <th className="px-4 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider border-r border-blue-700 bg-blue-800 text-blue-100">
+                      <tr className="bg-[#16305C] text-white/90 border-b border-[#1D3B6E]">
+                        <th className="px-4 py-2 text-center text-[10px] font-bold uppercase tracking-wider border-r border-[#1D3B6E] bg-[#16305C] text-white/90">
                           Shift 1
                         </th>
-                        <th className="px-4 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider border-r border-blue-700 bg-blue-800 text-blue-100">
+                        <th className="px-4 py-2 text-center text-[10px] font-bold uppercase tracking-wider border-r border-[#1D3B6E] bg-[#16305C] text-white/90">
                           Shift 2
                         </th>
-                        <th className="px-4 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider bg-blue-800 text-blue-100">
+                        <th className="px-4 py-2 text-center text-[10px] font-bold uppercase tracking-wider bg-[#16305C] text-white/90">
                           Sekolah Minggu
                         </th>
                       </tr>
@@ -3688,12 +3837,12 @@ export default function AdminView({
                       {tempPetugasMinggu.map((row, index) => (
                         <tr key={index} className="hover:bg-slate-50/50 transition-colors">
                           {/* Column 1: Tugas (Editable) */}
-                          <td className="p-1 border-r border-slate-200 bg-slate-50/80">
+                          <td className="p-1 border-r border-slate-200 bg-[#F4F6FA]/70">
                             <input
                               type="text"
                               value={row.tugas || ''}
                               onChange={(e) => handleCellChange(index, 'tugas', e.target.value)}
-                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-900 font-extrabold border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg transition"
+                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-900 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
                               placeholder="Nama tugas/peran..."
                             />
                           </td>
@@ -3703,7 +3852,7 @@ export default function AdminView({
                               type="text"
                               value={row.shift1 || ''}
                               onChange={(e) => handleCellChange(index, 'shift1', e.target.value)}
-                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg transition"
+                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
                               placeholder="Ketik nama petugas..."
                             />
                           </td>
@@ -3713,7 +3862,7 @@ export default function AdminView({
                               type="text"
                               value={row.shift2 || ''}
                               onChange={(e) => handleCellChange(index, 'shift2', e.target.value)}
-                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg transition"
+                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
                               placeholder="Ketik nama petugas..."
                             />
                           </td>
@@ -3723,7 +3872,7 @@ export default function AdminView({
                               type="text"
                               value={row.sekolahMinggu || ''}
                               onChange={(e) => handleCellChange(index, 'sekolahMinggu', e.target.value)}
-                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg transition"
+                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
                               placeholder="Ketik nama petugas..."
                             />
                           </td>
@@ -3732,7 +3881,7 @@ export default function AdminView({
                             <button
                               type="button"
                               onClick={() => handleDeletePetugasMingguRow(index)}
-                              className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition cursor-pointer"
+                              className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded-lg transition cursor-pointer"
                               title="Hapus Tugas"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -3750,10 +3899,10 @@ export default function AdminView({
                 
                 {/* TABEL 1 EDITOR: TOROP NARO MANDOHOTI PARTANGIANGAN */}
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                  <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="bg-[#F4F6FA] border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                      <h3 className="text-sm font-black text-slate-800 flex items-center space-x-2">
-                        <span className="w-2.5 h-2.5 bg-teal-500 rounded-full animate-pulse"></span>
+                      <h3 className="text-sm font-bold text-[#0F2447] flex items-center space-x-2">
+                        <span className="w-2 h-2 bg-[#0F2447] rounded-full"></span>
                         <span>Torop Naro Mandohoti Partangiangan di Minggu Naung Salpu</span>
                       </h3>
                       <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
@@ -3767,7 +3916,7 @@ export default function AdminView({
                           type="text"
                           value={partangianganAttendanceDate}
                           onChange={(e) => onUpdatePartangianganAttendanceDate(e.target.value)}
-                          className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-bold focus:ring-1 focus:ring-teal-400 outline-none max-w-xs"
+                          className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
                           placeholder="Contoh: Selasa 09 Juni & Rabu 10 Juni 2026"
                         />
                       </div>
@@ -3776,14 +3925,14 @@ export default function AdminView({
                       <button
                         type="button"
                         onClick={handleAddPartangianganAttendanceRow}
-                        className="px-4 py-2.5 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold rounded-xl border border-teal-200 transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                        className="px-4 py-2 bg-white hover:bg-[#EDF2F9] text-[#0F2447] text-xs font-semibold rounded-xl border border-slate-300 transition flex items-center justify-center space-x-1.5 cursor-pointer"
                       >
                         <Plus className="w-4 h-4" />
                         <span>Tambah Baris</span>
                       </button>
                       <button
                         onClick={handleSavePartangianganAttendance}
-                        className="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:brightness-105 active:scale-[0.99] text-xs font-black text-white rounded-xl shadow transition flex items-center justify-center space-x-2 cursor-pointer"
+                        className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-semibold text-white rounded-xl shadow-sm transition flex items-center justify-center space-x-2 cursor-pointer"
                       >
                         <Save className="w-4 h-4" />
                         <span>Simpan</span>
@@ -3794,32 +3943,32 @@ export default function AdminView({
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="bg-gradient-to-r from-teal-900 to-emerald-900 text-white border-b border-teal-950">
-                          <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[110px]">
+                        <tr className="bg-[#0F2447] text-white border-b border-[#1D3B6E]">
+                          <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[110px]">
                             Hari
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[150px]">
+                          <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[150px]">
                             Lunggu
                           </th>
-                          <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[80px]">
+                          <th className="px-3 py-3 text-center text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[80px]">
                             Ama
                           </th>
-                          <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[80px]">
+                          <th className="px-3 py-3 text-center text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[80px]">
                             Ina
                           </th>
-                          <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[80px]">
+                          <th className="px-3 py-3 text-center text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[80px]">
                             SM
                           </th>
-                          <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[80px]">
+                          <th className="px-3 py-3 text-center text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[80px]">
                             ReNa
                           </th>
-                          <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[95px]">
+                          <th className="px-3 py-3 text-center text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[95px]">
                             Parhalado
                           </th>
-                          <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 bg-teal-950/40 min-w-[100px]">
+                          <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] bg-[#16305C] min-w-[100px]">
                             Naro (Total)
                           </th>
-                          <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider bg-teal-950/40 min-w-[60px]">
+                          <th className="px-3 py-3 text-center text-xs font-bold uppercase tracking-wider bg-[#16305C] min-w-[60px]">
                             Aksi
                           </th>
                         </tr>
@@ -3838,7 +3987,7 @@ export default function AdminView({
                                 <select
                                   value={row.hari}
                                   onChange={(e) => handleAttendanceCellChange(index, 'hari', e.target.value)}
-                                  className="bg-transparent px-2 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-teal-50/60 focus:ring-1 focus:ring-teal-400 rounded-lg cursor-pointer"
+                                  className="bg-transparent px-2 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg cursor-pointer"
                                 >
                                   <option value="Selasa">Selasa</option>
                                   <option value="Rabu">Rabu</option>
@@ -3850,7 +3999,7 @@ export default function AdminView({
                                   type="text"
                                   value={row.lunggu || ''}
                                   onChange={(e) => handleAttendanceCellChange(index, 'lunggu', e.target.value)}
-                                  className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-teal-50/60 focus:ring-1 focus:ring-teal-400 rounded-lg"
+                                  className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                   placeholder="Nama lunggu..."
                                 />
                               </td>
@@ -3861,7 +4010,7 @@ export default function AdminView({
                                   value={row.ama}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'ama', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-teal-50/60 focus:ring-1 focus:ring-teal-400 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 4. Ina */}
@@ -3871,7 +4020,7 @@ export default function AdminView({
                                   value={row.ina}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'ina', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-teal-50/60 focus:ring-1 focus:ring-teal-400 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 5. SM */}
@@ -3881,7 +4030,7 @@ export default function AdminView({
                                   value={row.sm}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'sm', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-teal-50/60 focus:ring-1 focus:ring-teal-400 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 6. ReNa */}
@@ -3891,7 +4040,7 @@ export default function AdminView({
                                   value={row.rena}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'rena', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-teal-50/60 focus:ring-1 focus:ring-teal-400 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 7. Parhalado */}
@@ -3901,11 +4050,11 @@ export default function AdminView({
                                   value={row.parhalado}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'parhalado', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-teal-50/60 focus:ring-1 focus:ring-teal-400 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 8. Total Naro */}
-                              <td className="px-4 py-3 text-xs font-extrabold text-teal-800 text-center border-r border-slate-200 bg-teal-50/30">
+                              <td className="px-4 py-3 text-xs font-bold text-[#0F2447] text-center border-r border-slate-200 bg-[#EDF2F9]/50">
                                 {rowTotal}
                               </td>
                               {/* 9. Aksi Delete */}
@@ -3913,7 +4062,7 @@ export default function AdminView({
                                 <button
                                   type="button"
                                   onClick={() => handleDeletePartangianganAttendanceRow(index)}
-                                  className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition cursor-pointer"
+                                  className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded-lg transition cursor-pointer"
                                   title="Hapus Baris Lunggu"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -3933,29 +4082,29 @@ export default function AdminView({
                           const grandTotalNaro = totalAma + totalIna + totalSM + totalReNa + totalParhalado;
 
                           return (
-                            <tr className="bg-teal-50/80 border-t-2 border-teal-300 font-extrabold text-slate-900">
-                              <td colSpan={2} className="px-4 py-3.5 text-xs font-black text-teal-950 uppercase tracking-wide border-r border-teal-250 text-left bg-teal-100/60">
+                            <tr className="bg-[#EDF2F9] border-t-2 border-[#CBD7EA] font-bold text-[#0F2447]">
+                              <td colSpan={2} className="px-4 py-3.5 text-xs font-extrabold text-[#0F2447] uppercase tracking-wide border-r border-[#CBD7EA] text-left bg-[#E8EEF6]">
                                 Torop Naro (Total Jumlah)
                               </td>
-                              <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 text-teal-950">
+                              <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                 {totalAma}
                               </td>
-                              <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 text-teal-950">
+                              <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                 {totalIna}
                               </td>
-                              <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 text-teal-950">
+                              <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                 {totalSM}
                               </td>
-                              <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 text-teal-950">
+                              <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                 {totalReNa}
                               </td>
-                              <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 text-teal-950">
+                              <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                 {totalParhalado}
                               </td>
-                              <td className="px-4 py-3.5 text-xs text-center bg-teal-600 text-white font-black border-r border-teal-700">
+                              <td className="px-4 py-3.5 text-xs text-center bg-[#0F2447] text-white font-extrabold border-r border-[#1D3B6E]">
                                 {grandTotalNaro}
                               </td>
-                              <td className="bg-teal-100/60"></td>
+                              <td className="bg-[#E8EEF6]"></td>
                             </tr>
                           );
                         })()}
@@ -3966,10 +4115,10 @@ export default function AdminView({
 
                 {/* TABEL 2 EDITOR: PETUGAS PELAYANAN PARTANGIANGAN */}
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-fadeIn">
-                  <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="bg-[#F4F6FA] border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                      <h3 className="text-sm font-black text-slate-800 flex items-center space-x-2">
-                        <span className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse"></span>
+                      <h3 className="text-sm font-bold text-[#0F2447] flex items-center space-x-2">
+                        <span className="w-2 h-2 bg-[#0F2447] rounded-full"></span>
                         <span>Petugas Partangiangan</span>
                       </h3>
                       <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
@@ -3983,7 +4132,7 @@ export default function AdminView({
                           type="text"
                           value={petugasPartangianganDate}
                           onChange={(e) => onUpdatePetugasPartangianganDate(e.target.value)}
-                          className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-bold focus:ring-1 focus:ring-indigo-400 outline-none max-w-xs"
+                          className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
                           placeholder="Contoh: Selasa 16 Juni & Rabu 17 Juni 2026"
                         />
                       </div>
@@ -3991,14 +4140,14 @@ export default function AdminView({
                     <div className="flex items-center space-x-2 self-start md:self-auto">
                       <button
                         onClick={handleAddPetugasPartangianganRow}
-                        className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                        className="px-4 py-2 bg-white hover:bg-[#EDF2F9] text-[#0F2447] text-xs font-semibold rounded-xl border border-slate-300 transition flex items-center justify-center space-x-1.5 cursor-pointer"
                       >
                         <Plus className="w-4 h-4" />
                         <span>Tambah Jadwal</span>
                       </button>
                       <button
                         onClick={handleSavePetugasPartangianganTable}
-                        className="px-5 py-2.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-black text-white rounded-xl shadow transition flex items-center justify-center space-x-2 cursor-pointer"
+                        className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-semibold text-white rounded-xl shadow-sm transition flex items-center justify-center space-x-2 cursor-pointer"
                       >
                         <Save className="w-4 h-4" />
                         <span>Simpan</span>
@@ -4009,29 +4158,29 @@ export default function AdminView({
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white border-b border-blue-950">
-                          <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[100px]">
+                        <tr className="bg-[#0F2447] text-white border-b border-[#1D3B6E]">
+                          <th className="px-3 py-3 text-center text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[100px]">
                             Hari
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[130px]">
+                          <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[130px]">
                             Lunggu
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[150px]">
+                          <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[150px]">
                             Dibagas Ni Keluarga
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[170px]">
+                          <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[170px]">
                             Alamat
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[140px] bg-indigo-950/20">
+                          <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[140px] bg-[#16305C]">
                             Jamita
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[140px] bg-indigo-950/20">
+                          <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[140px] bg-[#16305C]">
                             Agenda
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[140px] bg-indigo-950/20">
+                          <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-[#1D3B6E] min-w-[140px] bg-[#16305C]">
                             Ende
                           </th>
-                          <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider min-w-[80px]">
+                          <th className="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider min-w-[80px]">
                             Aksi
                           </th>
                         </tr>
@@ -4044,7 +4193,7 @@ export default function AdminView({
                               <select
                                 value={row.hari}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'hari', e.target.value as any)}
-                                className="bg-transparent px-2 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg cursor-pointer"
+                                className="bg-transparent px-2 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg cursor-pointer"
                               >
                                 <option value="Selasa">Selasa</option>
                                 <option value="Rabu">Rabu</option>
@@ -4056,7 +4205,7 @@ export default function AdminView({
                                 type="text"
                                 value={row.lunggu || ''}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'lunggu', e.target.value)}
-                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg"
+                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 placeholder="Nama lunggu..."
                               />
                             </td>
@@ -4066,7 +4215,7 @@ export default function AdminView({
                                 type="text"
                                 value={row.keluarga || ''}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'keluarga', e.target.value)}
-                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg"
+                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 placeholder="Keluarga..."
                               />
                             </td>
@@ -4076,37 +4225,37 @@ export default function AdminView({
                                 type="text"
                                 value={row.alamat || ''}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'alamat', e.target.value)}
-                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-600 font-medium border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg"
+                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-600 font-medium border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 placeholder="Alamat rumah..."
                               />
                             </td>
                             {/* 5. Jamita input */}
-                            <td className="p-1 border-r border-slate-200 bg-blue-50/5">
+                            <td className="p-1 border-r border-slate-200 bg-[#F4F6FA]/50">
                               <input
                                 type="text"
                                 value={row.jamita || ''}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'jamita', e.target.value)}
-                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-indigo-950 font-black border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg"
+                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-[#0F2447] font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 placeholder="Khotbah..."
                               />
                             </td>
                             {/* 6. Agenda input */}
-                            <td className="p-1 border-r border-slate-200 bg-blue-50/5">
+                            <td className="p-1 border-r border-slate-200 bg-[#F4F6FA]/50">
                               <input
                                 type="text"
                                 value={row.agenda || ''}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'agenda', e.target.value)}
-                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-indigo-950 font-black border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg"
+                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-[#0F2447] font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 placeholder="Liturgis..."
                               />
                             </td>
                             {/* 7. Ende input */}
-                            <td className="p-1 border-r border-slate-200 bg-blue-50/5">
+                            <td className="p-1 border-r border-slate-200 bg-[#F4F6FA]/50">
                               <input
                                 type="text"
                                 value={row.ende || ''}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'ende', e.target.value)}
-                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-indigo-950 font-black border-none outline-none focus:bg-blue-50/60 focus:ring-1 focus:ring-blue-400 rounded-lg"
+                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-[#0F2447] font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 placeholder="Lagu / Musik..."
                               />
                             </td>
@@ -4114,7 +4263,7 @@ export default function AdminView({
                             <td className="p-2 text-center">
                               <button
                                 onClick={() => handleRemovePetugasPartangianganRow(index)}
-                                className="p-1.5 text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-lg border border-transparent hover:border-rose-200 transition cursor-pointer"
+                                className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] rounded-lg border border-slate-200 transition cursor-pointer"
                                 title="Hapus baris ini"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -4137,8 +4286,8 @@ export default function AdminView({
                 {/* OPSI NON-TABEL STATUS IBADAH PARTANGIANGAN */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
                   <div>
-                    <h3 className="text-sm font-black text-slate-900 flex items-center space-x-2">
-                      <Shield className="w-4 h-4 text-indigo-600" />
+                    <h3 className="text-sm font-bold text-[#0F2447] flex items-center space-x-2">
+                      <Shield className="w-4 h-4 text-[#0F2447]" />
                       <span>Opsi Status & Tampilan Ibadah Partangiangan di Portal Utama</span>
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">
@@ -4152,7 +4301,7 @@ export default function AdminView({
                       onClick={() => onUpdatePartangianganMode?.('normal')}
                       className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
                         partangianganMode === 'normal'
-                          ? 'bg-indigo-50/70 border-indigo-600 text-indigo-950 shadow-xs'
+                          ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] shadow-xs'
                           : 'bg-slate-50/60 border-slate-200 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
@@ -4163,11 +4312,11 @@ export default function AdminView({
                             name="partangianganMode"
                             checked={partangianganMode === 'normal'}
                             onChange={() => onUpdatePartangianganMode?.('normal')}
-                            className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                            className="mt-0.5 text-[#0F2447] focus:ring-[#0F2447]"
                           />
-                          <span className="text-xs font-black">Tampilkan Tabel Petugas</span>
+                          <span className="text-xs font-bold">Tampilkan Tabel Petugas</span>
                         </div>
-                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 uppercase">Standar</span>
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#0F2447] text-white uppercase">Standar</span>
                       </div>
                       <p className="text-[11px] text-slate-500 leading-snug">
                         Menampilkan tabel jadwal dan daftar nama petugas pelayanan partangiangan seperti biasa di portal utama.
@@ -4179,7 +4328,7 @@ export default function AdminView({
                       onClick={() => onUpdatePartangianganMode?.('keluarga')}
                       className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
                         partangianganMode === 'keluarga'
-                          ? 'bg-amber-50/80 border-amber-600 text-amber-950 shadow-xs'
+                          ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] shadow-xs'
                           : 'bg-slate-50/60 border-slate-200 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
@@ -4190,13 +4339,13 @@ export default function AdminView({
                             name="partangianganMode"
                             checked={partangianganMode === 'keluarga'}
                             onChange={() => onUpdatePartangianganMode?.('keluarga')}
-                            className="mt-0.5 text-amber-600 focus:ring-amber-500"
+                            className="mt-0.5 text-[#0F2447] focus:ring-[#0F2447]"
                           />
-                          <span className="text-xs font-black">Partangiangan Keluarga (Ibadah Keluarga)</span>
+                          <span className="text-xs font-bold">Partangiangan Keluarga (Ibadah Keluarga)</span>
                         </div>
-                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-amber-200 text-amber-900 uppercase">Opsi 1</span>
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#E8EEF6] text-[#0F2447] border border-[#CBD7EA] uppercase">Opsi 1</span>
                       </div>
-                      <p className="text-[11px] text-slate-600 leading-snug bg-white/80 p-2.5 rounded-xl border border-amber-200/80 font-medium">
+                      <p className="text-[11px] text-slate-600 leading-snug bg-white/90 p-2.5 rounded-xl border border-[#CBD7EA] font-medium">
                         "tidak ada petugas ibadah partangiangan dikarenakan ibadah keluarga akan dilakukan di rumah masing masing"
                       </p>
                     </label>
@@ -4206,7 +4355,7 @@ export default function AdminView({
                       onClick={() => onUpdatePartangianganMode?.('selesai')}
                       className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
                         partangianganMode === 'selesai'
-                          ? 'bg-blue-50/80 border-blue-600 text-blue-950 shadow-xs'
+                          ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] shadow-xs'
                           : 'bg-slate-50/60 border-slate-200 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
@@ -4217,13 +4366,13 @@ export default function AdminView({
                             name="partangianganMode"
                             checked={partangianganMode === 'selesai'}
                             onChange={() => onUpdatePartangianganMode?.('selesai')}
-                            className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                            className="mt-0.5 text-[#0F2447] focus:ring-[#0F2447]"
                           />
-                          <span className="text-xs font-black">Tidak Ada Ibadah Partangiangan</span>
+                          <span className="text-xs font-bold">Tidak Ada Ibadah Partangiangan</span>
                         </div>
-                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded bg-blue-200 text-blue-900 uppercase">Opsi 2</span>
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#E8EEF6] text-[#0F2447] border border-[#CBD7EA] uppercase">Opsi 2</span>
                       </div>
-                      <p className="text-[11px] text-slate-600 leading-snug bg-white/80 p-2.5 rounded-xl border border-blue-200/80 font-medium">
+                      <p className="text-[11px] text-slate-600 leading-snug bg-white/90 p-2.5 rounded-xl border border-[#CBD7EA] font-medium">
                         "tidak ada ibadah partangiangan karena ibadah partangiangann untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
                       </p>
                     </label>
@@ -4251,34 +4400,34 @@ export default function AdminView({
               const totalSunday = smCount + shift1Count + shift2Count;
 
               return (
-                <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 border border-slate-800 shadow-md space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div className="bg-[#0F2447] text-white rounded-2xl p-5 border border-[#1D3B6E] shadow-md space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                        <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/10 text-white border border-white/15">
                           Tren Kehadiran 1 Minggu
                         </span>
-                        <span className="text-[10px] font-bold text-slate-400">
+                        <span className="text-[10px] font-semibold text-white/70">
                           {latest1W.tanggalRange || petugasMingguDate || 'Minggu Terbaru'}
                         </span>
                       </div>
-                      <h3 className="text-sm font-black text-white mt-1 flex items-center space-x-2">
-                        <TrendingUp className="w-4 h-4 text-emerald-400" />
+                      <h3 className="text-sm font-bold text-white mt-1.5 flex items-center space-x-2">
+                        <TrendingUp className="w-4 h-4 text-white/80" />
                         <span>Statistik Kehadiran Kebaktian Minggu</span>
                       </h3>
                     </div>
                     <div className="text-right self-start sm:self-auto">
-                      <span className="text-[10px] text-slate-400 font-medium block">Total Hadir Kebaktian Minggu</span>
-                      <span className="text-xl font-black text-emerald-400">{totalSunday} <span className="text-xs font-semibold text-slate-300">Jemaat</span></span>
+                      <span className="text-[10px] text-white/70 font-medium block">Total Hadir Kebaktian Minggu</span>
+                      <span className="text-xl font-extrabold text-white">{totalSunday} <span className="text-xs font-medium text-white/75">Jemaat</span></span>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {/* Sekolah Minggu */}
-                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3.5 space-y-2">
+                    <div className="bg-[#16305C] border border-[#24467D] rounded-xl p-3.5 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sekolah Minggu</span>
-                        <div className="p-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg">
+                        <span className="text-[10px] font-bold text-white/75 uppercase tracking-wider">Sekolah Minggu</span>
+                        <div className="p-1.5 bg-white/10 border border-white/15 text-white rounded-lg">
                           <BookOpen className="w-3.5 h-3.5" />
                         </div>
                       </div>
@@ -4299,17 +4448,17 @@ export default function AdminView({
                               onUpdateAttendanceTrends(updated);
                             }
                           }}
-                          className="w-24 bg-slate-900/90 border border-slate-600 rounded-lg px-2.5 py-1 text-base font-black text-amber-400 focus:border-amber-400 outline-none"
+                          className="w-24 bg-[#091731] border border-[#2C5290] rounded-lg px-2.5 py-1 text-base font-extrabold text-white focus:border-white outline-none"
                         />
-                        <span className="text-xs font-bold text-slate-400">Jemaat</span>
+                        <span className="text-xs font-semibold text-white/70">Jemaat</span>
                       </div>
                     </div>
 
                     {/* Shift 1 */}
-                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3.5 space-y-2">
+                    <div className="bg-[#16305C] border border-[#24467D] rounded-xl p-3.5 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Shift 1 (Pagi)</span>
-                        <div className="p-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-lg">
+                        <span className="text-[10px] font-bold text-white/75 uppercase tracking-wider">Shift 1 (Pagi)</span>
+                        <div className="p-1.5 bg-white/10 border border-white/15 text-white rounded-lg">
                           <Clock className="w-3.5 h-3.5" />
                         </div>
                       </div>
@@ -4330,17 +4479,17 @@ export default function AdminView({
                               onUpdateAttendanceTrends(updated);
                             }
                           }}
-                          className="w-24 bg-slate-900/90 border border-slate-600 rounded-lg px-2.5 py-1 text-base font-black text-cyan-400 focus:border-cyan-400 outline-none"
+                          className="w-24 bg-[#091731] border border-[#2C5290] rounded-lg px-2.5 py-1 text-base font-extrabold text-white focus:border-white outline-none"
                         />
-                        <span className="text-xs font-bold text-slate-400">Jemaat</span>
+                        <span className="text-xs font-semibold text-white/70">Jemaat</span>
                       </div>
                     </div>
 
                     {/* Shift 2 */}
-                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3.5 space-y-2">
+                    <div className="bg-[#16305C] border border-[#24467D] rounded-xl p-3.5 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Shift 2 (Siang)</span>
-                        <div className="p-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg">
+                        <span className="text-[10px] font-bold text-white/75 uppercase tracking-wider">Shift 2 (Siang)</span>
+                        <div className="p-1.5 bg-white/10 border border-white/15 text-white rounded-lg">
                           <Clock className="w-3.5 h-3.5" />
                         </div>
                       </div>
@@ -4361,13 +4510,13 @@ export default function AdminView({
                               onUpdateAttendanceTrends(updated);
                             }
                           }}
-                          className="w-24 bg-slate-900/90 border border-slate-600 rounded-lg px-2.5 py-1 text-base font-black text-indigo-400 focus:border-indigo-400 outline-none"
+                          className="w-24 bg-[#091731] border border-[#2C5290] rounded-lg px-2.5 py-1 text-base font-extrabold text-white focus:border-white outline-none"
                         />
-                        <span className="text-xs font-bold text-slate-400">Jemaat</span>
+                        <span className="text-xs font-semibold text-white/70">Jemaat</span>
                       </div>
                     </div>
                   </div>
-                  <p className="text-[10px] text-slate-400 italic font-medium">
+                  <p className="text-[10px] text-white/65 italic font-medium">
                     * Statistik tren 1 minggu di atas hanya mencakup Kebaktian Minggu (Sekolah Minggu, Shift 1, dan Shift 2) tanpa ibadah partangiangan. Perubahan angka di atas otomatis memperbarui tren di halaman warta jemaat.
                   </p>
                 </div>
@@ -4379,7 +4528,7 @@ export default function AdminView({
                 <div className="flex justify-end">
                   <button
                     onClick={startNewWarta}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-xs font-extrabold text-white rounded-xl flex items-center space-x-1.5 transition cursor-pointer"
+                    className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-semibold text-white rounded-xl flex items-center space-x-1.5 transition cursor-pointer shadow-sm"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Tambah Warta Baru</span>
@@ -4388,12 +4537,12 @@ export default function AdminView({
 
                 <div className="grid grid-cols-1 gap-3">
                   {wartaList.map((w) => (
-                    <div key={w.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div key={w.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
                       <div>
                         <div className="flex items-center space-x-2 text-[10px] mb-1">
-                          <span className="font-extrabold uppercase bg-slate-50 border border-slate-200 px-2 py-0.5 rounded text-blue-700">{w.kategori}</span>
+                          <span className="font-bold uppercase bg-[#EDF2F9] border border-[#CBD7EA] px-2 py-0.5 rounded text-[#0F2447]">{w.kategori}</span>
                           <span className="text-slate-500">{w.tanggal}</span>
-                          {w.prioritas && <span className="bg-amber-50 text-amber-700 font-extrabold px-1.5 py-0.2 rounded border border-amber-200">Penting</span>}
+                          {w.prioritas && <span className="bg-[#0F2447] text-white font-bold px-2 py-0.5 rounded">Penting</span>}
                         </div>
                         <h4 className="text-sm font-bold text-slate-900 leading-snug">{w.judul}</h4>
                         <p className="text-xs text-slate-600 mt-1 line-clamp-2 max-w-2xl">{w.isi}</p>
@@ -4402,13 +4551,13 @@ export default function AdminView({
                       <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
                         <button
                           onClick={() => startEditWarta(w)}
-                          className="px-3 py-1.5 bg-white border border-slate-200 hover:border-slate-300 text-[11px] font-bold text-slate-700 hover:text-slate-900 rounded-lg transition cursor-pointer shadow-sm"
+                          className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-[#EDF2F9] text-[11px] font-semibold text-[#0F2447] rounded-lg transition cursor-pointer"
                         >
                           Ubah
                         </button>
                         <button
                           onClick={() => handleDeleteWarta(w.id)}
-                          className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg transition cursor-pointer"
+                          className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded-lg transition cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -4420,7 +4569,7 @@ export default function AdminView({
             ) : (
               /* WARTA COMPOSER FORM */
               <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                <h3 className="text-base font-bold text-slate-900 uppercase border-b border-slate-200 pb-3">
+                <h3 className="text-base font-bold text-[#0F2447] uppercase border-b border-slate-200 pb-3">
                   {editingWartaId === 'new' ? 'Tulis Pokok Warta Jemaat' : 'Ubah Pokok Warta Jemaat'}
                 </h3>
 
@@ -4431,7 +4580,7 @@ export default function AdminView({
                       type="text"
                       value={wartaTitle}
                       onChange={(e) => setWartaTitle(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15 transition-all"
                       placeholder="Contoh: Berita Pernikahan / Rencana Kegiatan Sermon"
                     />
                   </div>
@@ -4441,7 +4590,7 @@ export default function AdminView({
                     <select
                       value={wartaKategori}
                       onChange={(e: any) => setWartaKategori(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15"
                     >
                       <option value="umum">Umum (Pemberitahuan Utama)</option>
                       <option value="pelayanan">Pelayanan Jemaat (Ibadah & Kursus)</option>
@@ -4460,7 +4609,7 @@ export default function AdminView({
                         type="checkbox"
                         checked={wartaPrioritas}
                         onChange={(e) => setWartaPrioritas(e.target.checked)}
-                        className="rounded bg-white border-slate-300 text-blue-600 focus:ring-0 w-4 h-4"
+                        className="rounded bg-white border-slate-300 text-[#0F2447] focus:ring-[#0F2447] w-4 h-4"
                       />
                       <span className="text-slate-700 font-bold">Tandai sebagai Informasi Penting (Prioritas Atas)</span>
                     </label>
@@ -4473,7 +4622,7 @@ export default function AdminView({
                     rows={6}
                     value={wartaIsi}
                     onChange={(e) => setWartaIsi(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 transition-all leading-relaxed font-sans"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15 transition-all leading-relaxed font-sans"
                     placeholder="Ketik isi berita warta jemaat sejelas rincinya..."
                   />
                 </div>
@@ -4481,13 +4630,13 @@ export default function AdminView({
                 <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
                   <button
                     onClick={() => setEditingWartaId(null)}
-                    className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:text-slate-800 rounded-lg transition"
+                    className="px-4 py-2 bg-white border border-slate-300 text-xs font-semibold text-[#0F2447] hover:bg-[#EDF2F9] rounded-lg transition cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     onClick={handleSaveWarta}
-                    className="px-5 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-bold text-white rounded-lg transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
+                    className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-semibold text-white rounded-lg transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
                   >
                     <Save className="w-4 h-4" />
                     <span>Simpan Pengumuman</span>
@@ -4504,12 +4653,12 @@ export default function AdminView({
         {activeSubTab === 'keuangan' && (
           <div className="space-y-6">
             {/* ADMIN FINANCIAL OVERVIEW & CONTROLS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-100/50 p-4 rounded-2xl border border-slate-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#E8EEF6]/60 p-4 rounded-2xl border border-[#CBD7EA]">
               {/* 1. GABUNGAN: TOTAL PEMASUKAN & PENGELUARAN */}
               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
-                    <Activity className="w-4 h-4 text-slate-500 animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#0F2447] flex items-center space-x-1.5">
+                    <Activity className="w-4 h-4 text-[#0F2447]" />
                     <span>Total Arus Kas Masuk & Keluar</span>
                   </span>
                 </div>
@@ -4517,41 +4666,41 @@ export default function AdminView({
                   <div>
                     <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Pemasukan</span>
                     <div className="flex items-center space-x-1 mt-1">
-                      <ArrowUpRight className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <h4 className="text-base font-black text-emerald-600 truncate">{formatRupiah(totalPemasukan)}</h4>
+                      <ArrowUpRight className="w-4 h-4 text-[#0F2447] shrink-0" />
+                      <h4 className="text-base font-extrabold text-[#0F2447] truncate">{formatRupiah(totalPemasukan)}</h4>
                     </div>
                   </div>
                   <div className="pl-4">
                     <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Pengeluaran</span>
                     <div className="flex items-center space-x-1 mt-1">
-                      <ArrowDownRight className="w-4 h-4 text-red-500 shrink-0" />
-                      <h4 className="text-base font-black text-red-600 truncate">{formatRupiah(totalPengeluaran)}</h4>
+                      <ArrowDownRight className="w-4 h-4 text-slate-500 shrink-0" />
+                      <h4 className="text-base font-extrabold text-slate-700 truncate">{formatRupiah(totalPengeluaran)}</h4>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* 2. GABUNGAN: SALDO KAS HURIA & KAS PEMBANGUNAN */}
-              <div className="bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/40 border border-blue-200/80 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
-                <div className="flex items-center justify-between border-b border-blue-100/60 pb-3 mb-2.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-800 flex items-center space-x-1.5">
-                    <Building className="w-4 h-4 text-blue-600" />
+              <div className="bg-[#EDF2F9] border border-[#CBD7EA] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div className="flex items-center justify-between border-b border-[#CBD7EA] pb-3 mb-2.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#0F2447] flex items-center space-x-1.5">
+                    <Building className="w-4 h-4 text-[#0F2447]" />
                     <span>Saldo Kas Huria & Kas Pembangunan</span>
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 divide-x divide-blue-100/50 mb-2">
+                <div className="grid grid-cols-2 gap-3 divide-x divide-[#CBD7EA] mb-2">
                   <div>
                     <span className="text-[9px] text-slate-500 uppercase font-bold block">Kas Huria (Umum)</span>
-                    <h4 className="text-sm font-extrabold text-blue-700 mt-0.5 truncate">{formatRupiah(saldoKasHuria)}</h4>
+                    <h4 className="text-sm font-extrabold text-[#0F2447] mt-0.5 truncate">{formatRupiah(saldoKasHuria)}</h4>
                   </div>
                   <div className="pl-3">
                     <span className="text-[9px] text-slate-500 uppercase font-bold block">Kas Pembangunan</span>
-                    <h4 className="text-sm font-extrabold text-indigo-700 mt-0.5 truncate">{formatRupiah(saldoKasPembangunan)}</h4>
+                    <h4 className="text-sm font-extrabold text-[#173361] mt-0.5 truncate">{formatRupiah(saldoKasPembangunan)}</h4>
                   </div>
                 </div>
-                <div className="border-t border-dashed border-blue-200/60 pt-2 flex items-center justify-between text-[10px] font-bold text-slate-600">
+                <div className="border-t border-dashed border-[#CBD7EA] pt-2 flex items-center justify-between text-[10px] font-bold text-slate-600">
                   <span>Gabungan Saldo Kas:</span>
-                  <span className="text-xs font-black text-slate-800">{formatRupiah(saldoKasHuria + saldoKasPembangunan)}</span>
+                  <span className="text-xs font-extrabold text-[#0F2447]">{formatRupiah(saldoKasHuria + saldoKasPembangunan)}</span>
                 </div>
               </div>
 
@@ -4559,13 +4708,13 @@ export default function AdminView({
               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-semibold flex items-center space-x-1">
-                    <Heart className="w-3.5 h-3.5 text-pink-500" />
+                    <Heart className="w-3.5 h-3.5 text-[#0F2447]" />
                     <span>Saldo Diakonia Sosial</span>
                   </span>
-                  <h4 className="text-lg font-black text-slate-800 mt-1">{formatRupiah(saldoDiakoniaSosial)}</h4>
+                  <h4 className="text-lg font-extrabold text-[#0F2447] mt-1">{formatRupiah(saldoDiakoniaSosial)}</h4>
                   <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Membantu sesama dan pelayanan sosial jemaat</span>
                 </div>
-                <div className="p-3 bg-pink-50 text-pink-500 rounded-xl shrink-0 border border-pink-100">
+                <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-xl shrink-0 border border-[#CBD7EA]">
                   <Heart className="w-5 h-5" />
                 </div>
               </div>
@@ -4576,14 +4725,14 @@ export default function AdminView({
                   <div className="flex items-center justify-between w-full">
                     <div>
                       <span className="text-[10px] text-slate-500 uppercase font-semibold flex items-center space-x-1">
-                        <Coins className="w-3.5 h-3.5 text-amber-500" />
+                        <Coins className="w-3.5 h-3.5 text-[#0F2447]" />
                         <span className="truncate max-w-[150px] block" title={customBalanceTitle}>{customBalanceTitle}</span>
                       </span>
-                      <h4 className="text-lg font-black text-slate-800 mt-1">{formatRupiah(activeCustomBalanceValue)}</h4>
+                      <h4 className="text-lg font-extrabold text-[#0F2447] mt-1">{formatRupiah(activeCustomBalanceValue)}</h4>
                       <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Saldo kustom (menggabungkan basis & transaksi)</span>
                     </div>
                     <div className="flex flex-col items-end space-y-2">
-                      <div className="p-2.5 bg-amber-50 text-amber-500 rounded-xl shrink-0 border border-amber-100">
+                      <div className="p-2.5 bg-[#EDF2F9] text-[#0F2447] rounded-xl shrink-0 border border-[#CBD7EA]">
                         <Coins className="w-5 h-5" />
                       </div>
                       <button
@@ -4592,7 +4741,7 @@ export default function AdminView({
                           setTempCustomValue(customBalanceValue);
                           setIsEditingCustomBalance(true);
                         }}
-                        className="text-[10px] font-bold text-amber-600 hover:text-amber-700 bg-amber-50/50 hover:bg-amber-50 px-2 py-1 rounded-md border border-amber-100 transition cursor-pointer"
+                        className="text-[10px] font-semibold text-[#0F2447] hover:bg-[#EDF2F9] bg-white px-2.5 py-1 rounded-md border border-slate-300 transition cursor-pointer"
                       >
                         Ubah Judul & Saldo
                       </button>
@@ -4600,9 +4749,9 @@ export default function AdminView({
                   </div>
                 ) : (
                   <div className="space-y-3 w-full">
-                    <div className="flex items-center justify-between border-b border-amber-100 pb-1.5">
-                      <span className="text-[10px] text-amber-800 uppercase font-bold flex items-center space-x-1">
-                        <Coins className="w-3.5 h-3.5 text-amber-500" />
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                      <span className="text-[10px] text-[#0F2447] uppercase font-bold flex items-center space-x-1">
+                        <Coins className="w-3.5 h-3.5 text-[#0F2447]" />
                         <span>Sesuaikan Saldo Kustom</span>
                       </span>
                       <span className="text-[9px] text-slate-400">Atur Judul & Nilai Saldo</span>
@@ -4615,7 +4764,7 @@ export default function AdminView({
                           value={tempCustomTitle}
                           onChange={(e) => setTempCustomTitle(e.target.value)}
                           placeholder="Contoh: Kas Remaja & Naposo"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 outline-none focus:border-amber-500 font-bold"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-700 outline-none focus:border-[#0F2447] font-bold"
                         />
                       </div>
                       <div>
@@ -4625,7 +4774,7 @@ export default function AdminView({
                           value={tempCustomValue}
                           onChange={(e) => setTempCustomValue(Number(e.target.value))}
                           placeholder="Contoh: 2500000"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 outline-none focus:border-amber-500 font-bold"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-700 outline-none focus:border-[#0F2447] font-bold"
                         />
                       </div>
                     </div>
@@ -4633,7 +4782,7 @@ export default function AdminView({
                       <button
                         type="button"
                         onClick={() => setIsEditingCustomBalance(false)}
-                        className="text-[10px] font-bold text-slate-500 hover:text-slate-700 bg-slate-100 px-3 py-1 rounded-lg transition cursor-pointer"
+                        className="text-[10px] font-semibold text-slate-600 hover:text-[#0F2447] bg-white border border-slate-300 px-3 py-1 rounded-lg transition cursor-pointer"
                       >
                         Batal
                       </button>
@@ -4648,7 +4797,7 @@ export default function AdminView({
                           onUpdateCustomBalanceValue(tempCustomValue);
                           setIsEditingCustomBalance(false);
                         }}
-                        className="text-[10px] font-bold text-white bg-amber-600 hover:bg-amber-700 px-3 py-1 rounded-lg transition cursor-pointer shadow-sm shadow-amber-100"
+                        className="text-[10px] font-semibold text-white bg-[#0F2447] hover:bg-[#173361] px-3 py-1 rounded-lg transition cursor-pointer shadow-xs"
                       >
                         Simpan Perubahan
                       </button>
@@ -4673,7 +4822,7 @@ export default function AdminView({
                         placeholder="Cari transaksi (kategori, keterangan)..."
                         value={searchKeuangan}
                         onChange={(e) => setSearchKeuangan(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-700 outline-none focus:border-blue-500 font-semibold shadow-sm"
+                        className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-700 outline-none focus:border-[#0F2447] font-semibold shadow-sm"
                       />
                       {searchKeuangan && (
                         <button
@@ -4687,7 +4836,7 @@ export default function AdminView({
 
                     <button
                       onClick={handleExportKeuanganExcel}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow shadow-emerald-100"
+                      className="px-4 py-2 bg-white hover:bg-[#EDF2F9] text-xs font-semibold text-[#0F2447] border border-slate-300 rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-xs"
                     >
                       <FileSpreadsheet className="w-4 h-4" />
                       <span>Ekspor ke Excel</span>
@@ -4695,7 +4844,7 @@ export default function AdminView({
 
                     <button
                       onClick={startNewTransaksi}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow shadow-blue-100"
+                      className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-semibold text-white rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-sm"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Catat Transaksi Baru</span>
@@ -4707,7 +4856,7 @@ export default function AdminView({
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold">
+                        <tr className="bg-[#0F2447] text-white font-bold">
                           <th className="p-3">Tanggal</th>
                           <th className="p-3">Jenis</th>
                           <th className="p-3">Kategori</th>
@@ -4744,10 +4893,10 @@ export default function AdminView({
                               <td className="p-3 text-slate-500 font-mono">{t.tanggal}</td>
                               <td className="p-3">
                                 <span
-                                  className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded tracking-wider border ${
+                                  className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded tracking-wider border ${
                                     t.tipe === 'pemasukan' 
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                                      : 'bg-red-50 text-red-700 border-red-200'
+                                      ? 'bg-[#0F2447] text-white border-[#0F2447]' 
+                                      : 'bg-slate-100 text-slate-700 border-slate-300'
                                   }`}
                                 >
                                   {t.tipe}
@@ -4756,21 +4905,21 @@ export default function AdminView({
                               <td className="p-3 text-slate-800 font-bold">{t.kategori}</td>
                               <td className="p-3 whitespace-nowrap">
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                                  getTipeKasDisplayClass(getTipeKasOfTransaction(t, customBalanceTitle))
+                                  getTipeKasDisplayClass(getTipeKasOfTransaction(t))
                                 }`}>
-                                  {getTipeKasLabel(getTipeKasOfTransaction(t, customBalanceTitle), customBalanceTitle)}
+                                  {getTipeKasLabel(getTipeKasOfTransaction(t), customBalanceTitle)}
                                 </span>
                               </td>
                               <td className="p-3 text-slate-600 min-w-[150px] max-w-xs break-words whitespace-normal" title={t.keterangan}>{t.keterangan}</td>
                               <td
                                 className={`p-3 text-right font-bold font-mono ${
-                                  t.tipe === 'pemasukan' ? 'text-emerald-600' : 'text-red-600'
+                                  t.tipe === 'pemasukan' ? 'text-[#0F2447]' : 'text-slate-600'
                                 }`}
                               >
                                 <div className="flex flex-col items-end">
                                   <span>{t.tipe === 'pemasukan' ? '+' : '-'} {formatRupiah(t.jumlah)}</span>
                                   {t.tipe === 'pemasukan' && t.sentralisasiPersen ? (
-                                    <span className="text-[10px] text-amber-600 font-medium font-sans">
+                                    <span className="text-[10px] text-slate-500 font-medium font-sans">
                                       (sentral {t.sentralisasiPersen}% = {formatRupiah(t.jumlah * t.sentralisasiPersen / 100)})
                                     </span>
                                   ) : null}
@@ -4780,14 +4929,14 @@ export default function AdminView({
                                 <div className="flex items-center justify-center space-x-1">
                                   <button
                                     onClick={() => startEditTransaksi(t)}
-                                    className="p-1 text-slate-450 hover:text-blue-600 rounded transition"
+                                    className="p-1 text-slate-500 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                     title="Ubah Transaksi"
                                   >
                                     <Edit2 className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteTransaksi(t.id)}
-                                    className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition"
+                                    className="p-1 text-slate-500 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                     title="Hapus Transaksi"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -4805,19 +4954,19 @@ export default function AdminView({
             ) : (
               /* TRANSACTION LEDGER SHEET */
               <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                <h3 className="text-base font-bold text-slate-900 uppercase border-b border-slate-200 pb-3">
+                <h3 className="text-base font-bold text-[#0F2447] uppercase border-b border-slate-200 pb-3">
                   {editingTransaksiId === 'new' ? 'Catat Arus Kas Transaksi Baru' : 'Koreksi Transaksi Kas'}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">Tipe Transaksi</label>
-                    <div className="flex items-center space-x-2 bg-slate-50 p-1 rounded-lg border border-slate-200">
+                    <div className="flex items-center space-x-2 bg-[#E8EEF6] p-1 rounded-lg border border-[#D4DFEE]">
                       <button
                         type="button"
                         onClick={() => setTxTipe('pemasukan')}
-                        className={`flex-1 py-1.5 rounded-md text-xs font-extrabold tracking-wide uppercase transition ${
-                          txTipe === 'pemasukan' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                        className={`flex-1 py-1.5 rounded-md text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
+                          txTipe === 'pemasukan' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'
                         }`}
                       >
                         Pemasukan Cash
@@ -4825,8 +4974,8 @@ export default function AdminView({
                       <button
                         type="button"
                         onClick={() => setTxTipe('pengeluaran')}
-                        className={`flex-1 py-1.5 rounded-md text-xs font-extrabold tracking-wide uppercase transition ${
-                          txTipe === 'pengeluaran' ? 'bg-red-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                        className={`flex-1 py-1.5 rounded-md text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
+                          txTipe === 'pengeluaran' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'
                         }`}
                       >
                         Pengeluaran Cash
@@ -4840,7 +4989,7 @@ export default function AdminView({
                       type="text"
                       value={txKategori}
                       onChange={(e) => setTxKategori(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
                       placeholder="Contoh: Pelean IA, Pelean IB, Pelean II, Listrik Gereja, Diakonia"
                     />
                   </div>
@@ -4850,7 +4999,7 @@ export default function AdminView({
                     <select
                       value={txTipeKas}
                       onChange={(e) => setTxTipeKas(e.target.value as any)}
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-850 outline-none focus:border-blue-500 font-bold transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-bold transition-all"
                     >
                       <option value="Kas Huria">Kas Huria (Umum)</option>
                       <option value="Kas Pembangunan">Kas Pembangunan</option>
@@ -4865,16 +5014,16 @@ export default function AdminView({
                       type="number"
                       value={txJumlah === 0 ? '' : txJumlah}
                       onChange={(e) => setTxJumlah(Number(e.target.value))}
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold font-mono transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold font-mono transition-all"
                       placeholder="Masukkan nilai Rupiah (contoh: 2500000)"
                     />
                   </div>
 
                   {txTipe === 'pemasukan' && (
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    <div className="bg-[#F4F6FA] p-3 rounded-lg border border-slate-200">
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="block text-xs font-bold text-slate-700">Potongan Sentralisasi (%)</label>
-                        <span className="text-[9px] px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded font-bold font-mono">Sentralisasi HKBP</span>
+                        <span className="text-[9px] px-1.5 py-0.5 bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA] rounded font-bold font-mono">Sentralisasi HKBP</span>
                       </div>
                       <div className="flex space-x-2">
                         <input
@@ -4886,7 +5035,7 @@ export default function AdminView({
                             const val = Math.min(100, Math.max(0, Number(e.target.value)));
                             setTxSentralisasiPersen(val);
                           }}
-                          className="flex-1 bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-500 font-bold font-mono transition-all"
+                          className="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-bold font-mono transition-all"
                           placeholder="Potongan (cth: 55)"
                         />
                         <div className="flex space-x-1 shrink-0">
@@ -4895,10 +5044,10 @@ export default function AdminView({
                               key={pct}
                               type="button"
                               onClick={() => setTxSentralisasiPersen(pct)}
-                              className={`px-2 py-1.5 rounded text-[10px] font-bold border transition ${
+                              className={`px-2 py-1.5 rounded text-[10px] font-bold border transition cursor-pointer ${
                                 txSentralisasiPersen === pct
-                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                                  : 'bg-white border-slate-200 text-slate-650 hover:bg-slate-50'
+                                  ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-xs'
+                                  : 'bg-white border-slate-300 text-slate-600 hover:bg-[#EDF2F9]'
                               }`}
                             >
                               {pct}%
@@ -4907,12 +5056,12 @@ export default function AdminView({
                         </div>
                       </div>
                       {txSentralisasiPersen > 0 && txJumlah > 0 && (
-                        <div className="mt-2 space-y-1 pt-1.5 border-t border-dashed border-slate-200">
-                          <div className="text-[10px] text-amber-600 font-bold flex justify-between">
+                        <div className="mt-2 space-y-1 pt-1.5 border-t border-dashed border-slate-300">
+                          <div className="text-[10px] text-slate-600 font-bold flex justify-between">
                             <span>Dikirim ke Pusat ({txSentralisasiPersen}%):</span>
                             <span className="font-mono">-{formatRupiah(txJumlah * txSentralisasiPersen / 100)}</span>
                           </div>
-                          <div className="text-[10px] text-blue-700 font-bold flex justify-between">
+                          <div className="text-[10px] text-[#0F2447] font-bold flex justify-between">
                             <span>Kas Bersih Huria ({100 - txSentralisasiPersen}%):</span>
                             <span className="font-mono">+{formatRupiah(txJumlah * (1 - txSentralisasiPersen / 100))}</span>
                           </div>
@@ -4927,7 +5076,7 @@ export default function AdminView({
                       type="date"
                       value={txTanggal}
                       onChange={(e) => setTxTanggal(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
                     />
                   </div>
                 </div>
@@ -4938,7 +5087,7 @@ export default function AdminView({
                     type="text"
                     value={txKeterangan}
                     onChange={(e) => setTxKeterangan(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
                     placeholder="Contoh: Persembahan Minggu ke-4 Sektor VII"
                   />
                 </div>
@@ -4946,13 +5095,13 @@ export default function AdminView({
                 <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
                   <button
                     onClick={() => setEditingTransaksiId(null)}
-                    className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:text-slate-800 rounded-lg transition"
+                    className="px-4 py-2 bg-white border border-slate-300 text-xs font-semibold text-[#0F2447] hover:bg-[#EDF2F9] rounded-lg transition cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     onClick={handleSaveTransaksi}
-                    className="px-5 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-lg transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
+                    className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-semibold text-white rounded-lg transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
                   >
                     <Save className="w-4 h-4" />
                     <span>Catat Transaksi</span>
@@ -4973,24 +5122,24 @@ export default function AdminView({
                 {/* Statistics Cards for Jemaat */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans animate-fadeIn">
                   {/* Card 1: Total Jemaat */}
-                  <div className="bg-gradient-to-br from-blue-500/5 to-indigo-500/5 border border-blue-100 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase text-blue-700 tracking-wider">Jumlah Jemaat Aktif</p>
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                      <p className="text-[10px] font-bold uppercase text-[#0F2447] tracking-wider">Jumlah Jemaat Aktif</p>
+                      <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">
                         {jemaatList.length} <span className="text-xs text-slate-500 font-bold">Jiwa</span>
                       </h3>
                       <p className="text-[9px] text-slate-500 font-semibold">Warga terdaftar di database</p>
                     </div>
-                    <div className="p-3 bg-blue-100/50 text-blue-700 rounded-2xl border border-blue-200">
+                    <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-2xl border border-[#CBD7EA]">
                       <Users className="w-5 h-5 shrink-0" />
                     </div>
                   </div>
 
                   {/* Card 2: Ulang Tahun Bulan Ini */}
-                  <div className="bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-100 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+                  <div className="bg-[#EDF2F9] border border-[#CBD7EA] rounded-2xl p-4 flex items-center justify-between shadow-xs">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase text-amber-700 tracking-wider">Ultah Bulan Ini</p>
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                      <p className="text-[10px] font-bold uppercase text-[#0F2447] tracking-wider">Ultah Bulan Ini</p>
+                      <h3 className="text-2xl font-extrabold text-[#0F2447] tracking-tight">
                         {(() => {
                           const thisMonth = new Date().getMonth(); // 0-11
                           return jemaatList.filter(j => {
@@ -4998,11 +5147,11 @@ export default function AdminView({
                             const d = new Date(j.tanggalLahir);
                             return !isNaN(d.getTime()) && d.getMonth() === thisMonth;
                           }).length;
-                        })()} <span className="text-xs text-slate-500 font-bold">Warga</span>
+                        })()} <span className="text-xs text-slate-600 font-bold">Warga</span>
                       </h3>
-                      <p className="text-[9px] text-slate-500 font-semibold">Bulan {new Date().toLocaleDateString('id-ID', { month: 'long' })}</p>
+                      <p className="text-[9px] text-slate-600 font-semibold">Bulan {new Date().toLocaleDateString('id-ID', { month: 'long' })}</p>
                     </div>
-                    <div className="p-3 bg-amber-100/50 text-amber-700 rounded-2xl border border-amber-200">
+                    <div className="p-3 bg-white text-[#0F2447] rounded-2xl border border-[#CBD7EA]">
                       <Heart className="w-5 h-5 shrink-0" />
                     </div>
                   </div>
@@ -5021,7 +5170,7 @@ export default function AdminView({
                         placeholder="Cari jemaat (nama, sektor)..."
                         value={searchJemaat}
                         onChange={(e) => setSearchJemaat(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-700 outline-none focus:border-blue-500 font-semibold shadow-sm"
+                        className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-700 outline-none focus:border-[#0F2447] font-semibold shadow-sm"
                       />
                       {searchJemaat && (
                         <button
@@ -5035,15 +5184,15 @@ export default function AdminView({
 
                      <button
                       onClick={() => setShowJemaatExcelModal(true)}
-                      className="px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 active:scale-[0.99] text-xs font-extrabold rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-sm shadow-emerald-50"
+                      className="px-4 py-2 bg-white text-[#0F2447] hover:bg-[#EDF2F9] border border-slate-300 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-xs"
                     >
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                      <FileSpreadsheet className="w-4 h-4 text-[#0F2447]" />
                       <span>Impor Excel</span>
                     </button>
 
                     <button
                       onClick={startNewJemaat}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow shadow-blue-100"
+                      className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-semibold text-white rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-sm"
                     >
                       <UserPlus className="w-4 h-4" />
                       <span>Tambah Data Biodata</span>
@@ -5052,9 +5201,9 @@ export default function AdminView({
                     {jemaatList.length > 0 && (
                       <button
                         onClick={handleDeleteAllJemaat}
-                        className="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 active:scale-[0.99] text-xs font-extrabold rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-sm shadow-rose-50"
+                        className="px-4 py-2 bg-white text-slate-700 hover:bg-[#EDF2F9] hover:text-[#0F2447] border border-slate-300 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-xs"
                       >
-                        <Trash2 className="w-4 h-4 text-rose-600" />
+                        <Trash2 className="w-4 h-4" />
                         <span>Hapus Semua Data</span>
                       </button>
                     )}
@@ -5065,7 +5214,7 @@ export default function AdminView({
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold">
+                        <tr className="bg-[#0F2447] text-white font-bold">
                           {jemaatColumns.map((col) => (
                             <th key={col.key} className="p-3">{col.label}</th>
                           ))}
@@ -5118,14 +5267,14 @@ export default function AdminView({
                                 <div className="flex items-center justify-center space-x-1">
                                   <button
                                     onClick={() => startEditJemaat(j)}
-                                    className="p-1 text-slate-450 hover:text-blue-600 rounded transition cursor-pointer"
+                                    className="p-1 text-slate-500 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                     title="Ubah Jemaat"
                                   >
                                     <Edit2 className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteJemaat(j.id)}
-                                    className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition cursor-pointer"
+                                    className="p-1 text-slate-500 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                     title="Hapus Jemaat"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -5143,7 +5292,7 @@ export default function AdminView({
             ) : (
               /* DETAILED JEMAAT FORM EDITOR */
               <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                <h3 className="text-base font-bold text-slate-900 uppercase border-b border-slate-200 pb-3">
+                <h3 className="text-base font-bold text-[#0F2447] uppercase border-b border-slate-200 pb-3">
                   {editingJemaatId === 'new' ? 'Daftarkan Biodata Jemaat Baru' : 'Ubah Biodata Jemaat'}
                 </h3>
 
@@ -5161,7 +5310,7 @@ export default function AdminView({
                             type="text"
                             value={jmNama}
                             onChange={(e) => setJmNama(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
                             placeholder="Contoh: Sahat Siregar"
                           />
                         </div>
@@ -5176,7 +5325,7 @@ export default function AdminView({
                             type="date"
                             value={jmTglLahir}
                             onChange={(e) => setJmTglLahir(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
                           />
                         </div>
                       );
@@ -5191,7 +5340,7 @@ export default function AdminView({
                             list="sektor-suggestions"
                             value={jmSektor}
                             onChange={(e) => setJmSektor(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
                             placeholder="Pilih atau ketik sektor/wijk"
                           />
                           <datalist id="sektor-suggestions">
@@ -5215,7 +5364,7 @@ export default function AdminView({
                             type="text"
                             value={jmNoHP}
                             onChange={(e) => setJmNoHP(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold font-mono transition-all"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold font-mono transition-all"
                             placeholder="Contoh: 081234567890"
                           />
                         </div>
@@ -5224,7 +5373,7 @@ export default function AdminView({
 
                     // Otherwise, it is a custom dynamic column
                     return (
-                      <div key={col.key} className="bg-slate-50/50 p-3 rounded-xl border border-slate-200/80">
+                      <div key={col.key} className="bg-[#F4F6FA] p-3 rounded-xl border border-slate-200">
                         <div className="flex items-center justify-between mb-1.5">
                           <label className="block text-xs font-semibold text-slate-700">{col.label}</label>
                           <button
@@ -5234,7 +5383,7 @@ export default function AdminView({
                               delete next[col.key];
                               setJmCustomFields(next);
                             }}
-                            className="text-[10px] text-red-500 font-extrabold hover:underline cursor-pointer"
+                            className="text-[10px] text-[#0F2447] font-bold hover:underline cursor-pointer"
                           >
                             Hapus Kolom
                           </button>
@@ -5248,7 +5397,7 @@ export default function AdminView({
                               [col.key]: e.target.value
                             });
                           }}
-                          className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
                           placeholder={`Isi nilai untuk kolom ${col.label}`}
                         />
                       </div>
@@ -5257,15 +5406,15 @@ export default function AdminView({
                 </div>
 
                 {/* Add New Custom Field Form */}
-                <div className="border-t border-slate-100 pt-4 mt-4 bg-slate-50/30 p-4 rounded-xl border border-dashed border-slate-200">
+                <div className="pt-4 mt-4 bg-[#F4F6FA] p-4 rounded-xl border border-dashed border-[#CBD7EA]">
                   <div className="flex flex-col sm:flex-row items-end gap-3">
                     <div className="flex-1">
-                      <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Tambah Kolom Informasi Baru</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tambah Kolom Informasi Baru</label>
                       <input
                         type="text"
                         placeholder="Nama Kolom Baru (contoh: Pekerjaan, Alamat, Status)"
                         id="new-column-name-input"
-                        className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
                       />
                     </div>
                     <button
@@ -5293,7 +5442,7 @@ export default function AdminView({
                         if (inputEl) inputEl.value = '';
                         showToast(`Kolom "${cleanName}" ditambahkan!`);
                       }}
-                      className="px-4 py-2 bg-slate-200 hover:bg-slate-300 border border-slate-300 text-slate-800 text-xs font-black rounded-xl transition cursor-pointer shrink-0"
+                      className="px-4 py-2 bg-white hover:bg-[#EDF2F9] border border-slate-300 text-[#0F2447] text-xs font-semibold rounded-xl transition cursor-pointer shrink-0"
                     >
                       Tambah Kolom
                     </button>
@@ -5303,13 +5452,13 @@ export default function AdminView({
                 <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
                   <button
                     onClick={() => setEditingJemaatId(null)}
-                    className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:text-slate-800 rounded-lg transition animate-none"
+                    className="px-4 py-2 bg-white border border-slate-300 text-xs font-semibold text-[#0F2447] hover:bg-[#EDF2F9] rounded-lg transition cursor-pointer"
                   >
                     Batal
                   </button>
                   <button
                     onClick={handleSaveJemaat}
-                    className="px-5 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-lg transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
+                    className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-xs font-semibold text-white rounded-lg transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
                   >
                     <Save className="w-4 h-4" />
                     <span>Simpan Biodata</span>
@@ -5325,14 +5474,14 @@ export default function AdminView({
               <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
                 <div className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                   {/* Modal Header */}
-                  <div className="bg-gradient-to-r from-blue-800 to-indigo-950 text-white p-5 flex items-center justify-between">
+                  <div className="bg-[#0F2447] text-white p-5 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-white/10 rounded-xl animate-pulse">
-                        <FileSpreadsheet className="w-5 h-5 text-emerald-400" />
+                      <div className="p-2 bg-white/10 rounded-xl">
+                        <FileSpreadsheet className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider leading-none">Impor Database Jemaat (Excel)</h3>
-                        <p className="text-[10px] text-blue-200 font-semibold tracking-wide mt-1">Impor data jemaat dari file spreadsheet .xlsx atau .xls</p>
+                        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider leading-none">Impor Database Jemaat (Excel)</h3>
+                        <p className="text-[10px] text-white/75 font-medium tracking-wide mt-1">Impor data jemaat dari file spreadsheet .xlsx atau .xls</p>
                       </div>
                     </div>
                     <button
@@ -5352,9 +5501,9 @@ export default function AdminView({
                   <div className="p-6 overflow-y-auto space-y-5 flex-1">
                     
                     {/* Instructions & Template Block */}
-                    <div className="bg-slate-50 border border-slate-150 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="bg-[#F4F6FA] border border-slate-200 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1">
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-wide">Format Kolom yang Didukung</h4>
+                        <h4 className="text-xs font-bold text-[#0F2447] uppercase tracking-wide">Format Kolom yang Didukung</h4>
                         <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
                           Sistem mendeteksi kolom secara otomatis. Pastikan file Excel Anda memiliki kolom header berikut:
                         </p>
@@ -5369,7 +5518,7 @@ export default function AdminView({
                       <button
                         type="button"
                         onClick={downloadJemaatExcelTemplate}
-                        className="px-3.5 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-xs font-extrabold flex items-center justify-center space-x-1.5 transition shrink-0 cursor-pointer shadow-xs self-start sm:self-auto"
+                        className="px-3.5 py-2 bg-white text-[#0F2447] hover:bg-[#EDF2F9] border border-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition shrink-0 cursor-pointer shadow-xs self-start sm:self-auto"
                       >
                         <Download className="w-4 h-4" />
                         <span>Unduh Template</span>
@@ -5379,24 +5528,24 @@ export default function AdminView({
                     {/* Drag Drop or Upload File Picker */}
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-700 block">Pilih Berkas Excel (.xlsx, .xls)</label>
-                      <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center bg-slate-50/50 hover:bg-slate-50 hover:border-blue-500 transition relative">
+                      <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-[#F4F6FA] hover:bg-[#EDF2F9] hover:border-[#0F2447] transition relative">
                         <input
                           type="file"
                           accept=".xlsx, .xls"
                           onChange={handleJemaatExcelImport}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
-                        <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2 animate-bounce" />
-                        <p className="text-xs font-black text-slate-700">
+                        <Upload className="w-8 h-8 text-[#0F2447] mx-auto mb-2" />
+                        <p className="text-xs font-bold text-[#0F2447]">
                           {excelFileName ? `Terpilih: ${excelFileName}` : 'Klik atau Seret Berkas Excel Ke Sini'}
                         </p>
-                        <p className="text-[10px] text-slate-400 font-semibold mt-1">Mendukung berkas Microsoft Excel .xlsx atau .xls</p>
+                        <p className="text-[10px] text-slate-500 font-semibold mt-1">Mendukung berkas Microsoft Excel .xlsx atau .xls</p>
                       </div>
                     </div>
 
                     {/* Error Message */}
                     {excelErrorMsg && (
-                      <div className="bg-red-50 border border-red-150 p-3 rounded-xl flex items-start space-x-2 text-red-700">
+                      <div className="bg-[#EDF2F9] border border-[#CBD7EA] p-3 rounded-xl flex items-start space-x-2 text-[#0F2447]">
                         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                         <span className="text-xs font-semibold leading-normal">{excelErrorMsg}</span>
                       </div>
@@ -5406,18 +5555,18 @@ export default function AdminView({
                     {parsedJemaatList.length > 0 && (
                       <div className="space-y-3">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                            <Check className="w-4 h-4 text-green-600 animate-scale" />
+                          <h4 className="text-xs font-bold text-[#0F2447] uppercase tracking-wider flex items-center gap-1.5">
+                            <Check className="w-4 h-4 text-[#0F2447]" />
                             <span>Preview Data Terdeteksi ({parsedJemaatList.length} Jemaat)</span>
                           </h4>
                           
                           {/* Import Method Toggle */}
-                          <div className="bg-slate-100 p-0.5 rounded-lg border border-slate-200 flex items-center self-start sm:self-auto">
+                          <div className="bg-[#E8EEF6] p-0.5 rounded-lg border border-[#D4DFEE] flex items-center self-start sm:self-auto">
                             <button
                               type="button"
                               onClick={() => setJemaatImportMode('append')}
                               className={`px-3 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                                jemaatImportMode === 'append' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-500 hover:text-slate-700'
+                                jemaatImportMode === 'append' ? 'bg-[#0F2447] text-white shadow-xs' : 'text-slate-600 hover:text-[#0F2447]'
                               }`}
                             >
                               Gabungkan (Append)
@@ -5426,7 +5575,7 @@ export default function AdminView({
                               type="button"
                               onClick={() => setJemaatImportMode('overwrite')}
                               className={`px-3 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                                jemaatImportMode === 'overwrite' ? 'bg-white text-red-700 shadow-xs' : 'text-slate-500 hover:text-slate-700'
+                                jemaatImportMode === 'overwrite' ? 'bg-[#0F2447] text-white shadow-xs' : 'text-slate-600 hover:text-[#0F2447]'
                               }`}
                             >
                               Gantikan Semua (Overwrite)
@@ -5437,7 +5586,7 @@ export default function AdminView({
                         <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs max-h-48 overflow-y-auto">
                           <table className="w-full text-left text-xs">
                             <thead>
-                              <tr className="bg-slate-50 text-slate-600 font-extrabold border-b border-slate-200">
+                              <tr className="bg-[#0F2447] text-white font-bold">
                                 <th className="p-2.5">Nama</th>
                                 <th className="p-2.5">Sektor</th>
                                 <th className="p-2.5">Tgl Lahir</th>
@@ -5468,7 +5617,7 @@ export default function AdminView({
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="bg-slate-50 border-t border-slate-150 p-4.5 flex items-center justify-end space-x-2.5">
+                  <div className="bg-[#F4F6FA] border-t border-slate-200 p-4 flex items-center justify-end space-x-2.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -5477,7 +5626,7 @@ export default function AdminView({
                         setExcelFileName('');
                         setExcelErrorMsg('');
                       }}
-                      className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:text-slate-800 rounded-xl transition cursor-pointer"
+                      className="px-4 py-2 bg-white border border-slate-300 text-xs font-semibold text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
                     >
                       Batal
                     </button>
@@ -5485,10 +5634,10 @@ export default function AdminView({
                       type="button"
                       onClick={handleSaveImportedJemaat}
                       disabled={parsedJemaatList.length === 0}
-                      className={`px-5 py-2 rounded-xl text-xs font-extrabold text-white transition flex items-center space-x-1.5 cursor-pointer shadow-sm ${
+                      className={`px-5 py-2 rounded-xl text-xs font-semibold text-white transition flex items-center space-x-1.5 cursor-pointer shadow-sm ${
                         parsedJemaatList.length === 0
-                          ? 'bg-slate-300 border-slate-300 cursor-not-allowed opacity-50'
-                          : 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99]'
+                          ? 'bg-slate-300 border-slate-300 cursor-not-allowed opacity-60'
+                          : 'bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731]'
                       }`}
                     >
                       <Save className="w-4 h-4" />
@@ -5509,36 +5658,36 @@ export default function AdminView({
             {/* Overview Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-sm">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-lg border border-blue-100">
+                <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-lg border border-[#CBD7EA]">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Acara Minggu Aktif</span>
-                  <span className="text-sm font-extrabold text-slate-900">
+                  <span className="text-sm font-extrabold text-[#0F2447]">
                     {liturgiMinggu?.[0]?.pdfUrl ? '✓ Terunggah (PDF)' : '✗ Belum Ada PDF'}
                   </span>
                 </div>
               </div>
 
               <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-sm">
-                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">
+                <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-lg border border-[#CBD7EA]">
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Acara Partangiangan (PDF)</span>
-                  <span className="text-sm font-extrabold text-slate-900">
+                  <span className="text-sm font-extrabold text-[#0F2447]">
                     {liturgiPartangiangan?.filter(l => l.pdfUrl).length || 0} Acara
                   </span>
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center space-x-3.5 shadow-sm">
-                <div className="p-3 bg-amber-50 text-amber-600 rounded-lg border border-amber-100">
+              <div className="bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl p-4 flex items-center space-x-3.5 shadow-sm">
+                <div className="p-3 bg-white text-[#0F2447] rounded-lg border border-[#CBD7EA]">
                   <Archive className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Arsip Berkas Permanen</span>
-                  <span className="text-sm font-extrabold text-slate-900">
+                  <span className="text-[10px] text-slate-600 uppercase tracking-wider block font-semibold">Arsip Berkas Permanen</span>
+                  <span className="text-sm font-extrabold text-[#0F2447]">
                     {arsipPdfs.length} Berkas
                   </span>
                 </div>
@@ -5548,14 +5697,14 @@ export default function AdminView({
             {/* List 1: PDFs linked to ACTIVE LITURGIES */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm">
               <div>
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">1. Berkas PDF Acara Ibadah Jemaat Aktif</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#0F2447]">1. Berkas PDF Acara Ibadah Jemaat Aktif</h3>
                 <p className="text-[10px] text-slate-500 mt-0.5">Daftar file PDF tata ibadah yang sedang aktif dan dapat diakses langsung oleh jemaat di aplikasi mobile.</p>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 text-slate-550 uppercase tracking-wider text-[10px] bg-slate-50">
+                    <tr className="bg-[#0F2447] text-white uppercase tracking-wider text-[10px]">
                       <th className="p-3">Nama Agenda Ibadah</th>
                       <th className="p-3">Tanggal Pelaksanaan</th>
                       <th className="p-3">Nama Berkas PDF</th>
@@ -5568,20 +5717,20 @@ export default function AdminView({
                     {liturgiMinggu?.map((lit) => (
                       <tr key={`minggu-${lit.id}`} className="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
                         <td className="p-3 font-bold text-slate-900 flex items-center space-x-2">
-                          <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                          <span className="w-2 h-2 rounded-full bg-[#0F2447] shrink-0"></span>
                           <span>{lit.judul} (Minggu)</span>
                         </td>
                         <td className="p-3 text-slate-500 font-mono">{lit.tanggal}</td>
-                        <td className="p-3 text-slate-750 font-medium">
+                        <td className="p-3 text-slate-700 font-medium">
                           {lit.isPdfMode ? (
                             <span className="text-slate-700 italic font-medium">{lit.uploadedPdfName || (lit.pdfUrl ? 'Tata_Ibadah_Minggu.pdf' : '-')}</span>
                           ) : (
-                            <span className="text-blue-700 font-bold text-[10px] bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                            <span className="text-[#0F2447] font-bold text-[10px] bg-[#EDF2F9] border border-[#CBD7EA] px-2 py-0.5 rounded-full">
                               Teks Manual ({lit.teksLiturgi?.length || 0} Langkah)
                             </span>
                           )}
                         </td>
-                        <td className="p-3 text-slate-550 font-mono">
+                        <td className="p-3 text-slate-500 font-mono">
                           {lit.isPdfMode ? (lit.uploadedPdfSize || (lit.pdfUrl ? '1.5 MB' : '-')) : '-'}
                         </td>
                         <td className="p-3 text-center">
@@ -5589,10 +5738,10 @@ export default function AdminView({
                             {lit.teksLiturgi && lit.teksLiturgi.length > 0 && (
                               <button
                                 onClick={() => setPreviewManualLit(lit)}
-                                className="px-2 py-1 bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-750 rounded text-[11px] font-bold transition cursor-pointer flex items-center space-x-1"
+                                className="px-2.5 py-1 bg-[#EDF2F9] border border-[#CBD7EA] hover:bg-[#E8EEF6] text-[#0F2447] rounded text-[11px] font-semibold transition cursor-pointer flex items-center space-x-1"
                                 title="Lihat Teks Acara"
                               >
-                                <FileText className="w-3 h-3 text-amber-600" />
+                                <FileText className="w-3 h-3 text-[#0F2447]" />
                                 <span>Lihat Teks</span>
                               </button>
                             )}
@@ -5600,16 +5749,16 @@ export default function AdminView({
                               <a
                                 href={lit.pdfUrl}
                                 download={`${lit.judul.replace(/\s+/g, '_')}.pdf`}
-                                className="p-1 px-2 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200 rounded text-[11px] font-bold transition flex items-center space-x-1"
+                                className="p-1 px-2.5 bg-white hover:bg-[#EDF2F9] text-[#0F2447] border border-slate-300 rounded text-[11px] font-semibold transition flex items-center space-x-1"
                                 title="Unduh Berkas PDF"
                               >
-                                <Download className="w-3 h-3 text-blue-600" />
+                                <Download className="w-3 h-3 text-[#0F2447]" />
                                 <span>Unduh</span>
                               </a>
                             )}
                             <button
                               onClick={() => handleDeleteLiturgy(lit.id, 'minggu')}
-                              className="p-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded transition cursor-pointer shrink-0"
+                              className="p-1 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded transition cursor-pointer shrink-0"
                               title="Hapus Acara"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -5623,20 +5772,20 @@ export default function AdminView({
                     {liturgiPartangiangan?.map((lit) => (
                       <tr key={`partangiangan-${lit.id}`} className="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
                         <td className="p-3 font-bold text-slate-900 flex items-center space-x-2">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                          <span className="w-2 h-2 rounded-full bg-[#4C6B9E] shrink-0"></span>
                           <span>{lit.judul} (Partangiangan)</span>
                         </td>
                         <td className="p-3 text-slate-500 font-mono">{lit.tanggal}</td>
-                        <td className="p-3 text-slate-750 font-medium">
+                        <td className="p-3 text-slate-700 font-medium">
                           {lit.isPdfMode ? (
                             <span className="text-slate-700 italic font-medium">{lit.uploadedPdfName || (lit.pdfUrl ? 'Tata_Ibadah_Partangiangan.pdf' : '-')}</span>
                           ) : (
-                            <span className="text-emerald-700 font-bold text-[10px] bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                            <span className="text-[#0F2447] font-bold text-[10px] bg-[#EDF2F9] border border-[#CBD7EA] px-2 py-0.5 rounded-full">
                               Teks Manual ({lit.teksLiturgi?.length || 0} Langkah)
                             </span>
                           )}
                         </td>
-                        <td className="p-3 text-slate-550 font-mono">
+                        <td className="p-3 text-slate-500 font-mono">
                           {lit.isPdfMode ? (lit.uploadedPdfSize || (lit.pdfUrl ? '1.2 MB' : '-')) : '-'}
                         </td>
                         <td className="p-3 text-center">
@@ -5644,10 +5793,10 @@ export default function AdminView({
                             {lit.teksLiturgi && lit.teksLiturgi.length > 0 && (
                               <button
                                 onClick={() => setPreviewManualLit(lit)}
-                                className="px-2 py-1 bg-amber-50 border border-amber-200 hover:bg-amber-100 text-amber-750 rounded text-[11px] font-bold transition cursor-pointer flex items-center space-x-1"
+                                className="px-2.5 py-1 bg-[#EDF2F9] border border-[#CBD7EA] hover:bg-[#E8EEF6] text-[#0F2447] rounded text-[11px] font-semibold transition cursor-pointer flex items-center space-x-1"
                                 title="Lihat Teks Acara"
                               >
-                                <FileText className="w-3 h-3 text-amber-600" />
+                                <FileText className="w-3 h-3 text-[#0F2447]" />
                                 <span>Lihat Teks</span>
                               </button>
                             )}
@@ -5655,16 +5804,16 @@ export default function AdminView({
                               <a
                                 href={lit.pdfUrl}
                                 download={`${lit.judul.replace(/\s+/g, '_')}.pdf`}
-                                className="p-1 px-2 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 border border-slate-200 rounded text-[11px] font-bold transition flex items-center space-x-1"
+                                className="p-1 px-2.5 bg-white hover:bg-[#EDF2F9] text-[#0F2447] border border-slate-300 rounded text-[11px] font-semibold transition flex items-center space-x-1"
                                 title="Unduh Berkas PDF"
                               >
-                                <Download className="w-3 h-3 text-emerald-600" />
+                                <Download className="w-3 h-3 text-[#0F2447]" />
                                 <span>Unduh</span>
                               </a>
                             )}
                             <button
                               onClick={() => handleDeleteLiturgy(lit.id, 'partangiangan')}
-                              className="p-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded transition cursor-pointer shrink-0"
+                              className="p-1 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded transition cursor-pointer shrink-0"
                               title="Hapus Acara"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -5682,7 +5831,7 @@ export default function AdminView({
             <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
                 <div>
-                  <h3 className="text-xs font-black uppercase tracking-wider text-indigo-950">2. Perpustakaan & Arsip Berkas Digital Jemaat</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#0F2447]">2. Perpustakaan & Arsip Berkas Digital Jemaat</h3>
                   <p className="text-[10px] text-slate-500 mt-0.5">Media penyimpanan berkas PDF per-minggu untuk Acara Ibadah, Jadwal Petugas, Warta Jemaat (Tingting), dan Laporan Keuangan.</p>
                 </div>
                 {!isAddingArsip && (
@@ -5695,7 +5844,7 @@ export default function AdminView({
                       setNewArsipPdfUrl('');
                       setIsAddingArsip(true);
                     }}
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
+                    className="px-3.5 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white text-xs font-semibold rounded-xl transition-colors flex items-center space-x-1.5 cursor-pointer shadow-sm"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Arsipkan Berkas Baru</span>
@@ -5704,10 +5853,10 @@ export default function AdminView({
               </div>
 
               {isAddingArsip && (
-                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4 animate-fadeIn font-sans">
+                <div className="bg-[#F4F6FA] p-5 rounded-xl border border-slate-200 space-y-4 animate-fadeIn font-sans">
                   <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2">
-                    <span className="text-xs font-black uppercase text-blue-700">Arsipkan Berkas Baru (Per Minggu)</span>
-                    <button onClick={() => setIsAddingArsip(false)} className="text-slate-450 hover:text-slate-700 cursor-pointer">
+                    <span className="text-xs font-bold uppercase text-[#0F2447]">Arsipkan Berkas Baru (Per Minggu)</span>
+                    <button onClick={() => setIsAddingArsip(false)} className="text-slate-500 hover:text-[#0F2447] cursor-pointer">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -5720,7 +5869,7 @@ export default function AdminView({
                         value={newArsipJudul}
                         onChange={(e) => setNewArsipJudul(e.target.value)}
                         placeholder="Contoh: AD/ART Huria HKBP atau Laporan Kas Minggu Ini"
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-850 outline-none focus:border-blue-500 font-bold shadow-sm"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold shadow-sm"
                       />
                     </div>
                     <div>
@@ -5730,7 +5879,7 @@ export default function AdminView({
                         value={newArsipKet}
                         onChange={(e) => setNewArsipKet(e.target.value)}
                         placeholder="Contoh: Berkas warta tingting jemaat periode minggu ini"
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-850 outline-none focus:border-blue-500 font-bold shadow-sm"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold shadow-sm"
                       />
                     </div>
                     <div>
@@ -5738,7 +5887,7 @@ export default function AdminView({
                       <select
                         value={newArsipKategori}
                         onChange={(e) => setNewArsipKategori(e.target.value as any)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-850 outline-none focus:border-blue-500 font-bold shadow-sm cursor-pointer"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold shadow-sm cursor-pointer"
                       >
                         <option value="acara">Acara Ibadah (Liturgy)</option>
                         <option value="petugas">Jadwal Petugas (Duty List)</option>
@@ -5752,7 +5901,7 @@ export default function AdminView({
                         type="date"
                         value={newArsipTanggalMinggu}
                         onChange={(e) => setNewArsipTanggalMinggu(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-850 outline-none focus:border-blue-500 font-bold shadow-sm cursor-pointer"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold shadow-sm cursor-pointer"
                       />
                     </div>
                   </div>
@@ -5760,9 +5909,9 @@ export default function AdminView({
                   {/* Upload input for new file */}
                   <div className="bg-white p-4 rounded-lg border border-dashed border-slate-300">
                     {newArsipFileName ? (
-                      <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-2.5">
+                      <div className="flex items-center justify-between bg-[#EDF2F9] border border-[#CBD7EA] rounded-lg p-2.5">
                         <div className="flex items-center space-x-2">
-                          <FileText className="w-5 h-5 text-amber-500" />
+                          <FileText className="w-5 h-5 text-[#0F2447]" />
                           <div>
                             <p className="text-xs font-bold text-slate-900 truncate max-w-[200px]">{newArsipFileName}</p>
                             <p className="text-[10px] text-slate-500 font-semibold">{newArsipFileSize}</p>
@@ -5775,7 +5924,7 @@ export default function AdminView({
                             setNewArsipFileSize('');
                             setNewArsipPdfUrl('');
                           }}
-                          className="p-1 text-red-500 hover:text-red-700 rounded hover:bg-red-50 cursor-pointer"
+                          className="p-1 text-slate-500 hover:text-[#0F2447] rounded hover:bg-white cursor-pointer"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -5786,7 +5935,7 @@ export default function AdminView({
                         <button
                           type="button"
                           onClick={() => document.getElementById('new-arsip-upload')?.click()}
-                          className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg transition border border-slate-200 cursor-pointer flex items-center space-x-1"
+                          className="px-3 py-1.5 bg-white hover:bg-[#EDF2F9] text-[#0F2447] text-xs font-semibold rounded-lg transition border border-slate-300 cursor-pointer flex items-center space-x-1"
                         >
                           <Upload className="w-3.5 h-3.5" />
                           <span>Pilih File PDF</span>
@@ -5820,7 +5969,7 @@ export default function AdminView({
                   <div className="flex items-center justify-end space-x-2 pt-2">
                     <button
                       onClick={() => setIsAddingArsip(false)}
-                      className="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-650 hover:bg-slate-50 hover:text-slate-800 rounded-lg text-xs font-bold transition cursor-pointer"
+                      className="px-3.5 py-1.5 bg-white border border-slate-300 text-[#0F2447] hover:bg-[#EDF2F9] rounded-lg text-xs font-semibold transition cursor-pointer"
                     >
                       Batal
                     </button>
@@ -5845,12 +5994,11 @@ export default function AdminView({
                           fileSize: newArsipFileSize,
                           pdfUrl: newArsipPdfUrl
                         };
-                        const updated = [newDoc, ...arsipPdfs];
-                        saveArsipPdfs(updated);
+                        saveArsipPdfs(prev => [newDoc, ...prev]);
                         setIsAddingArsip(false);
                         showToast('Berkas berhasil disimpan ke Arsip Mingguan Huria!');
                       }}
-                      className="px-4 py-1.5 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-white rounded-lg text-xs font-bold transition shadow shadow-blue-100 cursor-pointer"
+                      className="px-4 py-1.5 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white rounded-lg text-xs font-semibold transition shadow-sm cursor-pointer"
                     >
                       Simpan ke Perpustakaan
                     </button>
@@ -5859,9 +6007,9 @@ export default function AdminView({
               )}
 
               {/* Category Filters and Search Bar */}
-              <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans mb-2">
+              <div className="bg-[#F4F6FA] border border-slate-200 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans mb-2">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-500 mr-1 uppercase">Filter Kategori:</span>
+                  <span className="text-xs font-bold text-slate-500 mr-1 uppercase">Filter Kategori:</span>
                   {[
                     { id: 'all', label: 'Semua' },
                     { id: 'acara', label: 'Acara Ibadah' },
@@ -5872,10 +6020,10 @@ export default function AdminView({
                     <button
                       key={cat.id}
                       onClick={() => setArchiveCategoryFilter(cat.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                         archiveCategoryFilter === cat.id
-                          ? 'bg-blue-600 border-transparent text-white shadow shadow-blue-500/10'
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-850'
+                          ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-xs'
+                          : 'bg-white border-slate-300 text-slate-600 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                       }`}
                     >
                       {cat.label}
@@ -5890,7 +6038,7 @@ export default function AdminView({
                     value={archiveSearchQuery}
                     onChange={(e) => setArchiveSearchQuery(e.target.value)}
                     placeholder="Cari judul, keterangan, nama file..."
-                    className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 font-bold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
+                    className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 font-semibold outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15 shadow-sm"
                   />
                 </div>
               </div>
@@ -5924,7 +6072,7 @@ export default function AdminView({
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center text-slate-500 font-sans">
+                      <div className="bg-[#F4F6FA] border border-slate-200 rounded-2xl p-8 text-center text-slate-500 font-sans">
                         <Archive className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                         <p className="text-xs font-bold text-slate-600">Tidak ada dokumen yang cocok dengan filter pencarian Anda.</p>
                       </div>
@@ -5952,11 +6100,11 @@ export default function AdminView({
                     return (
                       <div key={key} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm animate-fadeIn">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                          <h4 className="text-xs font-black uppercase text-indigo-900 tracking-tight flex items-center space-x-2">
-                            <Calendar className="w-4 h-4 text-indigo-600" />
+                          <h4 className="text-xs font-bold uppercase text-[#0F2447] tracking-tight flex items-center space-x-2">
+                            <Calendar className="w-4 h-4 text-[#0F2447]" />
                             <span>{label}</span>
                           </h4>
-                          <span className="text-[10px] bg-indigo-50 border border-indigo-100 text-indigo-800 font-extrabold px-2.5 py-0.5 rounded-full">
+                          <span className="text-[10px] bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] font-bold px-2.5 py-0.5 rounded-full">
                             {files.length} Berkas
                           </span>
                         </div>
@@ -5965,45 +6113,42 @@ export default function AdminView({
                           {files.map((doc) => {
                             const isPdf = doc.isPdfMode !== false && (doc.pdfUrl || doc.fileName);
                             
-                            // Category styling
+                            // Category styling (Unified Biru Maroon)
                             let catLabel = 'Acara Ibadah';
-                            let catStyle = 'bg-blue-50 border-blue-200 text-blue-700';
+                            const catStyle = 'bg-[#EDF2F9] border-[#CBD7EA] text-[#0F2447]';
                             if (doc.kategori === 'petugas') {
                               catLabel = 'Jadwal Petugas';
-                              catStyle = 'bg-purple-50 border-purple-200 text-purple-700';
                             } else if (doc.kategori === 'warta') {
                               catLabel = 'Warta Jemaat';
-                              catStyle = 'bg-amber-50 border-amber-200 text-amber-700';
                             } else if (doc.kategori === 'keuangan') {
                               catLabel = 'Laporan Keuangan';
-                              catStyle = 'bg-emerald-50 border-emerald-200 text-emerald-700';
                             }
 
                             return (
-                              <div key={doc.id} className="bg-slate-50/50 border border-slate-200 p-4 rounded-xl hover:shadow hover:border-slate-300 transition flex flex-col justify-between space-y-4 font-sans">
+                              <div key={doc.id} className="bg-[#F4F6FA]/70 border border-slate-200 p-4 rounded-xl hover:shadow-sm hover:border-[#CBD7EA] transition flex flex-col justify-between space-y-4 font-sans">
                                 <div className="space-y-1.5">
                                   <div className="flex items-start justify-between">
                                     <div className="flex items-center space-x-2 text-slate-500">
-                                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded border uppercase tracking-wider ${catStyle}`}>
+                                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${catStyle}`}>
                                         {catLabel}
                                       </span>
                                       <span className="text-[9px] font-mono text-slate-500 font-semibold">{doc.tanggalUpload}</span>
                                     </div>
                                     {isPdf ? (
-                                      <span className="text-[9px] bg-slate-200 border border-slate-250 text-slate-700 font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                      <span className="text-[9px] bg-[#0F2447] text-white font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
                                         PDF
                                       </span>
                                     ) : (
-                                      <span className="text-[9px] bg-emerald-100 border border-emerald-200 text-emerald-700 font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                      <span className="text-[9px] bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
                                         Teks
                                       </span>
                                     )}
                                   </div>
-                                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight leading-normal">{doc.judul}</h4>
+                                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight leading-normal">{doc.judul}</h4>
                                   <p className="text-[11px] text-slate-600 leading-relaxed font-sans">{doc.keterangan}</p>
                                   
                                   <div className="bg-white p-2 rounded border border-slate-200 flex items-center space-x-2 text-[10px]">
-                                    <FileText className={`w-3.5 h-3.5 ${isPdf ? 'text-slate-400' : 'text-emerald-500'}`} />
+                                    <FileText className="w-3.5 h-3.5 text-[#0F2447]" />
                                     {isPdf ? (
                                       <>
                                         <span className="text-slate-700 truncate max-w-[150px] font-mono">{doc.fileName || 'berkas_arsip.pdf'}</span>
@@ -6011,21 +6156,29 @@ export default function AdminView({
                                         <span className="text-slate-500 font-mono">{doc.fileSize || '1.0 MB'}</span>
                                       </>
                                     ) : (
-                                      <span className="text-slate-700 font-medium">Teks Manual ({doc.teksLiturgi?.length || 0} Langkah)</span>
+                                      <span className="text-slate-700 font-medium">
+                                        {doc.kategori === 'warta' 
+                                          ? `Arsip Teks Warta (${doc.penulis || 'Huria'})`
+                                          : doc.kategori === 'petugas'
+                                          ? 'Arsip Jadwal Pelayan Huria'
+                                          : doc.kategori === 'keuangan'
+                                          ? 'Arsip Catatan Kas'
+                                          : `Teks Manual (${doc.teksLiturgi?.length || 0} Langkah Acara)`}
+                                      </span>
                                     )}
                                   </div>
                                 </div>
 
-                                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-200">
                                   {isPdf ? (
                                     doc.pdfUrl ? (
                                       <a
                                         href={doc.pdfUrl}
                                         download={`${doc.judul.replace(/\s+/g, '_')}.pdf`}
-                                        className="px-2.5 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center space-x-1"
+                                        className="px-2.5 py-1.5 bg-[#0F2447] text-white hover:bg-[#173361] rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center space-x-1"
                                         title="Unduh Berkas PDF"
                                       >
-                                        <Download className="w-3 h-3 text-blue-600" />
+                                        <Download className="w-3 h-3" />
                                         <span>Unduh Berkas</span>
                                       </a>
                                     ) : (
@@ -6034,10 +6187,10 @@ export default function AdminView({
                                   ) : (
                                     <button
                                       onClick={() => setPreviewManualLit(doc)}
-                                      className="px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center space-x-1"
-                                      title="Lihat Teks Acara"
+                                      className="px-2.5 py-1.5 bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] hover:bg-[#E8EEF6] rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center space-x-1"
+                                      title="Lihat Teks Dokumen"
                                     >
-                                      <FileText className="w-3 h-3 text-emerald-600" />
+                                      <FileText className="w-3 h-3 text-[#0F2447]" />
                                       <span>Lihat Teks</span>
                                     </button>
                                   )}
@@ -6046,7 +6199,7 @@ export default function AdminView({
                                     {doc.kategori === 'keuangan' && (
                                       <button
                                         onClick={handleExportKeuanganExcel}
-                                        className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded border border-emerald-200 shadow-sm transition cursor-pointer"
+                                        className="p-1.5 bg-white hover:bg-[#EDF2F9] text-[#0F2447] rounded border border-slate-300 shadow-xs transition cursor-pointer"
                                         title="Ekspor Laporan Kas Aktif ke Excel"
                                       >
                                         <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -6056,7 +6209,7 @@ export default function AdminView({
                                       <a
                                         href={doc.pdfUrl}
                                         download={`${doc.judul.replace(/\s+/g, '_')}.pdf`}
-                                        className="p-1.5 bg-white hover:bg-slate-50 text-slate-600 rounded border border-slate-200 shadow-sm transition cursor-pointer"
+                                        className="p-1.5 bg-white hover:bg-[#EDF2F9] text-[#0F2447] rounded border border-slate-300 shadow-xs transition cursor-pointer"
                                         title="Unduh Berkas"
                                       >
                                         <Download className="w-3.5 h-3.5" />
@@ -6068,13 +6221,18 @@ export default function AdminView({
                                           'Hapus dari Arsip',
                                           `Apakah Anda yakin ingin menghapus dokumen "${doc.judul}" dari arsip perpustakaan secara permanen?`,
                                           () => {
-                                            const updated = arsipPdfs.filter(d => d.id !== doc.id);
-                                            saveArsipPdfs(updated);
+                                            if (!deletedArsipIdsRef.current.includes(doc.id)) {
+                                              const nextDeleted = [...deletedArsipIdsRef.current, doc.id];
+                                              deletedArsipIdsRef.current = nextDeleted;
+                                              localStorage.setItem('hkbp_deleted_arsip_ids', JSON.stringify(nextDeleted));
+                                              saveDbKey('hkbp_deleted_arsip_ids', nextDeleted).catch(err => console.error('Failed to sync deleted arsip IDs:', err));
+                                            }
+                                            saveArsipPdfs(prev => prev.filter(d => d.id !== doc.id));
                                             showToast('Dokumen berhasil dihapus dari arsip!');
                                           }
                                         );
                                       }}
-                                      className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded transition cursor-pointer"
+                                      className="p-1.5 bg-white hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-300 rounded transition cursor-pointer"
                                       title="Hapus dari Arsip"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
@@ -6100,16 +6258,16 @@ export default function AdminView({
         {activeSubTab === 'buku_nyanyian' && (
           <div className="space-y-6 font-sans">
             {/* Top Info Banner & Actions */}
-            <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-lg relative overflow-hidden">
+            <div className="bg-[#0F2447] text-white rounded-3xl p-6 sm:p-7 shadow-md border border-[#1D3B6E] relative overflow-hidden">
               <div className="relative z-10 max-w-2xl">
-                <div className="flex items-center space-x-2 text-blue-300 text-xs font-bold uppercase tracking-wider mb-2">
-                  <Music className="w-4 h-4 text-blue-400" />
+                <div className="flex items-center space-x-2 text-white/80 text-xs font-bold uppercase tracking-wider mb-2">
+                  <Music className="w-4 h-4 text-white/90" />
                   <span>Portal Resmi HKBP: hkbp.or.id/buku-ende</span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
                   Database Buku Ende Resmi HKBP
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-white/75 mt-2 leading-relaxed">
                   Basis data lirik dan nomor lagu resmi Buku Ende & Buku Nyanyian HKBP langsung dari <strong>hkbp.or.id/buku-ende</strong> dan <strong>hkbp.or.id/buku-nyanyian</strong>. Ketika membuat susunan acara kebaktian, sistem membaca nomor dan ayat lagu lalu otomatis mengisi lirik asli otentik tanpa perubahan kata.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-2.5">
@@ -6117,28 +6275,28 @@ export default function AdminView({
                     href="https://hkbp.or.id/buku-ende"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3.5 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    className="px-3.5 py-2 bg-white/10 text-white hover:bg-white/20 border border-white/20 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer"
                   >
                     <span>🌐 Portal Buku Ende</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                    <ExternalLink className="w-3.5 h-3.5 text-white/80" />
                   </a>
                   <a
                     href="https://hkbp.or.id/buku-nyanyian"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3.5 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    className="px-3.5 py-2 bg-white/10 text-white hover:bg-white/20 border border-white/20 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer"
                   >
                     <span>🌐 Portal Buku Nyanyian</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-emerald-600" />
+                    <ExternalLink className="w-3.5 h-3.5 text-white/80" />
                   </a>
                   <a
                     href="https://hkbp.or.id/kidung"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3.5 py-2 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    className="px-3.5 py-2 bg-white/10 text-white hover:bg-white/20 border border-white/20 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer"
                   >
                     <span>🌐 Portal Kidung Jemaat</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-amber-600" />
+                    <ExternalLink className="w-3.5 h-3.5 text-white/80" />
                   </a>
                   <button
                     type="button"
@@ -6146,7 +6304,7 @@ export default function AdminView({
                       setImportDbJsonText('');
                       setIsImportDbModalOpen(true);
                     }}
-                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    className="px-3.5 py-2 bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer"
                     title="Impor atau berikan database lagu dalam format JSON atau teks"
                   >
                     <Upload className="w-4 h-4" />
@@ -6159,19 +6317,19 @@ export default function AdminView({
                       setSyncEnd('50');
                       setIsSyncApiModalOpen(true);
                     }}
-                    className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:brightness-110 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    className="px-3.5 py-2 bg-[#16305C] hover:bg-[#1D3B6E] text-white border border-white/25 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
                     title="Sinkronisasi lagu otomatis langsung dari https://hkbp.or.id/buku-ende"
                   >
-                    <Activity className="w-4 h-4 text-blue-200" />
+                    <Activity className="w-4 h-4 text-white" />
                     <span>⚡ Sinkron dari hkbp.or.id</span>
                   </button>
                   <button
                     type="button"
                     onClick={handleExportDb}
-                    className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer"
                     title="Unduh backup database lagu saat ini sebagai berkas JSON"
                   >
-                    <Download className="w-4 h-4 text-slate-300" />
+                    <Download className="w-4 h-4 text-white/85" />
                     <span>Ekspor JSON</span>
                   </button>
                   <button
@@ -6183,7 +6341,7 @@ export default function AdminView({
                       setNewSongRawLyrics('');
                       setIsAddSongModalOpen(true);
                     }}
-                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-md cursor-pointer"
+                    className="px-3.5 py-2 bg-white hover:bg-[#EDF2F9] text-[#0F2447] rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>+ Tambah Lagu Baru</span>
@@ -6196,23 +6354,23 @@ export default function AdminView({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
                 <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">Total Lagu</span>
-                <span className="text-xl font-extrabold text-slate-900">{bukuNyanyianDb.length} Lagu</span>
+                <span className="text-xl font-extrabold text-[#0F2447]">{bukuNyanyianDb.length} Lagu</span>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                <span className="text-[10px] text-blue-600 uppercase tracking-wider block font-bold">Buku Ende (BE)</span>
-                <span className="text-xl font-extrabold text-blue-900">
+                <span className="text-[10px] text-[#0F2447] uppercase tracking-wider block font-bold">Buku Ende (BE)</span>
+                <span className="text-xl font-extrabold text-[#0F2447]">
                   {bukuNyanyianDb.filter(s => s.kategori === 'BE').length} Lagu
                 </span>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                <span className="text-[10px] text-emerald-600 uppercase tracking-wider block font-bold">Buku Nyanyian (BN)</span>
-                <span className="text-xl font-extrabold text-emerald-900">
+                <span className="text-[10px] text-[#0F2447] uppercase tracking-wider block font-bold">Buku Nyanyian (BN)</span>
+                <span className="text-xl font-extrabold text-[#0F2447]">
                   {bukuNyanyianDb.filter(s => s.kategori === 'BN').length} Lagu
                 </span>
               </div>
-              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                <span className="text-[10px] text-amber-600 uppercase tracking-wider block font-bold">Kidung Jemaat (KJ)</span>
-                <span className="text-xl font-extrabold text-amber-900">
+              <div className="bg-[#EDF2F9] border border-[#CBD7EA] rounded-2xl p-4 shadow-sm">
+                <span className="text-[10px] text-[#0F2447] uppercase tracking-wider block font-bold">Kidung Jemaat (KJ)</span>
+                <span className="text-xl font-extrabold text-[#0F2447]">
                   {bukuNyanyianDb.filter(s => s.kategori === 'KJ').length} Lagu
                 </span>
               </div>
@@ -6225,10 +6383,10 @@ export default function AdminView({
                   <button
                     key={kat}
                     onClick={() => setSongCatalogFilter(kat)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer shrink-0 border ${
                       songCatalogFilter === kat
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
+                        : 'bg-[#F4F6FA] text-slate-600 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                     }`}
                   >
                     {kat === 'ALL' ? 'Semua Buku' : kat === 'BE' ? 'Buku Ende (BE)' : kat === 'BN' ? 'Buku Nyanyian (BN)' : 'Kidung Jemaat (KJ)'}
@@ -6243,7 +6401,7 @@ export default function AdminView({
                   value={songCatalogSearch}
                   onChange={(e) => setSongCatalogSearch(e.target.value)}
                   placeholder="Cari nomor lagu (10), judul, atau lirik..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-medium"
+                  className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:bg-white focus:border-[#0F2447] font-medium"
                 />
               </div>
             </div>
@@ -6269,17 +6427,11 @@ export default function AdminView({
                   return (
                     <div
                       key={song.id}
-                      className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-slate-300 transition flex flex-col justify-between"
+                      className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:border-[#CBD7EA] transition flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-lg border ${
-                            song.kategori === 'BE'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : song.kategori === 'BN'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-200'
-                          }`}>
+                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg border bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]">
                             {song.kategori} No. {song.nomor}
                           </span>
                           <span className="text-[10px] text-slate-400 font-medium">
@@ -6287,7 +6439,7 @@ export default function AdminView({
                           </span>
                         </div>
 
-                        <h4 className="text-sm font-extrabold text-slate-900 leading-snug">
+                        <h4 className="text-sm font-bold text-slate-900 leading-snug">
                           {song.judul}
                         </h4>
 
@@ -6299,13 +6451,13 @@ export default function AdminView({
                       <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between">
                         <button
                           onClick={() => setExpandedSongId(isExpanded ? null : song.id)}
-                          className="text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer flex items-center space-x-1"
+                          className="text-xs font-bold text-[#0F2447] hover:underline cursor-pointer flex items-center space-x-1"
                         >
                           <span>{isExpanded ? 'Tutup Ayat' : 'Buka & Uji Ayat'}</span>
                         </button>
                         <button
                           onClick={() => handleDeleteSongFromDb(song.id)}
-                          className="p-1 text-slate-300 hover:text-red-600 rounded transition cursor-pointer"
+                          className="p-1 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                           title="Hapus Lagu dari DB"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -6315,7 +6467,7 @@ export default function AdminView({
                       {isExpanded && (
                         <div className="mt-3 pt-3 border-t border-slate-100 space-y-3">
                           {/* Ayat Tester */}
-                          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                          <div className="bg-[#F4F6FA] p-2.5 rounded-xl border border-slate-200">
                             <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
                               Simulasi Pengambilan Ayat:
                             </label>
@@ -6324,9 +6476,9 @@ export default function AdminView({
                               value={testRange}
                               onChange={(e) => setTestSongVerseRange({ ...testSongVerseRange, [song.id]: e.target.value })}
                               placeholder="Contoh: 1-2 atau 1 & 3"
-                              className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-800 font-mono font-bold"
+                              className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 font-mono font-bold focus:border-[#0F2447] outline-none"
                             />
-                            <div className="mt-2 p-2 bg-white rounded border border-slate-150 text-[11px] font-mono whitespace-pre-line text-slate-700 max-h-40 overflow-y-auto">
+                            <div className="mt-2 p-2 bg-white rounded border border-slate-200 text-[11px] font-mono whitespace-pre-line text-slate-700 max-h-40 overflow-y-auto">
                               {formattedPreview.lyrics || 'Tidak ada ayat cocok.'}
                             </div>
                           </div>
@@ -6335,8 +6487,8 @@ export default function AdminView({
                           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                             <span className="text-[10px] font-bold text-slate-500 uppercase block">Semua Bait / Ayat:</span>
                             {song.ayatList.map(v => (
-                              <div key={v.ayat} className="p-2 bg-slate-50 rounded-lg border border-slate-150 text-[11px]">
-                                <span className="font-bold text-blue-700 block mb-0.5">Ayat {v.ayat}:</span>
+                              <div key={v.ayat} className="p-2 bg-[#F4F6FA] rounded-lg border border-slate-200 text-[11px]">
+                                <span className="font-bold text-[#0F2447] block mb-0.5">Ayat {v.ayat}:</span>
                                 <p className="text-slate-700 whitespace-pre-line font-mono">{v.teks}</p>
                               </div>
                             ))}
@@ -6362,23 +6514,23 @@ export default function AdminView({
                 if (matchingCatalog.length === 0) return null;
 
                 return (
-                  <div className="col-span-full mt-4 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl">
+                  <div className="col-span-full mt-4 p-5 bg-[#EDF2F9] border border-[#CBD7EA] rounded-2xl">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <h4 className="text-xs font-black text-blue-900 uppercase tracking-wider flex items-center space-x-1.5">
-                          <Music className="w-3.5 h-3.5 text-blue-600" />
+                        <h4 className="text-xs font-bold text-[#0F2447] uppercase tracking-wider flex items-center space-x-1.5">
+                          <Music className="w-3.5 h-3.5 text-[#0F2447]" />
                           <span>Ditemukan di Katalog Resmi HKBP (hkbp.or.id/buku-ende)</span>
                         </h4>
-                        <p className="text-[11px] text-blue-700 mt-0.5">
+                        <p className="text-[11px] text-slate-600 mt-0.5">
                           Lagu resmi berikut tersedia di portal HKBP dan lirik aslinya dapat diunduh sekali klik:
                         </p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                       {matchingCatalog.map(item => (
-                        <div key={item.nomorLagu} className="bg-white border border-blue-200 rounded-xl p-3 flex items-center justify-between shadow-xs">
+                        <div key={item.nomorLagu} className="bg-white border border-[#CBD7EA] rounded-xl p-3 flex items-center justify-between shadow-xs">
                           <div>
-                            <span className="text-[10px] font-extrabold text-blue-800 bg-blue-100 px-2 py-0.5 rounded">
+                            <span className="text-[10px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-2 py-0.5 rounded">
                               BE {item.nomorLagu}
                             </span>
                             <h5 className="text-xs font-bold text-slate-900 mt-1 line-clamp-1">{item.judul}</h5>
@@ -6396,7 +6548,7 @@ export default function AdminView({
                                 alert(`Gagal mengambil BE ${item.nomorLagu} dari hkbp.or.id`);
                               }
                             }}
-                            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-extrabold transition cursor-pointer flex items-center space-x-1 shrink-0 ml-2"
+                            className="px-2.5 py-1.5 bg-[#0F2447] hover:bg-[#173361] text-white rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center space-x-1 shrink-0 ml-2"
                           >
                             <Download className="w-3 h-3" />
                             <span>Unduh Lirik</span>
@@ -6416,8 +6568,8 @@ export default function AdminView({
         {/* ======================================================== */}
         {activeSubTab === 'jadwal' && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider pb-3 border-b border-slate-100 flex items-center space-x-2">
-              <Calendar className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-bold text-[#0F2447] uppercase tracking-wider pb-3 border-b border-slate-100 flex items-center space-x-2">
+              <Calendar className="w-4 h-4 text-[#0F2447]" />
               <span>Formulir Pengaturan Waktu Kebaktian</span>
             </h3>
             
@@ -6433,7 +6585,7 @@ export default function AdminView({
                     value={editSekolahMinggu}
                     onChange={(e) => setEditSekolahMinggu(e.target.value)}
                     placeholder="Contoh: 07.30 WIB"
-                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2 bg-[#F4F6FA] border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all outline-none"
                   />
                 </div>
               </div>
@@ -6449,7 +6601,7 @@ export default function AdminView({
                     value={editShift1}
                     onChange={(e) => setEditShift1(e.target.value)}
                     placeholder="Contoh: 08.00 WIB"
-                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2 bg-[#F4F6FA] border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all outline-none"
                   />
                 </div>
               </div>
@@ -6465,7 +6617,7 @@ export default function AdminView({
                     value={editShift2}
                     onChange={(e) => setEditShift2(e.target.value)}
                     placeholder="Contoh: 10.00 WIB"
-                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2 bg-[#F4F6FA] border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all outline-none"
                   />
                 </div>
               </div>
@@ -6480,7 +6632,7 @@ export default function AdminView({
                   });
                   showToast('Jadwal Ibadah berhasil disimpan!');
                 }}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-xl text-xs font-black hover:from-blue-600 hover:to-indigo-600 transition-all shadow-md shadow-blue-500/10 flex items-center space-x-2 cursor-pointer"
+                className="px-5 py-2.5 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center space-x-2 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 <span>Simpan Jadwal Ibadah</span>
@@ -6495,8 +6647,8 @@ export default function AdminView({
         {activeSubTab === 'sejarah' && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-3">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
-                <BookOpen className="w-4 h-4 text-blue-600" />
+              <h3 className="text-sm font-bold text-[#0F2447] uppercase tracking-wider flex items-center space-x-2">
+                <BookOpen className="w-4 h-4 text-[#0F2447]" />
                 <span>Konten Informasi & Dokumentasi Gereja</span>
               </h3>
               {!isAddingTentang && editingTentangId === null && (
@@ -6511,7 +6663,7 @@ export default function AdminView({
                     setTentangFormKeteranganGambar('');
                     setIsAddingTentang(true);
                   }}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-xl text-xs font-black hover:from-blue-600 hover:to-indigo-600 transition shadow-md shadow-blue-500/10 flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto"
+                  className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Tambah Informasi Baru</span>
@@ -6521,8 +6673,8 @@ export default function AdminView({
  
             {/* FORM TAMBAH / EDIT KONTEN */}
             {(isAddingTentang || editingTentangId !== null) ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <div className="bg-[#F4F6FA] border border-slate-200 rounded-2xl p-5 space-y-4">
+                <h4 className="text-xs font-bold text-[#0F2447] uppercase tracking-wider">
                   {editingTentangId !== null ? 'Edit Konten Informasi' : 'Tambah Konten Informasi Baru'}
                 </h4>
  
@@ -6535,7 +6687,7 @@ export default function AdminView({
                       value={tentangFormJudul}
                       onChange={(e) => setTentangFormJudul(e.target.value)}
                       placeholder="Contoh: Sejarah Singkat Gereja, Visi & Misi, Renovasi Altar..."
-                      className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition outline-none"
+                      className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none"
                     />
                   </div>
  
@@ -6547,7 +6699,7 @@ export default function AdminView({
                       value={tentangFormIsi}
                       onChange={(e) => setTentangFormIsi(e.target.value)}
                       placeholder="Ketik deskripsi atau narasi lengkap di sini..."
-                      className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 leading-relaxed focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition outline-none resize-y"
+                      className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 leading-relaxed focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none resize-y"
                     />
                     <p className="text-[10px] text-slate-400 italic">
                       * Petunjuk: Pisahkan paragraf dengan menekan tombol Enter dua kali agar terformat rapi.
@@ -6575,7 +6727,7 @@ export default function AdminView({
                               setTentangFormJudulGambar('');
                               setTentangFormKeteranganGambar('');
                             }}
-                            className="w-full px-2.5 py-1.5 bg-red-100 text-red-700 rounded-lg text-[10px] font-bold hover:bg-red-200 transition flex items-center justify-center space-x-1 cursor-pointer"
+                            className="w-full px-2.5 py-1.5 bg-slate-100 text-slate-700 hover:bg-[#EDF2F9] hover:text-[#0F2447] border border-slate-300 rounded-lg text-[10px] font-semibold transition flex items-center justify-center space-x-1 cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>Hapus Gambar</span>
@@ -6590,7 +6742,7 @@ export default function AdminView({
                               value={tentangFormJudulGambar}
                               onChange={(e) => setTentangFormJudulGambar(e.target.value)}
                               placeholder="Contoh: Gedung Depan Gereja, Penyerahan Bantuan..."
-                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition outline-none"
+                              className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none"
                             />
                           </div>
 
@@ -6601,21 +6753,21 @@ export default function AdminView({
                               value={tentangFormKeteranganGambar}
                               onChange={(e) => setTentangFormKeteranganGambar(e.target.value)}
                               placeholder="Contoh: Diambil pada acara ulang tahun gereja ke-50..."
-                              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-850 leading-relaxed focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition outline-none resize-none"
+                              className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-slate-800 leading-relaxed focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none resize-none"
                             />
                           </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center bg-white hover:border-blue-500 transition relative">
+                      <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center bg-white hover:border-[#0F2447] hover:bg-[#EDF2F9]/40 transition relative">
                         <input
                           type="file"
                           accept="image/*"
                           onChange={handleImageUpload}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
-                        <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1.5" />
-                        <p className="text-xs font-bold text-slate-600">Klik atau seret gambar ke sini</p>
+                        <Upload className="w-5 h-5 text-[#0F2447] mx-auto mb-1.5" />
+                        <p className="text-xs font-bold text-[#0F2447]">Klik atau seret gambar ke sini</p>
                         <p className="text-[9px] text-slate-400">PNG, JPG, atau JPEG up to 2MB</p>
                       </div>
                     )}
@@ -6669,7 +6821,7 @@ export default function AdminView({
                         setIsAddingTentang(false);
                       }
                     }}
-                    className="px-4 py-2 bg-green-700 text-white rounded-xl text-xs font-black hover:bg-green-600 transition flex items-center space-x-1.5 cursor-pointer"
+                    className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
                   >
                     <Save className="w-4 h-4" />
                     <span>Simpan Konten</span>
@@ -6681,7 +6833,7 @@ export default function AdminView({
                       setIsAddingTentang(false);
                       setEditingTentangId(null);
                     }}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-black hover:bg-slate-300 transition flex items-center space-x-1.5 cursor-pointer"
+                    className="px-4 py-2 bg-white border border-slate-300 text-[#0F2447] rounded-xl text-xs font-semibold hover:bg-[#EDF2F9] transition flex items-center space-x-1.5 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                     <span>Batal</span>
@@ -6692,7 +6844,7 @@ export default function AdminView({
               /* LIST KONTEN */
               <div className="space-y-3">
                 {tentangGerejaList.map((item) => (
-                  <div key={item.id} className="p-4 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50 transition">
+                  <div key={item.id} className="p-4 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#F4F6FA]/60 transition">
                     <div className="flex items-start space-x-3.5">
                       {item.gambar ? (
                         <div className="w-14 h-14 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shrink-0">
@@ -6703,12 +6855,12 @@ export default function AdminView({
                           />
                         </div>
                       ) : (
-                        <div className="w-14 h-14 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 shrink-0">
+                        <div className="w-14 h-14 bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl flex items-center justify-center text-[#0F2447] shrink-0">
                           <BookOpen className="w-6 h-6" />
                         </div>
                       )}
                       <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-slate-800">{item.judul}</h4>
+                        <h4 className="text-xs font-bold text-slate-900">{item.judul}</h4>
                         <p className="text-[10px] text-slate-500 font-medium line-clamp-2 leading-relaxed">
                           {item.isi}
                         </p>
@@ -6732,7 +6884,7 @@ export default function AdminView({
                           setTentangFormKeteranganGambar(item.keteranganGambar || '');
                           setIsAddingTentang(false);
                         }}
-                        className="p-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition cursor-pointer"
+                        className="p-2 bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA] rounded-lg hover:bg-[#E8EEF6] transition cursor-pointer"
                         title="Edit Konten"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -6750,7 +6902,7 @@ export default function AdminView({
                             }
                           );
                         }}
-                        className="p-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition cursor-pointer"
+                        className="p-2 bg-slate-100 text-slate-600 hover:bg-[#EDF2F9] hover:text-[#0F2447] border border-slate-200 rounded-lg transition cursor-pointer"
                         title="Hapus Konten"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -6775,8 +6927,8 @@ export default function AdminView({
         {activeSubTab === 'parhalado' && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-3">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
-                <Users className="w-4 h-4 text-blue-600" />
+              <h3 className="text-sm font-bold text-[#0F2447] uppercase tracking-wider flex items-center space-x-2">
+                <Users className="w-4 h-4 text-[#0F2447]" />
                 <span>Susunan Pelayan & Parhalado Huria</span>
               </h3>
               
@@ -6789,7 +6941,7 @@ export default function AdminView({
                     setParhaladoFormNoTelp('');
                     setIsAddingParhalado(true);
                   }}
-                  className="px-3.5 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100/75 transition cursor-pointer flex items-center space-x-1.5"
+                  className="px-3.5 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-sm"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Tambah Parhalado Baru</span>
@@ -6799,8 +6951,8 @@ export default function AdminView({
 
             {/* FORM TAMBAH / EDIT INLINE */}
             {(isAddingParhalado || editingParhaladoId) && (
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 animate-fadeIn max-w-xl">
-                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wide">
+              <div className="p-4 bg-[#F4F6FA] border border-slate-200 rounded-2xl space-y-4 animate-fadeIn max-w-xl">
+                <h4 className="text-xs font-bold text-[#0F2447] uppercase tracking-wide">
                   {isAddingParhalado ? 'Registrasi Pelayan Baru' : 'Sunting Data Pelayan'}
                 </h4>
                 
@@ -6812,7 +6964,7 @@ export default function AdminView({
                       value={parhaladoFormNama}
                       onChange={(e) => setParhaladoFormNama(e.target.value)}
                       placeholder="Contoh: St. K. Pasaribu"
-                      className="w-full px-3.5 py-2 bg-white border border-slate-250 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                     />
                   </div>
 
@@ -6823,7 +6975,7 @@ export default function AdminView({
                       value={parhaladoFormJabatan}
                       onChange={(e) => setParhaladoFormJabatan(e.target.value)}
                       placeholder="Contoh: Sekretaris Jemaat / Sintua Sektor II"
-                      className="w-full px-3.5 py-2 bg-white border border-slate-250 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                     />
                   </div>
 
@@ -6834,7 +6986,7 @@ export default function AdminView({
                       value={parhaladoFormNoTelp}
                       onChange={(e) => setParhaladoFormNoTelp(e.target.value)}
                       placeholder="Contoh: 08123456789"
-                      className="w-full px-3.5 py-2 bg-white border border-slate-250 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                     />
                   </div>
                 </div>
@@ -6874,7 +7026,7 @@ export default function AdminView({
                       setIsAddingParhalado(false);
                       setEditingParhaladoId(null);
                     }}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black transition cursor-pointer shadow shadow-blue-500/10 flex items-center space-x-1.5"
+                    className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-sm flex items-center space-x-1.5"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Simpan Pelayan</span>
@@ -6889,7 +7041,7 @@ export default function AdminView({
                       setIsAddingParhalado(false);
                       setEditingParhaladoId(null);
                     }}
-                    className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-600 border border-slate-250 rounded-xl text-xs font-bold transition cursor-pointer"
+                    className="px-4 py-2 bg-white hover:bg-[#EDF2F9] text-[#0F2447] border border-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
                   >
                     Batal
                   </button>
@@ -6901,19 +7053,19 @@ export default function AdminView({
             <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
               <table className="w-full text-left border-collapse font-sans text-xs">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="p-3.5 font-extrabold text-slate-700">Nama Pelayan</th>
-                    <th className="p-3.5 font-extrabold text-slate-700">Jabatan / Sektor</th>
-                    <th className="p-3.5 font-extrabold text-slate-700">No. Telepon / WA</th>
-                    <th className="p-3.5 font-extrabold text-slate-700 text-right">Aksi</th>
+                  <tr className="bg-[#0F2447] text-white">
+                    <th className="p-3.5 font-bold">Nama Pelayan</th>
+                    <th className="p-3.5 font-bold">Jabatan / Sektor</th>
+                    <th className="p-3.5 font-bold">No. Telepon / WA</th>
+                    <th className="p-3.5 font-bold text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {parhaladoList.length > 0 ? (
                     parhaladoList.map((member) => (
                       <tr key={member.id} className="hover:bg-slate-50/50 transition">
-                        <td className="p-3.5 font-black text-slate-900">{member.nama}</td>
-                        <td className="p-3.5 font-bold text-slate-600">{member.jabatan}</td>
+                        <td className="p-3.5 font-bold text-slate-900">{member.nama}</td>
+                        <td className="p-3.5 font-semibold text-slate-600">{member.jabatan}</td>
                         <td className="p-3.5 font-semibold text-slate-500 font-mono">{member.noTelp || '-'}</td>
                         <td className="p-3.5 text-right">
                           <div className="flex items-center justify-end space-x-1.5">
@@ -6926,7 +7078,7 @@ export default function AdminView({
                                 setParhaladoFormNoTelp(member.noTelp || '');
                                 setIsAddingParhalado(false);
                               }}
-                              className="p-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded transition cursor-pointer"
+                              className="p-1.5 bg-white border border-slate-300 hover:bg-[#EDF2F9] text-[#0F2447] rounded transition cursor-pointer"
                               title="Sunting"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -6944,7 +7096,7 @@ export default function AdminView({
                                   }
                                 );
                               }}
-                              className="p-1.5 bg-red-50 border border-red-150 hover:bg-red-100 text-red-600 rounded transition cursor-pointer"
+                              className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] rounded transition cursor-pointer"
                               title="Hapus"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -6972,8 +7124,8 @@ export default function AdminView({
             {/* MANAGE DATABASE OF ACCOUNTS */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-3">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center space-x-2">
-                  <Database className="w-4 h-4 text-blue-600" />
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+                  <Database className="w-4 h-4 text-[#0F2447]" />
                   <span>Daftar Akun Pengguna</span>
                 </h3>
                 
@@ -6989,7 +7141,7 @@ export default function AdminView({
                       setAccountFormStatus('ruas');
                       setIsAddingAccount(true);
                     }}
-                    className="px-3.5 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100/75 transition cursor-pointer flex items-center space-x-1.5"
+                    className="px-3.5 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-sm"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Tambah Akun Baru</span>
@@ -6999,8 +7151,8 @@ export default function AdminView({
 
               {/* FORM MANUAL ACC INLINE */}
               {(isAddingAccount || editingAccountIdx !== null) && (
-                <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4 animate-fadeIn max-w-xl">
-                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wide">
+                <div className="p-5 bg-[#F4F6FA] border border-slate-200 rounded-2xl space-y-4 animate-fadeIn max-w-xl">
+                  <h4 className="text-xs font-bold text-[#0F2447] uppercase tracking-wide">
                     {isAddingAccount ? 'Tambahkan Akun Baru' : 'Sunting Detail Akun'}
                   </h4>
                   
@@ -7013,7 +7165,7 @@ export default function AdminView({
                         onChange={(e) => setAccountFormUsername(e.target.value)}
                         placeholder="Masukkan username"
                         disabled={editingAccountIdx !== null}
-                        className="w-full px-3.5 py-2 bg-white border border-slate-250 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-50 disabled:bg-slate-100 transition-all"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] disabled:opacity-50 disabled:bg-slate-100 transition-all"
                       />
                     </div>
 
@@ -7025,7 +7177,7 @@ export default function AdminView({
                         onChange={(e) => setAccountFormEmail(e.target.value)}
                         placeholder="administrator@hkbp.or.id"
                         disabled={editingAccountIdx !== null}
-                        className="w-full px-3.5 py-2 bg-white border border-slate-250 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-50 disabled:bg-slate-100 transition-all"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] disabled:opacity-50 disabled:bg-slate-100 transition-all"
                       />
                     </div>
 
@@ -7037,12 +7189,12 @@ export default function AdminView({
                           value={accountFormPassword}
                           onChange={(e) => setAccountFormPassword(e.target.value)}
                           placeholder="••••••••"
-                          className="w-full pl-3.5 pr-10 py-2 bg-white border border-slate-250 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                          className="w-full pl-3.5 pr-10 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                         />
                         <button
                           type="button"
                           onClick={() => setShowFormPassword(!showFormPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5 flex items-center justify-center rounded-md hover:bg-slate-50 transition"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0F2447] cursor-pointer p-0.5 flex items-center justify-center rounded-md hover:bg-[#EDF2F9] transition"
                           title={showFormPassword ? "Sembunyikan Password" : "Tampilkan Password"}
                         >
                           {showFormPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -7057,7 +7209,7 @@ export default function AdminView({
                         value={accountFormNamaGereja}
                         onChange={(e) => setAccountFormNamaGereja(e.target.value)}
                         placeholder="Contoh: HKBP Hinalang Silalahi"
-                        className="w-full px-3.5 py-2 bg-white border border-slate-250 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                       />
                     </div>
                   </div>
@@ -7070,8 +7222,8 @@ export default function AdminView({
                         onClick={() => setAccountFormStatus('ruas')}
                         className={`py-2 rounded-xl border text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
                           accountFormStatus === 'ruas'
-                            ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-xs'
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-xs'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                         }`}
                       >
                         <User className="w-3.5 h-3.5" />
@@ -7083,8 +7235,8 @@ export default function AdminView({
                         onClick={() => setAccountFormStatus('parhalado')}
                         className={`py-2 rounded-xl border text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
                           accountFormStatus === 'parhalado'
-                            ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-xs'
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-xs'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                         }`}
                       >
                         <Shield className="w-3.5 h-3.5" />
@@ -7097,7 +7249,7 @@ export default function AdminView({
                     <button
                       type="button"
                       onClick={handleSaveAccount}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black transition cursor-pointer shadow-md shadow-blue-500/15 flex items-center space-x-1.5"
+                      className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-sm flex items-center space-x-1.5"
                     >
                       <Check className="w-3.5 h-3.5" />
                       <span>Simpan Akun</span>
@@ -7110,7 +7262,7 @@ export default function AdminView({
                         setEditingAccountIdx(null);
                         setShowFormPassword(false);
                       }}
-                      className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-600 border border-slate-250 rounded-xl text-xs font-bold transition cursor-pointer"
+                      className="px-4 py-2 bg-white hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
                     >
                       Batal
                     </button>
@@ -7122,19 +7274,20 @@ export default function AdminView({
               <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                 <table className="w-full text-left border-collapse font-sans text-xs">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="p-3.5 font-extrabold text-slate-700">Username</th>
-                      <th className="p-3.5 font-extrabold text-slate-700">Email</th>
-                      <th className="p-3.5 font-extrabold text-slate-700">Password</th>
-                      <th className="p-3.5 font-extrabold text-slate-700">Nama Gereja</th>
-                      <th className="p-3.5 font-extrabold text-slate-700">Akses</th>
-                      <th className="p-3.5 font-extrabold text-slate-700 text-right">Aksi</th>
+                    <tr className="bg-[#0F2447] text-white">
+                      <th className="p-3.5 font-semibold">Username</th>
+                      <th className="p-3.5 font-semibold">Email</th>
+                      <th className="p-3.5 font-semibold">Password</th>
+                      <th className="p-3.5 font-semibold">Nama Gereja</th>
+                      <th className="p-3.5 font-semibold">Akses</th>
+                      <th className="p-3.5 font-semibold">Status</th>
+                      <th className="p-3.5 font-semibold text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {accountsList.length > 0 ? (
                       accountsList.map((acc, index) => (
-                        <tr key={acc.username + '_' + index} className="hover:bg-slate-50/50 transition">
+                        <tr key={acc.username + '_' + index} className={`transition ${acc.isActive === false ? 'bg-slate-50/70 opacity-75' : 'hover:bg-slate-50/50'}`}>
                           <td className="p-3.5 font-black text-slate-900">{acc.username}</td>
                           <td className="p-3.5 font-bold text-slate-600">{acc.email}</td>
                           <td className="p-3.5 font-medium text-slate-500 font-mono">
@@ -7158,12 +7311,21 @@ export default function AdminView({
                           </td>
                           <td className="p-3.5 font-bold text-slate-600">{acc.namaGereja || 'HKBP Hinalang Silalahi'}</td>
                           <td className="p-3.5 font-bold">
-                            <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-extrabold tracking-wider ${
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider border ${
                               acc.status === 'parhalado' 
-                                ? 'bg-red-50 border border-red-200 text-red-700' 
-                                : 'bg-blue-50 border border-blue-200 text-blue-700'
+                                ? 'bg-[#0F2447] border-[#0F2447] text-white' 
+                                : 'bg-[#EDF2F9] border-[#CBD7EA] text-[#0F2447]'
                             }`}>
                               {acc.status || 'ruas'}
+                            </span>
+                          </td>
+                          <td className="p-3.5 font-bold">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider border ${
+                              acc.isActive === false
+                                ? 'bg-slate-100 border-slate-300 text-slate-500'
+                                : 'bg-[#EDF2F9] border-[#CBD7EA] text-[#0F2447]'
+                            }`}>
+                              {acc.isActive === false ? 'Nonaktif' : 'Aktif'}
                             </span>
                           </td>
                           <td className="p-3.5 text-right">
@@ -7179,32 +7341,53 @@ export default function AdminView({
                                   setAccountFormStatus(acc.status || 'ruas');
                                   setIsAddingAccount(false);
                                 }}
-                                className="p-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded transition cursor-pointer"
+                                className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] rounded-lg transition cursor-pointer"
                                 title="Sunting"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteAccount(index)}
-                                disabled={acc.username === 'admin'}
-                                className={`p-1.5 rounded transition cursor-pointer ${
-                                  acc.username === 'admin' 
-                                    ? 'bg-slate-100 border border-slate-200 text-slate-300 cursor-not-allowed'
-                                    : 'bg-red-50 border border-red-150 hover:bg-red-100 text-red-600'
-                                }`}
-                                title={acc.username === 'admin' ? 'Admin utama tidak bisa dihapus' : 'Hapus'}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              {acc.isActive !== false ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleAccountActive(index)}
+                                  disabled={acc.username === 'admin'}
+                                  className={`p-1.5 rounded-lg transition cursor-pointer ${
+                                    acc.username === 'admin' 
+                                      ? 'bg-slate-100 border border-slate-200 text-slate-300 cursor-not-allowed'
+                                      : 'bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447]'
+                                  }`}
+                                  title={acc.username === 'admin' ? 'Admin utama tidak bisa dinonaktifkan' : 'Nonaktifkan Akun'}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleAccountActive(index)}
+                                    className="p-1.5 bg-[#EDF2F9] border border-[#CBD7EA] hover:bg-[#0F2447] text-[#0F2447] hover:text-white rounded-lg transition cursor-pointer flex items-center space-x-1"
+                                    title="Aktifkan Kembali Akun"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handlePermanentDeleteAccount(index)}
+                                    className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] rounded-lg transition cursor-pointer"
+                                    title="Hapus Permanen Dari Database"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={6} className="p-6 text-slate-400 text-center italic">Tidak ada database akun terdaftar.</td>
+                        <td colSpan={7} className="p-6 text-slate-400 text-center italic">Tidak ada database akun terdaftar.</td>
                       </tr>
                     )}
                   </tbody>
@@ -7221,11 +7404,11 @@ export default function AdminView({
       {confirmDialog.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm font-sans">
           <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4 animate-fadeIn">
-            <div className="flex items-center space-x-3 text-red-650">
-              <div className="p-2.5 bg-red-50 border border-red-100 rounded-xl">
-                <AlertCircle className="w-6 h-6 text-red-650" />
+            <div className="flex items-center space-x-3 text-[#0F2447]">
+              <div className="p-2.5 bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl">
+                <AlertCircle className="w-6 h-6 text-[#0F2447]" />
               </div>
-              <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">{confirmDialog.title}</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">{confirmDialog.title}</h3>
             </div>
             <p className="text-xs text-slate-600 font-medium leading-relaxed">
               {confirmDialog.message}
@@ -7233,13 +7416,13 @@ export default function AdminView({
             <div className="flex items-center justify-end space-x-2 pt-2">
               <button
                 onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-4 py-2 bg-white hover:bg-[#EDF2F9] border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 Batal
               </button>
               <button
                 onClick={confirmDialog.onConfirm}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-md shadow-red-500/15"
+                className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-sm"
               >
                 Ya, Hapus
               </button>
@@ -7248,66 +7431,255 @@ export default function AdminView({
         </div>
       )}
 
+      {/* OTP EMAIL VERIFICATION MODAL */}
+      <OtpVerificationModal
+        isOpen={isVerifying}
+        onClose={() => {
+          setIsVerifying(false);
+          setPendingAccountToSave(null);
+          setUserTypedCode('');
+        }}
+        email={pendingAccountToSave?.email || accountFormEmail}
+        senderEmail="pirmasiahaan1234@gmail.com"
+        username={pendingAccountToSave?.username || accountFormUsername}
+        verificationCode={verificationCode}
+        userTypedCode={userTypedCode}
+        setUserTypedCode={setUserTypedCode}
+        otpDeliveryStatus={otpDeliveryStatus}
+        otpErrorMessage={otpErrorMessage}
+        onConfirm={handleConfirmVerificationCode}
+        onResend={handleResendOtp}
+      />
 
 
-      {/* CUSTOM MANUAL LITURGY PREVIEW MODAL */}
+
+      {/* CUSTOM MANUAL / TEXT DOCUMENT PREVIEW MODAL */}
       {previewManualLit && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm font-sans">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden animate-fadeIn">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm font-sans animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[88vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-[#F4F6FA] shrink-0">
               <div>
-                <span className="text-[9px] bg-blue-50 border border-blue-200 text-blue-700 font-extrabold px-2 py-0.5 rounded uppercase tracking-wide">
-                  Pratinjau Teks Liturgi
-                </span>
-                <h3 className="text-sm font-black text-slate-950 mt-1 leading-tight">{previewManualLit.judul}</h3>
-                <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{previewManualLit.tanggal}</p>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wide bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447]">
+                    {previewManualLit.kategori === 'warta'
+                      ? 'Arsip Warta Jemaat'
+                      : previewManualLit.kategori === 'petugas'
+                      ? 'Arsip Jadwal Pelayan Huria'
+                      : previewManualLit.kategori === 'keuangan'
+                      ? 'Arsip Transaksi Kas'
+                      : 'Arsip Tata Ibadah'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {previewManualLit.tanggalMinggu || previewManualLit.tanggalUpload || previewManualLit.tanggal}
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-slate-950 mt-1.5 leading-tight">{previewManualLit.judul}</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{previewManualLit.keterangan}</p>
               </div>
               <button
                 onClick={() => setPreviewManualLit(null)}
-                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                className="p-2 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
+                title="Tutup"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
+            {/* Modal Body */}
             <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              {/* Epistel & Khotbah if available */}
               {(previewManualLit.ayatReferensi || previewManualLit.ayatBacaan) && (
-                <div className="p-3 bg-amber-50/60 border border-amber-200 rounded-xl space-y-1.5">
+                <div className="p-3 bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl space-y-1.5">
                   {previewManualLit.ayatReferensi && (
-                    <div className="text-xs text-amber-900 font-bold">
-                      Epistel: <span className="font-medium text-amber-800">{previewManualLit.ayatReferensi}</span>
+                    <div className="text-xs text-[#0F2447] font-bold">
+                      Epistel: <span className="font-medium text-slate-700">{previewManualLit.ayatReferensi}</span>
                     </div>
                   )}
                   {previewManualLit.ayatBacaan && (
-                    <div className="text-xs text-amber-900 font-bold">
-                      Khotbah: <span className="font-medium text-amber-800">{previewManualLit.ayatBacaan}</span>
+                    <div className="text-xs text-[#0F2447] font-bold">
+                      Khotbah: <span className="font-medium text-slate-700">{previewManualLit.ayatBacaan}</span>
                     </div>
                   )}
                 </div>
               )}
               
-              <div className="space-y-4">
-                {previewManualLit.teksLiturgi && previewManualLit.teksLiturgi.length > 0 ? (
-                  previewManualLit.teksLiturgi.map((step, idx) => (
-                    <div key={step.id || idx} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+              {/* 1. Teks Liturgi / Acara */}
+              {previewManualLit.teksLiturgi && previewManualLit.teksLiturgi.length > 0 && (
+                <div className="space-y-3">
+                  {previewManualLit.teksLiturgi.map((step: any, idx: number) => (
+                    <div key={step.id || idx} className="p-3.5 bg-[#F4F6FA] border border-slate-200 rounded-xl space-y-1.5">
                       <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                        <h4 className="text-xs font-black text-slate-900">{step.label}</h4>
+                        <h4 className="text-xs font-bold text-[#0F2447]">{step.label}</h4>
                       </div>
                       <p className="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-sans">
                         {step.isi}
                       </p>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-slate-500 italic text-center py-4">Tidak ada teks liturgi manual.</p>
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 2. Isi Warta Jemaat */}
+              {previewManualLit.isiWarta && (
+                <div className="p-4 bg-[#F4F6FA] border border-slate-200 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Penulis: {previewManualLit.penulis || 'Sekretaris Huria'}
+                    </span>
+                    {previewManualLit.kategoriWarta && (
+                      <span className="text-[10px] font-bold uppercase text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-2 py-0.5 rounded">
+                        {previewManualLit.kategoriWarta}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-800 whitespace-pre-line leading-relaxed font-sans pt-1">
+                    {previewManualLit.isiWarta}
+                  </p>
+                </div>
+              )}
+
+              {/* 3. Petugas Minggu Table */}
+              {previewManualLit.petugasMingguData && Array.isArray(previewManualLit.petugasMingguData) && (
+                <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-[#0F2447] text-[10px] font-bold uppercase text-white">
+                        <th className="p-2.5">Tugas / Pelayanan</th>
+                        <th className="p-2.5">Ibadah Shift 1</th>
+                        <th className="p-2.5">Ibadah Shift 2</th>
+                        <th className="p-2.5">Sekolah Minggu</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-800">
+                      {previewManualLit.petugasMingguData.map((row: any, rIdx: number) => (
+                        <tr key={rIdx} className="hover:bg-[#F4F6FA]">
+                          <td className="p-2.5 font-bold text-slate-900">{row.tugas}</td>
+                          <td className="p-2.5">{row.shift1 || '-'}</td>
+                          <td className="p-2.5">{row.shift2 || '-'}</td>
+                          <td className="p-2.5">{row.sekolahMinggu || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* 4. Petugas Partangiangan Table */}
+              {previewManualLit.petugasPartangianganData && Array.isArray(previewManualLit.petugasPartangianganData) && (
+                <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-[#0F2447] text-[10px] font-bold uppercase text-white">
+                        <th className="p-2">Hari</th>
+                        <th className="p-2">Sektor/Lunggu</th>
+                        <th className="p-2">Keluarga (Tuan Rumah)</th>
+                        <th className="p-2">Jamita (Khotbah)</th>
+                        <th className="p-2">Agenda</th>
+                        <th className="p-2">Ende</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-800 text-[11px]">
+                      {previewManualLit.petugasPartangianganData.map((row: any, rIdx: number) => (
+                        <tr key={rIdx} className="hover:bg-[#F4F6FA]">
+                          <td className="p-2 font-bold">{row.hari}</td>
+                          <td className="p-2 font-semibold text-[#0F2447]">{row.lunggu}</td>
+                          <td className="p-2">{row.keluarga}</td>
+                          <td className="p-2">{row.jamita || '-'}</td>
+                          <td className="p-2">{row.agenda || '-'}</td>
+                          <td className="p-2">{row.ende || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* 5. Kehadiran Partangiangan */}
+              {previewManualLit.attendanceData && Array.isArray(previewManualLit.attendanceData) && (
+                <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-[#0F2447] text-[10px] font-bold uppercase text-white">
+                        <th className="p-2">Hari</th>
+                        <th className="p-2">Sektor/Lunggu</th>
+                        <th className="p-2">Ama</th>
+                        <th className="p-2">Ina</th>
+                        <th className="p-2">SM</th>
+                        <th className="p-2">Rena</th>
+                        <th className="p-2">Parhalado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-800 text-[11px]">
+                      {previewManualLit.attendanceData.map((row: any, rIdx: number) => (
+                        <tr key={rIdx} className="hover:bg-[#F4F6FA]">
+                          <td className="p-2 font-bold">{row.hari}</td>
+                          <td className="p-2 font-semibold text-[#0F2447]">{row.lunggu}</td>
+                          <td className="p-2 font-mono">{row.ama}</td>
+                          <td className="p-2 font-mono">{row.ina}</td>
+                          <td className="p-2 font-mono">{row.sm}</td>
+                          <td className="p-2 font-mono">{row.rena}</td>
+                          <td className="p-2 font-mono">{row.parhalado}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* 6. Transaksi Kas */}
+              {previewManualLit.transaksiData && (
+                <div className="p-4 bg-[#F4F6FA] border border-slate-200 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Tipe Transaksi:</span>
+                    <span className="text-xs font-bold uppercase px-2 py-0.5 rounded bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447]">
+                      {previewManualLit.transaksiData.tipe}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Jumlah:</span>
+                    <span className="text-sm font-bold font-mono text-[#0F2447]">
+                      Rp {Number(previewManualLit.transaksiData.jumlah || 0).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700">Kategori Kas:</span>
+                    <span className="text-xs font-medium text-slate-800">
+                      {previewManualLit.transaksiData.kategori} ({previewManualLit.transaksiData.tipeKas || 'Kas Huria'})
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {!previewManualLit.teksLiturgi && !previewManualLit.isiWarta && !previewManualLit.petugasMingguData && !previewManualLit.petugasPartangianganData && !previewManualLit.attendanceData && !previewManualLit.transaksiData && (
+                <p className="text-xs text-slate-600 leading-relaxed font-sans">{previewManualLit.keterangan}</p>
+              )}
             </div>
             
-            <div className="p-4 border-t border-slate-200 bg-slate-50 shrink-0 flex justify-end">
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-200 bg-[#F4F6FA] shrink-0 flex items-center justify-between">
               <button
+                type="button"
+                onClick={() => {
+                  let textToCopy = `${previewManualLit.judul}\n${previewManualLit.keterangan || ''}\n\n`;
+                  if (previewManualLit.isiWarta) {
+                    textToCopy += `Isi Warta:\n${previewManualLit.isiWarta}`;
+                  } else if (previewManualLit.teksLiturgi) {
+                    textToCopy += previewManualLit.teksLiturgi.map((s: any) => `${s.label}:\n${s.isi}`).join('\n\n');
+                  }
+                  navigator.clipboard.writeText(textToCopy);
+                  showToast('✓ Konten berhasil disalin ke clipboard!');
+                }}
+                className="px-3.5 py-2 bg-white hover:bg-[#EDF2F9] border border-slate-300 text-[#0F2447] rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-xs"
+              >
+                <Copy className="w-3.5 h-3.5 text-[#0F2447]" />
+                <span>Salin Teks</span>
+              </button>
+              
+              <button
+                type="button"
                 onClick={() => setPreviewManualLit(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-sm"
+                className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-sm"
               >
                 Tutup Pratinjau
               </button>
@@ -7320,19 +7692,19 @@ export default function AdminView({
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm font-sans animate-fadeIn">
           <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-[#F4F6FA] shrink-0">
               <div className="flex items-center space-x-2.5">
-                <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
+                <div className="p-2 bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] rounded-xl">
                   <Music className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">Input Nomor & Ayat Lagu</h3>
+                  <h3 className="text-sm font-bold text-slate-900">Input Nomor & Ayat Lagu</h3>
                   <p className="text-[10px] text-slate-500 mt-0.5">Membaca data lagu & lirik otomatis untuk Acara #{songPickerStepIndex + 1}</p>
                 </div>
               </div>
               <button
                 onClick={() => setSongPickerStepIndex(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -7349,10 +7721,10 @@ export default function AdminView({
                       key={k}
                       type="button"
                       onClick={() => setSongPickerKategori(k)}
-                      className={`py-2 px-3 rounded-xl text-xs font-extrabold transition cursor-pointer border text-center ${
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer border text-center ${
                         songPickerKategori === k
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                          ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                       }`}
                     >
                       {k === 'BE' ? 'BE (Buku Ende)' : k === 'BN' ? 'BN (Buku Nyanyian)' : 'KJ (Kidung Jemaat)'}
@@ -7374,7 +7746,7 @@ export default function AdminView({
                     value={songPickerNomor}
                     onChange={(e) => setSongPickerNomor(e.target.value)}
                     placeholder="Contoh: 10"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-slate-900 outline-none focus:border-blue-500 font-mono"
+                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
                   />
                 </div>
                 <div>
@@ -7386,7 +7758,7 @@ export default function AdminView({
                     value={songPickerAyat}
                     onChange={(e) => setSongPickerAyat(e.target.value)}
                     placeholder="Contoh: 1-3, 1+3, atau 1,2+5"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 font-mono"
+                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
                   />
                 </div>
               </div>
@@ -7408,8 +7780,8 @@ export default function AdminView({
                         }}
                         className={`text-[10px] px-2 py-0.5 rounded-lg border cursor-pointer font-bold transition ${
                           songPickerNomor === String(s.nomor)
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                            ? 'bg-[#0F2447] text-white border-[#0F2447]'
+                            : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                         }`}
                       >
                         No. {s.nomor}
@@ -7426,13 +7798,13 @@ export default function AdminView({
 
                 if (match.found && match.song) {
                   return (
-                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2">
+                    <div className="bg-[#F4F6FA] border border-slate-200 rounded-2xl p-3.5 space-y-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <span className="text-[9px] font-extrabold uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
+                          <span className="text-[9px] font-bold uppercase bg-[#EDF2F9] text-[#0F2447] px-2 py-0.5 rounded border border-[#CBD7EA]">
                             {match.song.kategori} No. {match.song.nomor}
                           </span>
-                          <h4 className="text-xs font-black text-slate-900 mt-1">{match.title}</h4>
+                          <h4 className="text-xs font-bold text-slate-900 mt-1">{match.title}</h4>
                         </div>
                         <span className="text-[10px] text-slate-500 font-semibold">
                           Total {match.song.ayatList.length} Ayat
@@ -7444,8 +7816,8 @@ export default function AdminView({
                         <button
                           type="button"
                           onClick={() => setSongPickerAyat('')}
-                          className={`text-[9px] px-2 py-0.5 rounded border font-bold ${
-                            !songPickerAyat.trim() ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200'
+                          className={`text-[9px] px-2 py-0.5 rounded border font-bold cursor-pointer ${
+                            !songPickerAyat.trim() ? 'bg-[#0F2447] text-white border-[#0F2447]' : 'bg-white text-slate-600 border-slate-200 hover:bg-[#EDF2F9]'
                           }`}
                         >
                           Semua Ayat
@@ -7455,10 +7827,10 @@ export default function AdminView({
                             key={v.ayat}
                             type="button"
                             onClick={() => setSongPickerAyat(String(v.ayat))}
-                            className={`text-[9px] px-2 py-0.5 rounded border font-bold ${
+                            className={`text-[9px] px-2 py-0.5 rounded border font-bold cursor-pointer ${
                               songPickerAyat.trim() === String(v.ayat)
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white text-slate-600 border-slate-200'
+                                ? 'bg-[#0F2447] text-white border-[#0F2447]'
+                                : 'bg-white text-slate-600 border-slate-200 hover:bg-[#EDF2F9]'
                             }`}
                           >
                             Ayat {v.ayat}
@@ -7466,7 +7838,7 @@ export default function AdminView({
                         ))}
                       </div>
 
-                      <div className="p-2.5 bg-white rounded-xl border border-slate-150 text-[11px] text-slate-700 whitespace-pre-line font-mono max-h-36 overflow-y-auto leading-relaxed">
+                      <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-[11px] text-slate-700 whitespace-pre-line font-mono max-h-36 overflow-y-auto leading-relaxed">
                         {match.lyrics}
                       </div>
                     </div>
@@ -7474,11 +7846,11 @@ export default function AdminView({
                 }
 
                 return (
-                  <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 text-center space-y-2">
-                    <p className="text-xs font-bold text-amber-900">
+                  <div className="bg-[#EDF2F9] border border-[#CBD7EA] rounded-2xl p-4 text-center space-y-2">
+                    <p className="text-xs font-bold text-[#0F2447]">
                       Lagu {songPickerKategori} No. {songPickerNomor || '?'} belum terdaftar di database lokal.
                     </p>
-                    <p className="text-[11px] text-amber-700">
+                    <p className="text-[11px] text-slate-600">
                       Anda dapat melihat dan menyalin nomor dan lirik lagu dari website resmi lagu HKBP.
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
@@ -7505,20 +7877,20 @@ export default function AdminView({
                               alert(`Gagal mengambil lagu: ${e.message}`);
                             }
                           }}
-                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer shadow-xs"
+                          className="px-3 py-1.5 bg-[#0F2447] hover:bg-[#173361] text-white rounded-lg text-xs font-semibold transition flex items-center space-x-1 cursor-pointer shadow-xs"
                         >
                           <Download className="w-3.5 h-3.5" />
-                          <span>⚡ Ambil Resmi dari hkbp.or.id</span>
+                          <span>Ambil Resmi dari hkbp.or.id</span>
                         </button>
                       )}
                       <a
                         href={songPickerKategori === 'BN' ? 'https://hkbp.or.id/buku-nyanyian' : songPickerKategori === 'KJ' ? 'https://hkbp.or.id/kidung' : 'https://hkbp.or.id/buku-ende'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1.5 bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 rounded-lg text-xs font-bold transition flex items-center space-x-1"
+                        className="px-3 py-1.5 bg-white border border-slate-300 text-[#0F2447] hover:bg-slate-50 rounded-lg text-xs font-semibold transition flex items-center space-x-1"
                       >
                         <span>Cari di hkbp.or.id</span>
-                        <ExternalLink className="w-3 h-3 text-amber-600" />
+                        <ExternalLink className="w-3 h-3 text-[#0F2447]" />
                       </a>
                       <button
                         type="button"
@@ -7529,7 +7901,7 @@ export default function AdminView({
                           setNewSongRawLyrics('');
                           setIsAddSongModalOpen(true);
                         }}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                        className="px-3 py-1.5 bg-white border border-[#CBD7EA] hover:bg-slate-50 text-[#0F2447] rounded-lg text-xs font-semibold transition cursor-pointer"
                       >
                         + Tambah Manual
                       </button>
@@ -7540,28 +7912,28 @@ export default function AdminView({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+            <div className="p-4 border-t border-slate-200 bg-[#F4F6FA] flex items-center justify-between shrink-0">
               <a
                 href={songPickerKategori === 'BN' ? "https://hkbp.or.id/buku-nyanyian" : songPickerKategori === 'KJ' ? "https://hkbp.or.id/kidung" : "https://hkbp.or.id/buku-ende"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] font-bold text-blue-700 hover:underline flex items-center space-x-1"
+                className="text-[11px] font-bold text-[#0F2447] hover:underline flex items-center space-x-1"
               >
-                <span>🌐 Portal Resmi: {songPickerKategori === 'BN' ? 'hkbp.or.id/buku-nyanyian' : songPickerKategori === 'KJ' ? 'hkbp.or.id/kidung' : 'hkbp.or.id/buku-ende'}</span>
+                <span>Portal Resmi: {songPickerKategori === 'BN' ? 'hkbp.or.id/buku-nyanyian' : songPickerKategori === 'KJ' ? 'hkbp.or.id/kidung' : 'hkbp.or.id/buku-ende'}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
               <div className="flex items-center space-x-2">
                 <button
                   type="button"
                   onClick={() => setSongPickerStepIndex(null)}
-                  className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+                  className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="button"
                   onClick={handleApplySongFromPicker}
-                  className="px-5 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-blue-500/20 hover:brightness-105 active:scale-[0.99] cursor-pointer flex items-center space-x-1.5"
+                  className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition shadow-sm cursor-pointer flex items-center space-x-1.5"
                 >
                   <Check className="w-4 h-4" />
                   <span>Terapkan ke Acara</span>
@@ -7576,14 +7948,14 @@ export default function AdminView({
       {isAddSongModalOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm font-sans animate-fadeIn">
           <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-[#F4F6FA] shrink-0">
               <div>
-                <h3 className="text-sm font-black text-slate-900">Tambah Lagu ke Database</h3>
+                <h3 className="text-sm font-bold text-slate-900">Tambah Lagu ke Database</h3>
                 <p className="text-[10px] text-slate-500 mt-0.5">Tambah lagu atau sinkronkan langsung dari portal resmi https://hkbp.or.id/buku-ende</p>
               </div>
               <button
                 onClick={() => setIsAddSongModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -7596,7 +7968,7 @@ export default function AdminView({
                   <select
                     value={newSongKategori}
                     onChange={(e) => setNewSongKategori(e.target.value as any)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-blue-500"
+                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2447]"
                   >
                     <option value="BE">BE (Buku Ende)</option>
                     <option value="BN">BN (Buku Nyanyian)</option>
@@ -7612,7 +7984,7 @@ export default function AdminView({
                     value={newSongNomor}
                     onChange={(e) => setNewSongNomor(e.target.value)}
                     placeholder="Contoh: 10"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-slate-900 outline-none focus:border-blue-500 font-mono"
+                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
                   />
                 </div>
               </div>
@@ -7624,7 +7996,7 @@ export default function AdminView({
                   value={newSongJudul}
                   onChange={(e) => setNewSongJudul(e.target.value)}
                   placeholder="Contoh: Hupuji Ho Amang"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-blue-500"
+                  className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447]"
                 />
               </div>
 
@@ -7638,23 +8010,23 @@ export default function AdminView({
                   value={newSongRawLyrics}
                   onChange={(e) => setNewSongRawLyrics(e.target.value)}
                   placeholder={"1. Hupuji Ho Amang pardenggan basa i...\n\n2. Gok di Ho do dongan nang hagogoon i..."}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-mono"
+                  className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-mono"
                 />
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end space-x-2 shrink-0">
+            <div className="p-4 border-t border-slate-200 bg-[#F4F6FA] flex items-center justify-end space-x-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsAddSongModalOpen(false)}
-                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="button"
                 onClick={handleSaveNewSongToDb}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer flex items-center space-x-1"
+                className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition shadow-sm cursor-pointer flex items-center space-x-1"
               >
                 <Save className="w-4 h-4" />
                 <span>Simpan ke Database</span>
@@ -7667,20 +8039,20 @@ export default function AdminView({
       {isImportDbModalOpen && (
         <div className="fixed inset-0 z-[125] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm font-sans animate-fadeIn">
           <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-[#F4F6FA] shrink-0">
               <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] flex items-center justify-center">
                   <Upload className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">Impor / Berikan Database Lagu</h3>
+                  <h3 className="text-sm font-bold text-slate-900">Impor / Berikan Database Lagu</h3>
                   <p className="text-[10px] text-slate-500 mt-0.5">Unggah berkas JSON atau tempel format data buku nyanyian</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsImportDbModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -7688,7 +8060,7 @@ export default function AdminView({
 
             <div className="p-5 overflow-y-auto space-y-4 flex-1">
               {/* File Upload Option */}
-              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-emerald-500 transition">
+              <div className="bg-[#F4F6FA] border border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-[#0F2447] transition">
                 <input
                   type="file"
                   id="import-song-db-file"
@@ -7711,7 +8083,7 @@ export default function AdminView({
                   htmlFor="import-song-db-file"
                   className="cursor-pointer flex flex-col items-center justify-center space-y-1.5"
                 >
-                  <FolderOpen className="w-6 h-6 text-emerald-600" />
+                  <FolderOpen className="w-6 h-6 text-[#0F2447]" />
                   <span className="text-xs font-bold text-slate-800">Klik untuk Unggah Berkas JSON</span>
                   <span className="text-[10px] text-slate-400">Mendukung berkas data resmi dari https://hkbp.or.id/buku-ende atau format JSON</span>
                 </label>
@@ -7737,7 +8109,7 @@ export default function AdminView({
                       ];
                       setImportDbJsonText(JSON.stringify(sample, null, 2));
                     }}
-                    className="text-[10px] text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
+                    className="text-[10px] text-[#0F2447] hover:text-[#173361] font-bold underline cursor-pointer"
                   >
                     Muat Contoh Format
                   </button>
@@ -7747,7 +8119,7 @@ export default function AdminView({
                   value={importDbJsonText}
                   onChange={(e) => setImportDbJsonText(e.target.value)}
                   placeholder={`Contoh struktur JSON:\n[\n  {\n    "kategori": "BE",\n    "nomor": 10,\n    "judul": "Hupuji Ho Amang",\n    "ayatList": [\n      { "ayat": 1, "teks": "..." },\n      { "ayat": 2, "teks": "..." }\n    ]\n  }\n]`}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-mono text-slate-800 outline-none focus:border-emerald-500"
+                  className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-mono text-slate-800 outline-none focus:border-[#0F2447]"
                 />
               </div>
 
@@ -7757,10 +8129,10 @@ export default function AdminView({
                 const parsed = normalizeSongImport(importDbJsonText);
                 return (
                   <div className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between ${
-                    parsed.length > 0 ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : 'bg-amber-50 text-amber-900 border-amber-200'
+                    parsed.length > 0 ? 'bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]' : 'bg-slate-100 text-slate-700 border-slate-300'
                   }`}>
                     <div className="flex items-center space-x-2">
-                      <Music className="w-4 h-4 shrink-0 text-emerald-600" />
+                      <Music className="w-4 h-4 shrink-0 text-[#0F2447]" />
                       <span>{parsed.length > 0 ? `Siap diimpor: ${parsed.length} lagu berhasil dikenali` : 'Format belum sesuai. Periksa kembali struktur data.'}</span>
                     </div>
                   </div>
@@ -7768,11 +8140,11 @@ export default function AdminView({
               })()}
 
               {/* Import Mode Selection */}
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+              <div className="bg-[#F4F6FA] p-3.5 rounded-2xl border border-slate-200 space-y-2">
                 <span className="text-[10px] font-bold text-slate-600 uppercase block">Metode Penggabungan Database:</span>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <label className={`p-2.5 rounded-xl border cursor-pointer flex items-start space-x-2 ${
-                    importDbMode === 'merge' ? 'bg-blue-50 border-blue-300 text-blue-900 font-bold' : 'bg-white border-slate-200 text-slate-700'
+                    importDbMode === 'merge' ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] font-bold' : 'bg-white border-slate-200 text-slate-700'
                   }`}>
                     <input
                       type="radio"
@@ -7780,7 +8152,7 @@ export default function AdminView({
                       value="merge"
                       checked={importDbMode === 'merge'}
                       onChange={() => setImportDbMode('merge')}
-                      className="mt-0.5"
+                      className="mt-0.5 accent-[#0F2447]"
                     />
                     <div>
                       <span className="block text-xs font-bold">Gabungkan (Merge)</span>
@@ -7789,7 +8161,7 @@ export default function AdminView({
                   </label>
 
                   <label className={`p-2.5 rounded-xl border cursor-pointer flex items-start space-x-2 ${
-                    importDbMode === 'replace' ? 'bg-amber-50 border-amber-300 text-amber-900 font-bold' : 'bg-white border-slate-200 text-slate-700'
+                    importDbMode === 'replace' ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] font-bold' : 'bg-white border-slate-200 text-slate-700'
                   }`}>
                     <input
                       type="radio"
@@ -7797,7 +8169,7 @@ export default function AdminView({
                       value="replace"
                       checked={importDbMode === 'replace'}
                       onChange={() => setImportDbMode('replace')}
-                      className="mt-0.5"
+                      className="mt-0.5 accent-[#0F2447]"
                     />
                     <div>
                       <span className="block text-xs font-bold">Ganti Total (Replace)</span>
@@ -7808,11 +8180,11 @@ export default function AdminView({
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+            <div className="p-4 border-t border-slate-200 bg-[#F4F6FA] flex items-center justify-between shrink-0">
               <button
                 type="button"
                 onClick={handleResetToDefaultDb}
-                className="text-[10px] font-bold text-slate-500 hover:text-red-600 underline cursor-pointer"
+                className="text-[10px] font-bold text-slate-500 hover:text-[#0F2447] underline cursor-pointer"
               >
                 Reset ke Standar HKBP
               </button>
@@ -7820,14 +8192,14 @@ export default function AdminView({
                 <button
                   type="button"
                   onClick={() => setIsImportDbModalOpen(false)}
-                  className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+                  className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="button"
                   onClick={handleProcessImportDb}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer flex items-center space-x-1.5"
+                  className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition shadow-sm cursor-pointer flex items-center space-x-1.5"
                 >
                   <Save className="w-4 h-4" />
                   <span>Proses & Simpan Database</span>
@@ -7841,15 +8213,13 @@ export default function AdminView({
       {isSyncApiModalOpen && (
         <div className="fixed inset-0 z-[125] flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm font-sans animate-fadeIn">
           <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-[#F4F6FA] shrink-0">
               <div className="flex items-center space-x-2.5">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                  syncBook === 'BN' ? 'bg-emerald-100 text-emerald-700' : syncBook === 'KJ' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-                }`}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447]">
                   <Activity className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900">
                     Portal Resmi HKBP (hkbp.or.id/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende'})
                   </h3>
                   <p className="text-[10px] text-slate-500 mt-0.5">Sinkronisasi lagu otentik langsung dari basis data resmi HKBP</p>
@@ -7859,7 +8229,7 @@ export default function AdminView({
                 type="button"
                 disabled={isSyncingApi}
                 onClick={() => setIsSyncApiModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -7878,10 +8248,10 @@ export default function AdminView({
                       setSyncStart('1');
                       setSyncEnd('50');
                     }}
-                    className={`py-2 px-2.5 rounded-xl text-[11px] font-extrabold transition cursor-pointer border text-center ${
+                    className={`py-2 px-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer border text-center ${
                       syncBook === 'BE'
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                     }`}
                   >
                     Buku Ende (867)
@@ -7894,10 +8264,10 @@ export default function AdminView({
                       setSyncStart('1');
                       setSyncEnd('50');
                     }}
-                    className={`py-2 px-2.5 rounded-xl text-[11px] font-extrabold transition cursor-pointer border text-center ${
+                    className={`py-2 px-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer border text-center ${
                       syncBook === 'BN'
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                     }`}
                   >
                     Buku Nyanyian (865)
@@ -7910,10 +8280,10 @@ export default function AdminView({
                       setSyncStart('1');
                       setSyncEnd('50');
                     }}
-                    className={`py-2 px-2.5 rounded-xl text-[11px] font-extrabold transition cursor-pointer border text-center ${
+                    className={`py-2 px-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer border text-center ${
                       syncBook === 'KJ'
-                        ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                     }`}
                   >
                     Kidung Jemaat (478)
@@ -7922,31 +8292,23 @@ export default function AdminView({
               </div>
 
               {/* API Info Card */}
-              <div className={`border rounded-2xl p-4 space-y-1.5 ${
-                syncBook === 'BN' ? 'bg-emerald-50/70 border-emerald-200' : syncBook === 'KJ' ? 'bg-amber-50/70 border-amber-200' : 'bg-blue-50/70 border-blue-200'
-              }`}>
-                <div className={`flex items-center space-x-1.5 text-xs font-bold ${
-                  syncBook === 'BN' ? 'text-emerald-800' : syncBook === 'KJ' ? 'text-amber-800' : 'text-blue-800'
-                }`}>
-                  <Check className={`w-4 h-4 ${syncBook === 'BN' ? 'text-emerald-600' : syncBook === 'KJ' ? 'text-amber-600' : 'text-blue-600'}`} />
+              <div className="border border-[#CBD7EA] bg-[#EDF2F9] rounded-2xl p-4 space-y-1.5">
+                <div className="flex items-center space-x-1.5 text-xs font-bold text-[#0F2447]">
+                  <Check className="w-4 h-4 text-[#0F2447]" />
                   <span>Sumber Resmi: https://hkbp.or.id/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende'}</span>
                 </div>
-                <p className={`text-[11px] leading-relaxed ${
-                  syncBook === 'BN' ? 'text-emerald-700' : syncBook === 'KJ' ? 'text-amber-700' : 'text-blue-700'
-                }`}>
+                <p className="text-[11px] leading-relaxed text-slate-700">
                   Data diambil langsung dari API resmi HKBP (<code>api.hkbp.or.id/api/v1/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung-jemaat' : 'buku-ende'}/songs</code>) yang menopang portal resmi <strong>hkbp.or.id/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende'}</strong>. Seluruh lirik dan bait lagu dijamin 100% otentik, akurat, dan tidak diubah.
                 </p>
                 <div className="pt-1">
-                  <span className={`text-[10px] font-mono bg-white px-2 py-0.5 rounded border inline-block ${
-                    syncBook === 'BN' ? 'text-emerald-900 border-emerald-200' : syncBook === 'KJ' ? 'text-amber-900 border-amber-200' : 'text-blue-900 border-blue-200'
-                  }`}>
+                  <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-[#CBD7EA] text-[#0F2447] inline-block">
                     Endpoint: https://api.hkbp.or.id/api/v1/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung-jemaat' : 'buku-ende'}/songs/:nomor
                   </span>
                 </div>
               </div>
 
               {/* Range input */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+              <div className="bg-[#F4F6FA] p-4 rounded-2xl border border-slate-200 space-y-3">
                 <label className="block text-[10px] font-bold text-slate-700 uppercase">
                   Tentukan Rentang Nomor Lagu {syncBook} (1 - {syncBook === 'BN' ? '865' : syncBook === 'KJ' ? '478' : '867'}):
                 </label>
@@ -7960,7 +8322,7 @@ export default function AdminView({
                       disabled={isSyncingApi}
                       value={syncStart}
                       onChange={(e) => setSyncStart(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
                     />
                   </div>
                   <div>
@@ -7972,7 +8334,7 @@ export default function AdminView({
                       disabled={isSyncingApi}
                       value={syncEnd}
                       onChange={(e) => setSyncEnd(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-blue-500 font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
                     />
                   </div>
                 </div>
@@ -7996,9 +8358,7 @@ export default function AdminView({
                           setSyncStart(preset.s);
                           setSyncEnd(preset.e);
                         }}
-                        className={`text-[10px] font-bold px-2 py-1 bg-white rounded-lg border border-slate-200 cursor-pointer transition ${
-                          syncBook === 'BN' ? 'hover:bg-emerald-50 hover:text-emerald-700' : 'hover:bg-blue-50 hover:text-blue-700'
-                        }`}
+                        className="text-[10px] font-bold px-2 py-1 bg-white rounded-lg border border-slate-200 cursor-pointer transition hover:bg-[#EDF2F9] hover:text-[#0F2447] hover:border-[#CBD7EA]"
                       >
                         {preset.label}
                       </button>
@@ -8009,23 +8369,19 @@ export default function AdminView({
 
               {/* Progress State */}
               {isSyncingApi && (
-                <div className={`p-3 rounded-xl border flex items-center space-x-2.5 text-xs font-bold animate-pulse ${
-                  syncBook === 'BN' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-blue-50 border-blue-200 text-blue-900'
-                }`}>
-                  <Loader2 className={`w-4 h-4 animate-spin shrink-0 ${
-                    syncBook === 'BN' ? 'text-emerald-600' : 'text-blue-600'
-                  }`} />
+                <div className="p-3 rounded-xl border border-[#CBD7EA] bg-[#EDF2F9] text-[#0F2447] flex items-center space-x-2.5 text-xs font-bold animate-pulse">
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0 text-[#0F2447]" />
                   <span>{syncProgress}</span>
                 </div>
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end space-x-2 shrink-0">
+            <div className="p-4 border-t border-slate-200 bg-[#F4F6FA] flex items-center justify-end space-x-2 shrink-0">
               <button
                 type="button"
                 disabled={isSyncingApi}
                 onClick={() => setIsSyncApiModalOpen(false)}
-                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 Tutup
               </button>
@@ -8033,9 +8389,7 @@ export default function AdminView({
                 type="button"
                 disabled={isSyncingApi}
                 onClick={handleSyncFromApi}
-                className={`px-5 py-2 hover:brightness-105 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer flex items-center space-x-1.5 ${
-                  syncBook === 'BN' ? 'bg-gradient-to-r from-emerald-700 to-teal-700' : 'bg-gradient-to-r from-blue-700 to-indigo-700'
-                }`}
+                className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition shadow-sm cursor-pointer flex items-center space-x-1.5"
               >
                 {isSyncingApi ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 <span>{isSyncingApi ? 'Sedang Mengambil...' : `Mulai Sinkronisasi ${syncBook}`}</span>
@@ -8048,14 +8402,14 @@ export default function AdminView({
       {scripturePickerTarget && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-rose-950 text-white px-6 py-4 flex items-center justify-between shrink-0">
+            <div className="bg-[#0F2447] text-white px-6 py-4 flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 bg-white/10 rounded-xl border border-white/20">
-                  <BookOpen className="w-5 h-5 text-blue-200" />
+                  <BookOpen className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-wide">Pilih Kitab & Ayat Alkitab</h3>
-                  <p className="text-[10px] text-blue-100/90">Pilih dari 66 Kitab PL/PB (Bahasa Indonesia atau Bahasa Batak)</p>
+                  <h3 className="text-sm font-bold uppercase tracking-wide">Pilih Kitab & Ayat Alkitab</h3>
+                  <p className="text-[10px] text-white/80">Pilih dari 66 Kitab PL/PB (Bahasa Indonesia atau Bahasa Batak)</p>
                 </div>
               </div>
               <button
@@ -8069,8 +8423,8 @@ export default function AdminView({
 
             <div className="p-6 overflow-y-auto space-y-4">
               {/* Language Mode Selector */}
-              <div className="bg-slate-900/5 border border-slate-200/90 rounded-2xl p-3.5 space-y-2">
-                <label className="block text-[11px] font-extrabold text-slate-800 uppercase tracking-wider">
+              <div className="bg-[#F4F6FA] border border-slate-200 rounded-2xl p-3.5 space-y-2">
+                <label className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider">
                   Bahasa
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -8082,8 +8436,8 @@ export default function AdminView({
                     }}
                     className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer border ${
                       pickerLangMode === 'indo'
-                        ? 'bg-gradient-to-r from-blue-900 to-rose-900 text-white border-blue-950 shadow-sm'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                     }`}
                   >
                     <span>Bahasa Indonesia</span>
@@ -8096,8 +8450,8 @@ export default function AdminView({
                     }}
                     className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer border ${
                       pickerLangMode === 'batak'
-                        ? 'bg-gradient-to-r from-blue-900 to-rose-900 text-white border-blue-950 shadow-sm'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
                     }`}
                   >
                     <span>Bahasa Batak</span>
@@ -8117,7 +8471,7 @@ export default function AdminView({
                       setPickerChapter(1);
                       handleUpdateScripturePickerPreview(newBId, 1, pickerVerseRange, pickerLangMode);
                     }}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-blue-800"
+                    className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2447]"
                   >
                     <optgroup label="Perjanjian Lama (Padan Na Robi)">
                       {ALKITAB_BOOKS_CATALOG.filter(b => b.testament === 'PL').map(b => (
@@ -8149,7 +8503,7 @@ export default function AdminView({
                           setPickerChapter(chap);
                           handleUpdateScripturePickerPreview(pickerBookId, chap, pickerVerseRange, pickerLangMode);
                         }}
-                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-blue-800"
+                        className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2447]"
                       >
                         {Array.from({ length: bInfo.totalChapters }, (_, i) => i + 1).map(c => (
                           <option key={c} value={c}>
@@ -8170,12 +8524,12 @@ export default function AdminView({
                       value={pickerVerseRange}
                       onChange={(e) => setPickerVerseRange(e.target.value)}
                       placeholder="1-5"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-blue-800"
+                      className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2447]"
                     />
                     <button
                       type="button"
                       onClick={() => handleUpdateScripturePickerPreview(pickerBookId, pickerChapter, pickerVerseRange, pickerLangMode)}
-                      className="px-3.5 py-2 bg-gradient-to-r from-blue-900 to-rose-900 hover:brightness-110 text-white rounded-xl text-xs font-bold transition cursor-pointer shrink-0 shadow-xs"
+                      className="px-3.5 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition cursor-pointer shrink-0 shadow-xs"
                     >
                       Cek
                     </button>
@@ -8184,13 +8538,13 @@ export default function AdminView({
               </div>
 
               {/* Preview Box */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+              <div className="bg-[#F4F6FA] border border-slate-200 rounded-2xl p-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                     Pratinjau Nats ({pickerLangMode === 'indo' ? 'Bahasa Indonesia' : 'Bahasa Batak'}):
                   </span>
                   {isFetchingPickerPreview && (
-                    <span className="text-[10px] text-blue-900 font-bold flex items-center space-x-1">
+                    <span className="text-[10px] text-[#0F2447] font-bold flex items-center space-x-1">
                       <Loader2 className="w-3 h-3 animate-spin" />
                       <span>Memuat...</span>
                     </span>
@@ -8205,18 +8559,18 @@ export default function AdminView({
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end space-x-2 shrink-0">
+            <div className="p-4 border-t border-slate-200 bg-[#F4F6FA] flex items-center justify-end space-x-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setScripturePickerTarget(null)}
-                className="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="button"
                 onClick={handleApplyScriptureFromPicker}
-                className="px-5 py-2 bg-gradient-to-r from-blue-900 via-indigo-900 to-rose-900 hover:brightness-110 text-white rounded-xl text-xs font-extrabold transition shadow-md cursor-pointer flex items-center space-x-1.5"
+                className="px-5 py-2 bg-[#0F2447] hover:bg-[#173361] text-white rounded-xl text-xs font-semibold transition shadow-sm cursor-pointer flex items-center space-x-1.5"
               >
                 <Check className="w-4 h-4" />
                 <span>Terapkan Ke Acara</span>

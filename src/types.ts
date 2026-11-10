@@ -88,6 +88,7 @@ export interface AdminCredentials {
   password?: string;
   namaGereja?: string;
   status?: 'ruas' | 'parhalado';
+  isActive?: boolean;
 }
 
 export interface ParhaladoMember {

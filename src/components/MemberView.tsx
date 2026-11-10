@@ -9,21 +9,16 @@ import {
   Gift,
   Tv,
   Search,
-  Filter,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Download,
-  Upload,
   ArrowUpRight,
   ArrowDownRight,
   Sparkles,
   ExternalLink,
   MessageCircle,
-  RefreshCw,
   Clock,
   MapPin,
-  Map,
   X,
   Users,
   Coins,
@@ -31,23 +26,18 @@ import {
   Building,
   Activity,
   ArrowLeft,
-  Maximize2,
   Menu,
-  Info,
   Phone,
   History,
   Instagram,
   Mail,
-  Edit2,
-  Trash2,
-  Save,
-  Plus,
   Wrench,
   AlertTriangle,
-  AlertCircle,
   Navigation,
   Copy,
-  Check
+  Check,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import {
   BarChart,
@@ -57,13 +47,9 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
+  ResponsiveContainer
 } from 'recharts';
 import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, TentangGerejaItem, PartangianganMode, WeeklyAttendanceTrend } from '../types';
-import AlkitabModal from './AlkitabModal';
 import { INITIAL_ATTENDANCE_TRENDS } from '../data/mockData';
 
 const BIRTHDAY_VERSES = [
@@ -140,9 +126,6 @@ interface MemberViewProps {
   partangianganMode?: PartangianganMode;
   attendanceTrends?: WeeklyAttendanceTrend[];
   onGoToLogin: () => void;
-  onUpdateLiturgiMinggu?: (list: Liturgi[]) => void;
-  onUpdateLiturgiPartangiangan?: (list: Liturgi[]) => void;
-  onUpdateJemaat?: (list: Jemaat[]) => void;
 }
 
 export default function MemberView({
@@ -164,10 +147,7 @@ export default function MemberView({
   parhaladoList,
   partangianganMode = 'normal',
   attendanceTrends = [],
-  onGoToLogin,
-  onUpdateLiturgiMinggu,
-  onUpdateLiturgiPartangiangan,
-  onUpdateJemaat
+  onGoToLogin
 }: MemberViewProps) {
   const [activeTab, setActiveTab] = useState<'minggu' | 'petugas' | 'warta' | 'keuangan' | 'ultah' | 'live'>(() => {
     const urlTab = new URLSearchParams(window.location.search).get('tab');
@@ -222,6 +202,51 @@ export default function MemberView({
     }
   }, [petugasSubTab]);
 
+  // Zoom state for scaling text size of event title and event content ('judul acara' & 'isi acara')
+  const [zoomLevel, setZoomLevel] = useState<number>(() => {
+    try {
+      const local = localStorage.getItem('hkbp_text_zoom');
+      const val = Number(local);
+      return val >= 80 && val <= 160 ? val : 100;
+    } catch {
+      return 100;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('hkbp_text_zoom', zoomLevel.toString());
+    } catch {
+      // ignore
+    }
+  }, [zoomLevel]);
+
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(160, prev + 10));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(80, prev - 10));
+  const handleZoomReset = () => setZoomLevel(100);
+
+  // Dynamic typography styles focused specifically on Judul Acara & Isi Acara
+  const zoomStyles = useMemo(() => {
+    const scale = zoomLevel / 100;
+    return {
+      judulUtama: {
+        fontSize: `${(18 * scale).toFixed(1)}px`,
+        lineHeight: 1.35,
+      },
+      topikAcara: {
+        fontSize: `${(13.5 * scale).toFixed(1)}px`,
+      },
+      judulAcara: {
+        fontSize: `${(14.5 * scale).toFixed(1)}px`,
+        lineHeight: 1.45,
+      },
+      isiAcara: {
+        fontSize: `${(14.5 * scale).toFixed(1)}px`,
+        lineHeight: 1.7,
+      },
+    };
+  }, [zoomLevel]);
+
   const [expandedLiturgySteps, setExpandedLiturgySteps] = useState<Record<string, boolean>>({});
   const [wartaFilter, setWartaFilter] = useState<WartaKategori | 'semua'>('semua');
   const [wartaSearch, setWartaSearch] = useState('');
@@ -229,156 +254,8 @@ export default function MemberView({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeMenuModal, setActiveMenuModal] = useState<'jadwal' | 'sejarah' | 'parhalado' | 'alamat' | 'developer' | null>(null);
   const [copiedLocation, setCopiedLocation] = useState(false);
-  const [isAlkitabModalOpen, setIsAlkitabModalOpen] = useState(false);
-  const [alkitabQuery, setAlkitabQuery] = useState('');
-
-  // ----------------------------------------------------
-  // STATES FOR JEMAAT EDITING IN MEMBER VIEW (PORTAL JEMAAT)
-  // ----------------------------------------------------
-  const [editingJemaatId, setEditingJemaatId] = useState<string | null>(null);
-  const [jmNama, setJmNama] = useState('');
-  const [jmTglLahir, setJmTglLahir] = useState('');
-  const [jmSektor, setJmSektor] = useState('Sektor III');
-  const [jmNoHP, setJmNoHP] = useState('');
-  const [jmCustomFields, setJmCustomFields] = useState<Record<string, string>>({});
-  const [searchJemaat, setSearchJemaat] = useState('');
-  const [memberToast, setMemberToast] = useState('');
 
   const currentVerse = useMemo(() => getWeeklyVerse(), []);
-
-  const showMemberToast = (msg: string) => {
-    setMemberToast(msg);
-    setTimeout(() => setMemberToast(''), 3000);
-  };
-
-  // Dynamically computed column headers for Jemaat table
-  const jemaatColumns = useMemo(() => {
-    const columns = [
-      { key: 'nama', label: 'Nama Lengkap' },
-      { key: 'sektor', label: 'Sektor / Wijk' },
-      { key: 'tanggalLahir', label: 'Tanggal Lahir' },
-      { key: 'noHP', label: 'No. WhatsApp' },
-    ];
-    
-    const standardKeys = ['id', 'nama', 'sektor', 'tanggalLahir', 'noHP', 'no', 'No', 'no.', 'No.', 'nomor', 'Nomor'];
-    const customKeysSet = new Set<string>();
-    
-    jemaatList.forEach((j) => {
-      Object.keys(j).forEach((k) => {
-        if (!standardKeys.includes(k) && j[k] !== undefined && j[k] !== null && j[k] !== '') {
-          customKeysSet.add(k);
-        }
-      });
-    });
-    
-    customKeysSet.forEach((k) => {
-      const label = k.charAt(0).toUpperCase() + k.slice(1);
-      columns.push({ key: k, label });
-    });
-    
-    return columns;
-  }, [jemaatList]);
-
-  // CRUD handlers for Jemaat
-  const startEditJemaat = (j: Jemaat) => {
-    setEditingJemaatId(j.id);
-    setJmNama(j.nama);
-    setJmTglLahir(j.tanggalLahir);
-    setJmSektor(j.sektor);
-    setJmNoHP(j.noHP || '');
-    
-    // Extracted custom fields
-    const standardKeys = ['id', 'nama', 'sektor', 'tanggalLahir', 'noHP'];
-    const customs: Record<string, string> = {};
-    Object.keys(j).forEach((k) => {
-      if (!standardKeys.includes(k)) {
-        customs[k] = j[k] !== undefined && j[k] !== null ? j[k].toString() : '';
-      }
-    });
-    setJmCustomFields(customs);
-  };
-
-  const startNewJemaat = () => {
-    setEditingJemaatId('new');
-    setJmNama('');
-    setJmTglLahir('1990-06-12');
-    setJmSektor('Sektor III');
-    setJmNoHP('0812');
-    setJmCustomFields({});
-  };
-
-  const handleSaveJemaat = () => {
-    if (!jmNama.trim()) {
-      showMemberToast('Nama lengkap jemaat wajib diisi!');
-      return;
-    }
-    if (!jmTglLahir) {
-      showMemberToast('Tanggal lahir wajib diisi!');
-      return;
-    }
-    if (!onUpdateJemaat) return;
-
-    const list = [...jemaatList];
-    const newJ: Jemaat = {
-      id: editingJemaatId === 'new' ? `jm-custom-${Date.now()}` : editingJemaatId!,
-      nama: jmNama,
-      tanggalLahir: jmTglLahir,
-      sektor: jmSektor,
-      noHP: jmNoHP || undefined,
-      ...jmCustomFields
-    };
-
-    if (editingJemaatId === 'new') {
-      list.push(newJ);
-    } else {
-      const idx = list.findIndex((j) => j.id === editingJemaatId);
-      if (idx !== -1) {
-        list[idx] = { ...list[idx], ...newJ };
-      }
-    }
-
-    onUpdateJemaat(list);
-    setEditingJemaatId(null);
-    showMemberToast('Data Jemaat Berhasil Disimpan!');
-  };
-
-  // Safe Confirm Dialog state for MemberView
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: () => {}
-  });
-
-  const triggerConfirm = (title: string, message: string, onConfirm: () => void) => {
-    setConfirmDialog({
-      isOpen: true,
-      title,
-      message,
-      onConfirm: () => {
-        onConfirm();
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-      }
-    });
-  };
-
-  const handleDeleteJemaat = (id: string) => {
-    if (!onUpdateJemaat) return;
-    triggerConfirm(
-      'Hapus Data Jemaat',
-      'Apakah Anda yakin ingin menghapus data biodata jemaat ini?',
-      () => {
-        const filtered = jemaatList.filter((j) => j.id !== id);
-        onUpdateJemaat(filtered);
-        showMemberToast('Biodata Jemaat Dihapus.');
-      }
-    );
-  };
 
 
   // Disable body scroll when Live mode (Fullscreen) is active to prevent page scrolling behind the iframe
@@ -400,48 +277,41 @@ export default function MemberView({
     }));
   };
 
-  // Dynamic current date for real-world and uploaded data
-  const currentContextDate = useMemo(() => new Date(), []);
-  
+  // Parse date string safely in local timezone (avoids UTC offset shifting YYYY-MM-DD by 1 day)
+  const parseLocalDate = (dateStr: string): Date | null => {
+    if (!dateStr) return null;
+    const match = dateStr.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const d = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+      return isNaN(d.getTime()) ? null : d;
+    }
+    const fallback = new Date(dateStr);
+    return isNaN(fallback.getTime()) ? null : fallback;
+  };
+
   const bdayMembersThisWeek = useMemo(() => {
-    return jemaatList.filter((j) => {
-      if (!j.tanggalLahir) return false;
-      const bday = new Date(j.tanggalLahir);
-      if (isNaN(bday.getTime())) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Birthday month and day this year
+    const getNextBirthday = (tanggalLahir: string): Date | null => {
+      const bday = parseLocalDate(tanggalLahir);
+      if (!bday) return null;
       const bdayThisYear = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
-      // Birthday next year (for December -> January transition check)
-      const bdayNextYear = new Date(today.getFullYear() + 1, bday.getMonth(), bday.getDate());
-
-      // Closest upcoming birthday date
-      let nextBday = bdayThisYear;
       if (bdayThisYear.getTime() < today.getTime()) {
-        nextBday = bdayNextYear;
+        return new Date(today.getFullYear() + 1, bday.getMonth(), bday.getDate());
       }
+      return bdayThisYear;
+    };
 
-      // Calculate diff in days
+    return jemaatList.filter((j) => {
+      const nextBday = getNextBirthday(j.tanggalLahir);
+      if (!nextBday) return false;
       const diffTime = nextBday.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      // 0 means today, up to 7 days from now
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
       return diffDays >= 0 && diffDays <= 7;
     }).sort((a, b) => {
-      const bdayA = new Date(a.tanggalLahir);
-      const bdayB = new Date(b.tanggalLahir);
-      
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const nextA = new Date(today.getFullYear(), bdayA.getMonth(), bdayA.getDate());
-      if (nextA.getTime() < today.getTime()) nextA.setFullYear(today.getFullYear() + 1);
-
-      const nextB = new Date(today.getFullYear(), bdayB.getMonth(), bdayB.getDate());
-      if (nextB.getTime() < today.getTime()) nextB.setFullYear(today.getFullYear() + 1);
-
+      const nextA = getNextBirthday(a.tanggalLahir)!;
+      const nextB = getNextBirthday(b.tanggalLahir)!;
       return nextA.getTime() - nextB.getTime();
     });
   }, [jemaatList]);
@@ -462,10 +332,8 @@ export default function MemberView({
       .reduce((sum, t) => sum + t.jumlah, 0);
   }, [transaksiList]);
 
-  const saldoKas = totalPemasukan - totalPengeluaran;
-
   // Helper functions for cash classification
-  const getTipeKasOfTransaction = (t: Transaksi, customTitle: string): 'Kas Huria' | 'Kas Pembangunan' | 'Kas Diakonia' | 'Kas Kustom' => {
+  const getTipeKasOfTransaction = (t: Transaksi): 'Kas Huria' | 'Kas Pembangunan' | 'Kas Diakonia' | 'Kas Kustom' => {
     if (t.tipeKas) {
       if (t.tipeKas === 'Kas Huria') return 'Kas Huria';
       if (t.tipeKas === 'Kas Pembangunan') return 'Kas Pembangunan';
@@ -493,67 +361,67 @@ export default function MemberView({
   };
 
   const getTipeKasDisplayClass = (resolved: 'Kas Huria' | 'Kas Pembangunan' | 'Kas Diakonia' | 'Kas Kustom') => {
-    if (resolved === 'Kas Huria') return 'bg-blue-50 text-blue-700 border-blue-200';
-    if (resolved === 'Kas Pembangunan') return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-    if (resolved === 'Kas Diakonia') return 'bg-pink-50 text-pink-700 border-pink-200';
-    return 'bg-amber-50 text-amber-700 border-amber-200';
+    if (resolved === 'Kas Huria') return 'bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]';
+    if (resolved === 'Kas Pembangunan') return 'bg-[#F4F6FA] text-[#1D3B6E] border-slate-300';
+    if (resolved === 'Kas Diakonia') return 'bg-slate-100 text-slate-700 border-slate-300';
+    return 'bg-white text-[#0F2447] border-[#0F2447]/30';
   };
 
   // Kas Huria
   const saldoKasHuria = useMemo(() => {
     const pemasukan = transaksiList
-      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Huria')
+      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t) === 'Kas Huria')
       .reduce((sum, t) => {
         const pct = t.sentralisasiPersen || 0;
         return sum + (t.jumlah * (1 - pct / 100));
       }, 0);
     const pengeluaran = transaksiList
-      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Huria')
+      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t) === 'Kas Huria')
       .reduce((sum, t) => sum + t.jumlah, 0);
     return pemasukan - pengeluaran;
-  }, [transaksiList, customBalanceTitle]);
+  }, [transaksiList]);
 
   // Kas Pembangunan
   const saldoKasPembangunan = useMemo(() => {
     const pemasukan = transaksiList
-      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Pembangunan')
+      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t) === 'Kas Pembangunan')
       .reduce((sum, t) => {
         const pct = t.sentralisasiPersen || 0;
         return sum + (t.jumlah * (1 - pct / 100));
       }, 0);
     const pengeluaran = transaksiList
-      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Pembangunan')
+      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t) === 'Kas Pembangunan')
       .reduce((sum, t) => sum + t.jumlah, 0);
     return pemasukan - pengeluaran;
-  }, [transaksiList, customBalanceTitle]);
+  }, [transaksiList]);
 
   // Diakonia Sosial
   const saldoDiakoniaSosial = useMemo(() => {
     const pemasukan = transaksiList
-      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Diakonia')
+      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t) === 'Kas Diakonia')
       .reduce((sum, t) => {
         const pct = t.sentralisasiPersen || 0;
         return sum + (t.jumlah * (1 - pct / 100));
       }, 0);
     const pengeluaran = transaksiList
-      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Diakonia')
+      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t) === 'Kas Diakonia')
       .reduce((sum, t) => sum + t.jumlah, 0);
     return pemasukan - pengeluaran;
-  }, [transaksiList, customBalanceTitle]);
+  }, [transaksiList]);
 
   // Active Custom Balance Value
   const activeCustomBalanceValue = useMemo(() => {
     const pemasukan = transaksiList
-      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Kustom')
+      .filter((t) => t.tipe === 'pemasukan' && getTipeKasOfTransaction(t) === 'Kas Kustom')
       .reduce((sum, t) => {
         const pct = t.sentralisasiPersen || 0;
         return sum + (t.jumlah * (1 - pct / 100));
       }, 0);
     const pengeluaran = transaksiList
-      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t, customBalanceTitle) === 'Kas Kustom')
+      .filter((t) => t.tipe === 'pengeluaran' && getTipeKasOfTransaction(t) === 'Kas Kustom')
       .reduce((sum, t) => sum + t.jumlah, 0);
     return customBalanceValue + pemasukan - pengeluaran;
-  }, [transaksiList, customBalanceValue, customBalanceTitle]);
+  }, [transaksiList, customBalanceValue]);
 
   // Chart data preparing
   const chartData = useMemo(() => {
@@ -595,23 +463,18 @@ export default function MemberView({
 
   // Humanize Birthday Display
   const getBdayDiffString = (tanggalLahir: string) => {
-    const bday = new Date(tanggalLahir);
-    if (isNaN(bday.getTime())) {
+    const bday = parseLocalDate(tanggalLahir);
+    if (!bday) {
       return { text: '', isToday: false, age: 0 };
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const bdayYear = bday.getFullYear();
-    const age = today.getFullYear() - bdayYear;
-
     const bdayThisYear = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
     const bdayNextYear = new Date(today.getFullYear() + 1, bday.getMonth(), bday.getDate());
 
-    let nextBday = bdayThisYear;
-    if (bdayThisYear.getTime() < today.getTime()) {
-      nextBday = bdayNextYear;
-    }
+    const nextBday = bdayThisYear.getTime() < today.getTime() ? bdayNextYear : bdayThisYear;
+    const age = nextBday.getFullYear() - bday.getFullYear();
 
     const diffTime = nextBday.getTime() - today.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
@@ -620,24 +483,19 @@ export default function MemberView({
       return { text: 'Hari Ini! 🎂', isToday: true, age };
     } else if (diffDays === 1) {
       return { text: 'Besok', isToday: false, age };
-    } else if (diffDays === -1) {
-      return { text: 'Kemarin', isToday: false, age };
-    } else if (diffDays > 1) {
-      return { text: `${diffDays} hari lagi`, isToday: false, age };
-    } else {
-      return { text: `${Math.abs(diffDays)} hari lalu`, isToday: false, age };
     }
+    return { text: `${diffDays} hari lagi`, isToday: false, age };
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#F4F6FA] text-slate-800 flex flex-col font-sans relative overflow-x-hidden">
       
       {/* HEADER BAR */}
       {activeTab !== 'live' && (
-        <header className="sticky top-0 z-40 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 shadow-md px-4 py-3.5">
+        <header className="sticky top-0 z-40 bg-[#0F2447] border-b border-[#1D3B6E] shadow-sm px-4 py-3.5">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-11 h-11 rounded-xl overflow-hidden bg-white/10 border border-white/20 flex items-center justify-center p-0.5 shadow-md">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden bg-white shadow-xs border border-white/25 flex items-center justify-center p-1.5 shrink-0">
                 <img
                   src="/hkbp.png"
                   alt="HKBP Logo"
@@ -646,18 +504,18 @@ export default function MemberView({
                 />
               </div>
               <div>
-                <h1 className="text-base md:text-lg font-bold text-white tracking-tight leading-none">
+                <h1 className="text-base md:text-lg font-extrabold text-white tracking-tight leading-none">
                   HKBP Hinalang Silalahi
                 </h1>
-                <p className="text-[10px] md:text-xs text-blue-100 mt-1 font-medium tracking-wide">Resort Hinalang Silalahi (Distrik XI Toba Hasundutan) </p>
+                <p className="text-[10px] md:text-xs text-white/75 mt-1 font-medium tracking-wide">Resort Hinalang Silalahi (Distrik XI Toba Hasundutan)</p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
               <button
                 type="button"
                 onClick={() => setIsDrawerOpen(true)}
-                className="p-2.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer backdrop-blur-md flex items-center justify-center"
+                className="p-2 sm:p-2.5 rounded-xl border border-white/15 bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center justify-center"
                 title="Menu Gereja"
               >
                 <Menu className="w-5 h-5" />
@@ -666,7 +524,7 @@ export default function MemberView({
               <button
                 type="button"
                 onClick={onGoToLogin}
-                className="text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer backdrop-blur-md"
+                className="text-xs font-bold uppercase tracking-wider px-3 sm:px-4 py-2 rounded-xl border border-white/20 bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer"
               >
                 Admin
               </button>
@@ -676,7 +534,9 @@ export default function MemberView({
       )}
 
       {/* CORE FRAME FOR TABS */}
-      <main className={`flex-1 w-full mx-auto relative z-10 transition-all duration-300 ${activeTab === 'live' ? 'max-w-none p-0 pb-16 md:pb-16' : 'max-w-4xl p-4 pb-20 md:pb-12'}`}>
+      <main 
+        className={`flex-1 w-full mx-auto relative z-10 transition-all duration-200 ${activeTab === 'live' ? 'max-w-none p-0 pb-16 md:pb-16' : 'max-w-4xl p-4 pb-20 md:pb-12'}`}
+      >
         <AnimatePresence mode="wait">
                   {/* TAB 1: KEBAKTIAN GABUNGAN (MINGGU & PARTANGIANGAN) */}
           {activeTab === 'minggu' && (
@@ -689,13 +549,13 @@ export default function MemberView({
               className="space-y-4"
             >
               {/* Segmented Toggler */}
-              <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-sm max-w-md mx-auto mb-6">
+              <div className="flex bg-[#E8EEF6] p-1 rounded-xl border border-[#D4DFEE] max-w-md mx-auto mb-6">
                 <button
                   onClick={() => setKebaktianSubTab('minggu')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+                  className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                     kebaktianSubTab === 'minggu'
-                      ? 'bg-blue-600 text-white shadow shadow-blue-500/10'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#0F2447] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-[#0F2447]'
                   }`}
                 >
                   <BookOpen className="w-4 h-4" />
@@ -703,10 +563,10 @@ export default function MemberView({
                 </button>
                 <button
                   onClick={() => setKebaktianSubTab('partangiangan')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+                  className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                     kebaktianSubTab === 'partangiangan'
-                      ? 'bg-blue-600 text-white shadow shadow-blue-500/10'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#0F2447] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-[#0F2447]'
                   }`}
                 >
                   <Calendar className="w-4 h-4" />
@@ -718,35 +578,49 @@ export default function MemberView({
                 /* Sunday Liturgy */
                 liturgiMinggu.slice(0, 1).map((liturgy) => {
                   return (
-                    <div key={liturgy.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md relative z-10" id="agenda-minggu-container">
+                    <div key={liturgy.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10" id="agenda-minggu-container">
                       
-                      {/* Card header with info and optional download button */}
-                      <div className="p-5 bg-slate-50 border-b border-slate-200">
+                      {/* Card header with info */}
+                      <div className="p-5 bg-[#EDF2F9]/60 border-b border-slate-200">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
                             <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
-                              <span className="text-[10px] bg-blue-50 border border-blue-200 text-blue-600 font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                              <span className="text-[10px] bg-[#0F2447] text-white font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
                                 Kebaktian Minggu 
                               </span>
                             </div>
-                            <h3 className="text-base md:text-lg font-black text-slate-900 mt-2.5">{liturgy.judul}</h3>
+                            <h3 
+                              style={zoomStyles.judulUtama}
+                              className="font-extrabold text-[#0F2447] mt-2.5 transition-all"
+                            >
+                              {liturgy.judul}
+                            </h3>
                             {liturgy.topik && (
-                              <div className="mt-2 text-xs md:text-sm font-extrabold text-blue-700 bg-blue-50/70 border border-blue-100 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 max-w-full">
-                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse shrink-0"></span>
+                              <div 
+                                style={zoomStyles.topikAcara}
+                                className="mt-2 font-bold text-[#0F2447] bg-white border border-[#CBD7EA] px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 max-w-full transition-all"
+                              >
+                                <span className="w-1.5 h-1.5 bg-[#0F2447] rounded-full shrink-0"></span>
                                 <span className="break-words">Topik: {liturgy.topik}</span>
                               </div>
                             )}
                             {(liturgy.ayatReferensi || liturgy.ayatBacaan) && (
                               <div className="mt-2 flex flex-wrap gap-2 items-center">
                                 {liturgy.ayatReferensi && (
-                                  <div className="text-xs text-amber-900 font-extrabold bg-amber-100/90 border border-amber-300 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 shadow-2xs">
-                                    <BookOpen className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                                  <div 
+                                    style={zoomStyles.topikAcara}
+                                    className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                  >
+                                    <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                                     <span>Epistel: {liturgy.ayatReferensi}</span>
                                   </div>
                                 )}
                                 {liturgy.ayatBacaan && (
-                                  <div className="text-xs text-amber-900 font-extrabold bg-amber-100/90 border border-amber-300 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 shadow-2xs">
-                                    <BookOpen className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                                  <div 
+                                    style={zoomStyles.topikAcara}
+                                    className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                  >
+                                    <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                                     <span>Khotbah: {liturgy.ayatBacaan}</span>
                                   </div>
                                 )}
@@ -763,17 +637,20 @@ export default function MemberView({
                             {liturgy.teksLiturgi.map((step) => {
                                const isExpanded = !!expandedLiturgySteps[step.id];
                                return (
-                                 <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-slate-50">
+                                 <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-[#F4F6FA]">
                                    <button
                                      onClick={() => toggleStep(step.id)}
-                                     className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group"
+                                     className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group py-1"
                                    >
-                                     <div className="flex items-start space-x-2.5">
-                                       <span className="text-xs md:text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+                                     <div className="flex items-start space-x-2.5 flex-1 pr-2">
+                                       <span 
+                                         style={zoomStyles.judulAcara}
+                                         className="font-bold text-slate-800 group-hover:text-[#0F2447] transition-all leading-snug"
+                                       >
                                          {step.label}
                                        </span>
                                      </div>
-                                     <div className="text-slate-400 group-hover:text-slate-600 pl-2 shrink-0">
+                                     <div className="text-slate-400 group-hover:text-[#0F2447] pl-2 shrink-0">
                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                      </div>
                                    </button>
@@ -787,7 +664,10 @@ export default function MemberView({
                                          transition={{ duration: 0.15 }}
                                          className="overflow-hidden"
                                        >
-                                         <div className="mt-2.5 pl-3.5 border-l-2 border-blue-500 text-xs md:text-sm text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150">
+                                         <div 
+                                           style={zoomStyles.isiAcara}
+                                           className="mt-2.5 pl-3.5 border-l-2 border-[#0F2447] text-slate-700 leading-relaxed whitespace-pre-line bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-200/80 transition-all font-sans"
+                                         >
                                            {step.isi}
                                          </div>
                                        </motion.div>
@@ -801,7 +681,7 @@ export default function MemberView({
                             </div>
                           </>
                         ) : (
-                          <div className="p-8 text-center bg-slate-50/50 rounded-2xl m-2 border border-dashed border-slate-200">
+                          <div className="p-8 text-center bg-[#F4F6FA] rounded-xl m-2 border border-dashed border-slate-200">
                             <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
                             <p className="text-xs font-bold text-slate-700">Acara belum di isi oleh pengurus</p>
                           </div>
@@ -814,35 +694,51 @@ export default function MemberView({
                 /* Partangiangan Liturgy */
                 liturgiPartangiangan.slice(0, 1).map((liturgy) => {
                   return (
-                    <div key={liturgy.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md relative z-10" id="agenda-partangiangan-container">
+                    <div key={liturgy.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10" id="agenda-partangiangan-container">
                       
-                      {/* Card header with info and optional download button */}
-                      <div className="p-5 bg-slate-50 border-b border-slate-200">
+                      {/* Card header with info */}
+                      <div className="p-5 bg-[#EDF2F9]/60 border-b border-slate-200">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
                             <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
-                              <span className="text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-600 font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                              <span className="text-[10px] bg-[#0F2447] text-white font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
                                 Ibadah Lingkungan/Keluarga
                               </span>
                             </div>
-                            <h3 className="text-base md:text-lg font-black text-slate-900 mt-2.5">{liturgy.judul}</h3>
-                            <div className="flex items-center space-x-2 text-xs text-slate-500 mt-1.5">
-                              <Clock className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                            <h3 
+                              style={zoomStyles.judulUtama}
+                              className="font-extrabold text-[#0F2447] mt-2.5 transition-all"
+                            >
+                              {liturgy.judul}
+                            </h3>
+                            <div 
+                              style={zoomStyles.topikAcara}
+                              className="flex items-center space-x-2 text-slate-600 mt-1.5 transition-all"
+                            >
+                              <Clock className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                               <span>Jadwal: {liturgy.tanggal} (Pkl 19:30 WIB)</span>
                             </div>
                             {(liturgy.ayatReferensi || liturgy.ayatBacaan) && (
-                              <>
+                              <div className="mt-2 flex flex-wrap gap-2 items-center">
                                 {liturgy.ayatReferensi && (
-                                  <div className="mt-2 text-xs text-amber-800 font-bold bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg inline-block mr-2">
-                                    Epistel: {liturgy.ayatReferensi}
+                                  <div 
+                                    style={zoomStyles.topikAcara}
+                                    className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                  >
+                                    <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
+                                    <span>Epistel: {liturgy.ayatReferensi}</span>
                                   </div>
                                 )}
                                 {liturgy.ayatBacaan && (
-                                  <div className="mt-2 text-xs text-amber-800 font-bold bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg inline-block">
-                                    Khotbah: {liturgy.ayatBacaan}
+                                  <div 
+                                    style={zoomStyles.topikAcara}
+                                    className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                  >
+                                    <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
+                                    <span>Khotbah: {liturgy.ayatBacaan}</span>
                                   </div>
                                 )}
-                              </>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -855,17 +751,20 @@ export default function MemberView({
                             {liturgy.teksLiturgi.map((step) => {
                               const isExpanded = !!expandedLiturgySteps[step.id];
                               return (
-                                <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-slate-50">
+                                <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-[#F4F6FA]">
                                   <button
                                     onClick={() => toggleStep(step.id)}
-                                    className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group"
+                                    className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group py-1"
                                   >
-                                    <div className="flex items-start space-x-2.5">
-                                      <span className="text-xs md:text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">
+                                    <div className="flex items-start space-x-2.5 flex-1 pr-2">
+                                      <span 
+                                        style={zoomStyles.judulAcara}
+                                        className="font-bold text-slate-800 group-hover:text-[#0F2447] transition-all leading-snug"
+                                      >
                                         {step.label}
                                       </span>
                                     </div>
-                                    <div className="text-slate-400 group-hover:text-slate-600 pl-2 shrink-0">
+                                    <div className="text-slate-400 group-hover:text-[#0F2447] pl-2 shrink-0">
                                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                     </div>
                                   </button>
@@ -879,7 +778,10 @@ export default function MemberView({
                                         transition={{ duration: 0.15 }}
                                         className="overflow-hidden"
                                       >
-                                        <div className="mt-2.5 pl-3.5 border-l-2 border-emerald-500 text-xs md:text-sm text-slate-700 whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150 leading-relaxed">
+                                        <div 
+                                          style={zoomStyles.isiAcara}
+                                          className="mt-2.5 pl-3.5 border-l-2 border-[#0F2447] text-slate-700 whitespace-pre-line bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-200/80 leading-relaxed transition-all font-sans"
+                                        >
                                           {step.isi}
                                         </div>
                                       </motion.div>
@@ -893,7 +795,7 @@ export default function MemberView({
                             </div>
                           </>
                         ) : (
-                          <div className="p-8 text-center bg-slate-50/50 rounded-2xl m-2 border border-dashed border-slate-200">
+                          <div className="p-8 text-center bg-[#F4F6FA] rounded-xl m-2 border border-dashed border-slate-200">
                             <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
                             <p className="text-xs font-bold text-slate-700">Acara belum di isi oleh pengurus</p>
                           </div>
@@ -917,8 +819,8 @@ export default function MemberView({
               className="space-y-6"
             >
               <div className="bg-white border border-slate-200 p-5 rounded-2xl flex items-center space-x-3 shadow-sm relative z-10">
-                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl shrink-0 border border-amber-200">
-                  <Users className="w-6 h-6 text-amber-600" />
+                <div className="p-2.5 bg-[#EDF2F9] text-[#0F2447] rounded-xl shrink-0 border border-[#CBD7EA]">
+                  <Users className="w-6 h-6 text-[#0F2447]" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Daftar Petugas & Pelayan Ibadah</h3>
@@ -929,13 +831,13 @@ export default function MemberView({
               </div>
 
               {/* Segmented Toggler */}
-              <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-sm max-w-md mx-auto mb-2">
+              <div className="flex bg-[#E8EEF6] p-1 rounded-2xl border border-[#D4DFEE] shadow-sm max-w-md mx-auto mb-2">
                 <button
                   onClick={() => setPetugasSubTab('minggu')}
                   className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                     petugasSubTab === 'minggu'
-                      ? 'bg-amber-600 text-white shadow shadow-amber-500/10'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#0F2447] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-[#0F2447]'
                   }`}
                 >
                   <Users className="w-4 h-4" />
@@ -945,8 +847,8 @@ export default function MemberView({
                   onClick={() => setPetugasSubTab('partangiangan')}
                   className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                     petugasSubTab === 'partangiangan'
-                      ? 'bg-amber-600 text-white shadow shadow-amber-500/10'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#0F2447] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-[#0F2447]'
                   }`}
                 >
                   <Users className="w-4 h-4" />
@@ -962,37 +864,37 @@ export default function MemberView({
                     <div className="bg-slate-50 border-b border-slate-200 px-5 py-3.5">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="flex items-center space-x-2">
-                          <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                          <div className="w-2.5 h-2.5 bg-[#0F2447] rounded-full"></div>
                           <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Jadwal Petugas Ibadah Minggu</span>
                         </div>
                       </div>
 
                       {/* DATE FOR PETUGAS MINGGU */}
-                      <div className="mt-3 flex items-center space-x-2 text-xs bg-emerald-50/50 border border-emerald-100 rounded-xl px-3.5 py-2 text-emerald-950 font-semibold max-w-md">
-                        <Calendar className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Tanggal: <span className="font-extrabold text-emerald-800">{petugasMingguDate || 'Belum diatur'}</span></span>
+                      <div className="mt-3 flex items-center space-x-2 text-xs bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl px-3.5 py-2 text-[#0F2447] font-semibold max-w-md">
+                        <Calendar className="w-4 h-4 text-[#0F2447] shrink-0" />
+                        <span>Tanggal: <span className="font-extrabold text-[#0F2447]">{petugasMingguDate || 'Belum diatur'}</span></span>
                       </div>
                     </div>
 
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse">
                         <thead>
-                          <tr className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white border-b border-blue-800">
-                            <th rowSpan={2} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-800 min-w-[150px] bg-blue-900 text-white">
+                          <tr className="bg-[#0F2447] text-white border-b border-[#1D3B6E]">
+                            <th rowSpan={2} className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[150px] bg-[#0F2447] text-white">
                               Tugas
                             </th>
-                            <th colSpan={3} className="px-4 py-2 text-center text-xs font-black uppercase tracking-wider border-b border-blue-800 bg-blue-900 text-white">
+                            <th colSpan={3} className="px-4 py-2 text-center text-xs font-black uppercase tracking-wider border-b border-[#1D3B6E] bg-[#0F2447] text-white">
                               Petugas
                             </th>
                           </tr>
-                          <tr className="bg-blue-800 text-blue-100 border-b border-blue-700">
-                            <th className="px-4 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider border-r border-blue-700 bg-blue-800 text-blue-100">
+                          <tr className="bg-[#16305C] text-white/90 border-b border-[#1D3B6E]">
+                            <th className="px-4 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider border-r border-[#1D3B6E] bg-[#16305C] text-white/90">
                               Shift 1
                             </th>
-                            <th className="px-4 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider border-r border-blue-700 bg-blue-800 text-blue-100">
+                            <th className="px-4 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider border-r border-[#1D3B6E] bg-[#16305C] text-white/90">
                               Shift 2
                             </th>
-                            <th className="px-4 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider bg-blue-800 text-blue-100">
+                            <th className="px-4 py-2 text-center text-[10px] font-extrabold uppercase tracking-wider bg-[#16305C] text-white/90">
                               Sekolah Minggu
                             </th>
                           </tr>
@@ -1049,49 +951,49 @@ export default function MemberView({
                           <div className="bg-slate-50 border-b border-slate-200 px-5 py-4">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                               <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 bg-teal-500 rounded-full animate-pulse"></div>
+                                <div className="w-3 h-3 bg-[#0F2447] rounded-full"></div>
                                 <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide">
                                   Torop Naro Mandohoti Partangiangan di Minggu Naung Salpu
                                 </h4>
                               </div>
-                              <span className="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-full uppercase self-start sm:self-auto">
+                              <span className="text-[10px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-2.5 py-0.5 rounded-lg uppercase self-start sm:self-auto">
                                 Statistik Kehadiran
                               </span>
                             </div>
 
                             {/* DATE FOR TABEL 1 */}
-                            <div className="mt-3 flex items-center space-x-2 text-xs bg-teal-50/50 border border-teal-100 rounded-xl px-3.5 py-2 text-teal-950 font-semibold max-w-md">
-                              <Calendar className="w-4 h-4 text-teal-600 shrink-0" />
-                              <span>Tanggal: <span className="font-extrabold text-teal-800">{partangianganAttendanceDate || 'Belum diatur'}</span></span>
+                            <div className="mt-3 flex items-center space-x-2 text-xs bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl px-3.5 py-2 text-[#0F2447] font-semibold max-w-md">
+                              <Calendar className="w-4 h-4 text-[#0F2447] shrink-0" />
+                              <span>Tanggal: <span className="font-extrabold text-[#0F2447]">{partangianganAttendanceDate || 'Belum diatur'}</span></span>
                             </div>
                           </div>
 
                           <div className="overflow-x-auto">
                             <table className="w-full border-collapse">
                               <thead>
-                                <tr className="bg-gradient-to-r from-teal-900 to-emerald-900 text-white border-b border-teal-950">
-                                  <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[100px]">
+                                <tr className="bg-[#0F2447] text-white border-b border-[#1D3B6E]">
+                                  <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[100px]">
                                     Hari
                                   </th>
-                                  <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[150px]">
+                                  <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[150px]">
                                     Lunggu
                                   </th>
-                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[70px]">
                                     Ama
                                   </th>
-                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[70px]">
                                     Ina
                                   </th>
-                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[70px]">
                                     SM
                                   </th>
-                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[70px]">
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[70px]">
                                     ReNa
                                   </th>
-                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-teal-950 min-w-[80px]">
+                                  <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[80px]">
                                     Parhalado
                                   </th>
-                                  <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider min-w-[90px] bg-emerald-950/40">
+                                  <th className="px-4 py-3 text-center text-xs font-black uppercase tracking-wider min-w-[90px] bg-[#091731]">
                                     Naro (Total)
                                   </th>
                                 </tr>
@@ -1106,8 +1008,8 @@ export default function MemberView({
                                   return (
                                     <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                                       <td className="px-4 py-3 text-xs font-bold text-slate-700 text-center border-r border-slate-200">
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                          row.hari === 'Selasa' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-sky-100 text-sky-800 border border-sky-200'
+                                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
+                                          row.hari === 'Selasa' ? 'bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]' : 'bg-slate-100 text-slate-700 border border-slate-200'
                                         }`}>
                                           {row.hari}
                                         </span>
@@ -1130,7 +1032,7 @@ export default function MemberView({
                                       <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
                                         {row.parhalado}
                                       </td>
-                                      <td className="px-4 py-3 text-xs font-extrabold text-teal-800 text-center bg-teal-50/30">
+                                      <td className="px-4 py-3 text-xs font-extrabold text-[#0F2447] text-center bg-[#EDF2F9]/60">
                                         {rowTotal}
                                       </td>
                                     </tr>
@@ -1138,26 +1040,26 @@ export default function MemberView({
                                 })}
 
                                 {/* BARIS 7: TOROP NARO (GRAND TOTALS) */}
-                                <tr className="bg-teal-50/80 border-t-2 border-teal-300 font-extrabold text-slate-900">
-                                  <td colSpan={2} className="px-4 py-3.5 text-xs font-black text-teal-950 uppercase tracking-wide border-r border-teal-200 text-left bg-teal-100/60">
+                                <tr className="bg-[#EDF2F9] border-t-2 border-[#CBD7EA] font-extrabold text-[#0F2447]">
+                                  <td colSpan={2} className="px-4 py-3.5 text-xs font-black text-[#0F2447] uppercase tracking-wide border-r border-[#CBD7EA] text-left bg-[#E8EEF6]">
                                     Torop Naro (Total Jumlah)
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                     {totalAma}
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                     {totalIna}
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                     {totalSM}
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                     {totalReNa}
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-teal-200 bg-teal-50/20 text-teal-950">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
                                     {totalParhalado}
                                   </td>
-                                  <td className="px-4 py-3.5 text-xs text-center bg-teal-600 text-white font-black">
+                                  <td className="px-4 py-3.5 text-xs text-center bg-[#0F2447] text-white font-black">
                                     {grandTotalNaro}
                                   </td>
                                 </tr>
@@ -1175,50 +1077,50 @@ export default function MemberView({
                         <div className="bg-slate-50 border-b border-slate-200 px-5 py-4">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div className="flex items-center space-x-2">
-                              <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
+                              <div className="w-3 h-3 bg-[#0F2447] rounded-full"></div>
                               <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide">
                                 Petugas Partangiangan
                               </h4>
                             </div>
-                            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full uppercase self-start sm:self-auto">
+                            <span className="text-[10px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-2.5 py-0.5 rounded-lg uppercase self-start sm:self-auto">
                               Pelayan Sektor
                             </span>
                           </div>
 
                           {/* DATE FOR TABEL 2 */}
-                          <div className="mt-3 flex items-center space-x-2 text-xs bg-indigo-50/50 border border-indigo-100 rounded-xl px-3.5 py-2 text-indigo-950 font-semibold max-w-md">
-                            <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
-                            <span>Tanggal: <span className="font-extrabold text-indigo-800">{petugasPartangianganDate || 'Belum diatur'}</span></span>
+                          <div className="mt-3 flex items-center space-x-2 text-xs bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl px-3.5 py-2 text-[#0F2447] font-semibold max-w-md">
+                            <Calendar className="w-4 h-4 text-[#0F2447] shrink-0" />
+                            <span>Tanggal: <span className="font-extrabold text-[#0F2447]">{petugasPartangianganDate || 'Belum diatur'}</span></span>
                           </div>
                         </div>
 
                         {partangianganMode === 'keluarga' ? (
-                          <div className="p-8 bg-gradient-to-br from-amber-50/80 via-orange-50/50 to-amber-50/80 text-center space-y-3">
-                            <div className="w-14 h-14 bg-amber-100 text-amber-800 rounded-2xl flex items-center justify-center mx-auto border border-amber-200 shadow-sm">
-                              <Building className="w-7 h-7 text-amber-700" />
+                          <div className="p-8 bg-[#EDF2F9]/60 text-center space-y-3">
+                            <div className="w-14 h-14 bg-[#0F2447] text-white rounded-2xl flex items-center justify-center mx-auto border border-[#1D3B6E] shadow-sm">
+                              <Building className="w-7 h-7 text-white" />
                             </div>
                             <div>
-                              <span className="text-[10px] font-extrabold uppercase bg-amber-200/80 text-amber-900 px-3 py-1 rounded-full tracking-wider border border-amber-300/60">
+                              <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-[#0F2447] px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
                                 Partangiangan Keluarga (Ibadah Keluarga)
                               </span>
-                              <h4 className="text-base font-black text-amber-950 mt-2">Ibadah Partangiangan Sektor</h4>
+                              <h4 className="text-base font-black text-[#0F2447] mt-2">Ibadah Partangiangan Sektor</h4>
                             </div>
-                            <p className="text-xs sm:text-sm font-bold text-amber-900 leading-relaxed max-w-2xl mx-auto bg-white/90 p-4 sm:p-5 rounded-2xl border border-amber-200/80 shadow-xs">
+                            <p className="text-xs sm:text-sm font-bold text-[#0F2447] leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
                               "tidak ada petugas ibadah partangiangan dikarenakan ibadah keluarga akan dilakukan di rumah masing masing"
                             </p>
                           </div>
                         ) : partangianganMode === 'selesai' ? (
-                          <div className="p-8 bg-gradient-to-br from-blue-50/80 via-indigo-50/50 to-blue-50/80 text-center space-y-3">
-                            <div className="w-14 h-14 bg-blue-100 text-blue-800 rounded-2xl flex items-center justify-center mx-auto border border-blue-200 shadow-sm">
-                              <Calendar className="w-7 h-7 text-blue-700" />
+                          <div className="p-8 bg-[#EDF2F9]/60 text-center space-y-3">
+                            <div className="w-14 h-14 bg-[#0F2447] text-white rounded-2xl flex items-center justify-center mx-auto border border-[#1D3B6E] shadow-sm">
+                              <Calendar className="w-7 h-7 text-white" />
                             </div>
                             <div>
-                              <span className="text-[10px] font-extrabold uppercase bg-blue-200/80 text-blue-900 px-3 py-1 rounded-full tracking-wider border border-blue-300/60">
+                              <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-[#0F2447] px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
                                 Informasi Akhir Tahun
                               </span>
-                              <h4 className="text-base font-black text-blue-950 mt-2">Status Ibadah Partangiangan</h4>
+                              <h4 className="text-base font-black text-[#0F2447] mt-2">Status Ibadah Partangiangan</h4>
                             </div>
-                            <p className="text-xs sm:text-sm font-bold text-blue-900 leading-relaxed max-w-2xl mx-auto bg-white/90 p-4 sm:p-5 rounded-2xl border border-blue-200/80 shadow-xs">
+                            <p className="text-xs sm:text-sm font-bold text-[#0F2447] leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
                               "tidak ada ibadah partangiangan karena ibadah partangiangann untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
                             </p>
                           </div>
@@ -1227,26 +1129,26 @@ export default function MemberView({
                             <div className="overflow-x-auto">
                               <table className="w-full border-collapse">
                                 <thead>
-                                  <tr className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white border-b border-blue-950">
-                                    <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[80px]">
+                                  <tr className="bg-[#0F2447] text-white border-b border-[#1D3B6E]">
+                                    <th className="px-3 py-3 text-center text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[80px]">
                                       Hari
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[120px]">
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[120px]">
                                       Lunggu
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[140px]">
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[140px]">
                                       Dibagas Ni Keluarga
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[160px]">
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[160px]">
                                       Alamat
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[130px] bg-indigo-950/20">
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[130px] bg-[#091731]">
                                       Jamita
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-blue-950 min-w-[130px] bg-indigo-950/20">
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider border-r border-[#1D3B6E] min-w-[130px] bg-[#091731]">
                                       Agenda
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider min-w-[130px] bg-indigo-950/20">
+                                    <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wider min-w-[130px] bg-[#091731]">
                                       Ende
                                     </th>
                                   </tr>
@@ -1256,8 +1158,8 @@ export default function MemberView({
                                     petugasPartangiangan.map((row, idx) => (
                                       <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-3 py-3 text-xs font-bold text-slate-700 text-center border-r border-slate-200">
-                                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                                            row.hari === 'Selasa' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-sky-100 text-sky-800 border border-sky-200'
+                                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
+                                            row.hari === 'Selasa' ? 'bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]' : 'bg-slate-100 text-slate-700 border border-slate-200'
                                           }`}>
                                             {row.hari}
                                           </span>
@@ -1271,13 +1173,13 @@ export default function MemberView({
                                         <td className="px-4 py-3 text-xs font-medium text-slate-600 border-r border-slate-200">
                                           {row.alamat || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-black text-indigo-950 bg-indigo-50/10 border-r border-slate-200">
+                                        <td className="px-4 py-3 text-xs font-black text-[#0F2447] bg-[#EDF2F9]/30 border-r border-slate-200">
                                           {row.jamita || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-black text-indigo-950 bg-indigo-50/10 border-r border-slate-200">
+                                        <td className="px-4 py-3 text-xs font-black text-[#0F2447] bg-[#EDF2F9]/30 border-r border-slate-200">
                                           {row.agenda || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-black text-indigo-950 bg-indigo-50/10">
+                                        <td className="px-4 py-3 text-xs font-black text-[#0F2447] bg-[#EDF2F9]/30">
                                           {row.ende || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
                                         </td>
                                       </tr>
@@ -1322,20 +1224,19 @@ export default function MemberView({
                 const smCount = latest1W.sekolahMinggu ?? latest1W.mingguSm ?? 95;
                 const shift1Count = latest1W.shift1 ?? latest1W.mingguAma ?? 215;
                 const shift2Count = latest1W.shift2 ?? latest1W.mingguIna ?? 212;
-                const totalSunday = smCount + shift1Count + shift2Count;
 
                 return (
-                  <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-md space-y-3.5 relative z-10">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 border-b border-slate-800 pb-2.5">
+                  <div className="bg-[#0F2447] text-white rounded-2xl p-4 sm:p-5 border border-[#1D3B6E] shadow-md space-y-3.5 relative z-10">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 border-b border-[#1D3B6E] pb-2.5">
                       <div>
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-white/10 text-white border border-white/20">
                           Ringkasan Kebaktian Minggu (1 Minggu)
                         </span>
-                        <h3 className="text-sm font-black text-white mt-1 flex items-center space-x-2">
-                          <TrendingUp className="w-4 h-4 text-emerald-400" />
+                        <h3 className="text-sm font-black text-white mt-1.5 flex items-center space-x-2">
+                          <TrendingUp className="w-4 h-4 text-white/80" />
                           <span>Statistik Kehadiran Kebaktian Minggu</span>
                         </h3>
-                        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">
+                        <p className="text-[10px] sm:text-[11px] text-white/70 mt-0.5">
                           Ibadah Minggu: {latest1W.tanggalRange || petugasMingguDate || 'Minggu Terbaru'}
                         </p>
                       </div>
@@ -1343,34 +1244,34 @@ export default function MemberView({
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       {/* Sekolah Minggu */}
-                      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between">
+                      <div className="bg-[#16305C] border border-[#24467D] rounded-xl p-3 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sekolah Minggu</span>
-                          <span className="text-lg font-black text-amber-400 mt-0.5 block">{smCount} <span className="text-xs font-normal text-slate-400">orang</span></span>
+                          <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider block">Sekolah Minggu</span>
+                          <span className="text-lg font-black text-white mt-0.5 block">{smCount} <span className="text-xs font-normal text-white/60">orang</span></span>
                         </div>
-                        <div className="p-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg">
+                        <div className="p-2 bg-white/10 border border-white/15 text-white rounded-lg">
                           <BookOpen className="w-4 h-4" />
                         </div>
                       </div>
 
                       {/* Shift 1 */}
-                      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between">
+                      <div className="bg-[#16305C] border border-[#24467D] rounded-xl p-3 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Shift 1 (Pagi)</span>
-                          <span className="text-lg font-black text-cyan-400 mt-0.5 block">{shift1Count} <span className="text-xs font-normal text-slate-400">orang</span></span>
+                          <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider block">Shift 1 (Pagi)</span>
+                          <span className="text-lg font-black text-white mt-0.5 block">{shift1Count} <span className="text-xs font-normal text-white/60">orang</span></span>
                         </div>
-                        <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-lg">
+                        <div className="p-2 bg-white/10 border border-white/15 text-white rounded-lg">
                           <Clock className="w-4 h-4" />
                         </div>
                       </div>
 
                       {/* Shift 2 */}
-                      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between">
+                      <div className="bg-[#16305C] border border-[#24467D] rounded-xl p-3 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Shift 2 (Siang)</span>
-                          <span className="text-lg font-black text-indigo-400 mt-0.5 block">{shift2Count} <span className="text-xs font-normal text-slate-400">orang</span></span>
+                          <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider block">Shift 2 (Siang)</span>
+                          <span className="text-lg font-black text-white mt-0.5 block">{shift2Count} <span className="text-xs font-normal text-white/60">orang</span></span>
                         </div>
-                        <div className="p-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-lg">
+                        <div className="p-2 bg-white/10 border border-white/15 text-white rounded-lg">
                           <Users className="w-4 h-4" />
                         </div>
                       </div>
@@ -1388,7 +1289,7 @@ export default function MemberView({
                     placeholder="Cari pokok warta jemaat..."
                     value={wartaSearch}
                     onChange={(e) => setWartaSearch(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447]/30 transition-all"
                   />
                 </div>
 
@@ -1398,10 +1299,10 @@ export default function MemberView({
                     <button
                       key={kategori}
                       onClick={() => setWartaFilter(kategori)}
-                      className={`text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full border cursor-pointer transition-all shrink-0 ${
+                      className={`text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-lg border cursor-pointer transition-all shrink-0 ${
                         wartaFilter === kategori
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/10'
-                          : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                          ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-sm'
+                          : 'bg-[#F1F5F9] border-slate-200 text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
                       }`}
                     >
                       {kategori === 'semua'
@@ -1434,12 +1335,12 @@ export default function MemberView({
                       key={warta.id}
                       className={`border rounded-2xl p-5 transition-all shadow-sm relative overflow-hidden hover:bg-slate-50/50 ${
                         warta.prioritas
-                          ? 'border-amber-300 bg-amber-50/30'
+                          ? 'border-[#0F2447]/40 bg-[#EDF2F9]/50'
                           : 'border-slate-200 bg-white'
                       }`}
                     >
                       {warta.prioritas && (
-                        <div className="absolute top-0 right-0 bg-amber-100/50 text-[9px] text-amber-800 font-bold px-3 py-1 uppercase tracking-wider rounded-bl-lg flex items-center space-x-1 border-b border-l border-amber-200">
+                        <div className="absolute top-0 right-0 bg-[#0F2447] text-[9px] text-white font-bold px-3 py-1 uppercase tracking-wider rounded-bl-lg flex items-center space-x-1">
                           <Sparkles className="w-2.5 h-2.5" />
                           <span>Penting</span>
                         </div>
@@ -1447,18 +1348,10 @@ export default function MemberView({
 
                       <div className="flex items-center space-x-2">
                         <span
-                          className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-lg tracking-wide border ${
-                            warta.kategori === 'umum'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
-                              : warta.kategori === 'pelayanan'
-                              ? 'bg-purple-50 text-purple-700 border-purple-200'
-                              : warta.kategori === 'keuangan'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : warta.kategori === 'sukacita'
-                              ? 'bg-amber-50 text-amber-700 border-amber-200'
-                              : warta.kategori === 'sektor'
-                              ? 'bg-sky-50 text-sky-700 border-sky-200'
-                              : 'bg-red-50 text-red-700 border-red-200'
+                          className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wide border ${
+                            warta.prioritas
+                              ? 'bg-[#0F2447] text-white border-[#0F2447]'
+                              : 'bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]'
                           }`}
                         >
                           {warta.kategori === 'duka'
@@ -1472,11 +1365,17 @@ export default function MemberView({
                         <span className="text-[10px] text-slate-500 font-medium">{warta.tanggal}</span>
                       </div>
 
-                      <h4 className="text-sm md:text-base font-bold text-slate-900 mt-2.5 leading-tight">
+                      <h4 
+                        style={zoomStyles.judulAcara}
+                        className="font-bold text-slate-900 mt-2.5 leading-tight transition-all"
+                      >
                         {warta.judul}
                       </h4>
 
-                      <div className="text-xs text-slate-700 leading-relaxed mt-3 whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150">
+                      <div 
+                        style={zoomStyles.isiAcara}
+                        className="text-slate-700 mt-3 whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150 transition-all font-sans"
+                      >
                         {warta.isi}
                       </div>
 
@@ -1507,8 +1406,8 @@ export default function MemberView({
                 {/* 1. GABUNGAN: TOTAL PEMASUKAN & PENGELUARAN */}
                 <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
-                      <Activity className="w-4 h-4 text-slate-500 animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#0F2447] flex items-center space-x-1.5">
+                      <Activity className="w-4 h-4 text-[#0F2447]" />
                       <span>Total Kas Masuk & Keluar</span>
                     </span>
                   </div>
@@ -1516,41 +1415,41 @@ export default function MemberView({
                     <div>
                       <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Pemasukan</span>
                       <div className="flex items-center space-x-1 mt-1">
-                        <ArrowUpRight className="w-4 h-4 text-emerald-500 shrink-0" />
-                        <h4 className="text-base font-black text-emerald-600 truncate">{formatRupiah(totalPemasukan)}</h4>
+                        <ArrowUpRight className="w-4 h-4 text-[#0F2447] shrink-0" />
+                        <h4 className="text-base font-black text-[#0F2447] truncate">{formatRupiah(totalPemasukan)}</h4>
                       </div>
                     </div>
                     <div className="pl-4">
                       <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Pengeluaran</span>
                       <div className="flex items-center space-x-1 mt-1">
-                        <ArrowDownRight className="w-4 h-4 text-red-500 shrink-0" />
-                        <h4 className="text-base font-black text-red-600 truncate">{formatRupiah(totalPengeluaran)}</h4>
+                        <ArrowDownRight className="w-4 h-4 text-slate-500 shrink-0" />
+                        <h4 className="text-base font-black text-slate-700 truncate">{formatRupiah(totalPengeluaran)}</h4>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* 2. GABUNGAN: SALDO KAS HURIA & KAS PEMBANGUNAN */}
-                <div className="bg-gradient-to-br from-blue-50/40 via-white to-indigo-50/40 border border-blue-200/80 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
-                  <div className="flex items-center justify-between border-b border-blue-100/60 pb-3 mb-2.5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-blue-800 flex items-center space-x-1.5">
-                      <Building className="w-4 h-4 text-blue-600" />
+                <div className="bg-[#EDF2F9] border border-[#CBD7EA] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                  <div className="flex items-center justify-between border-b border-[#CBD7EA] pb-3 mb-2.5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#0F2447] flex items-center space-x-1.5">
+                      <Building className="w-4 h-4 text-[#0F2447]" />
                       <span>Saldo Kas Huria & Kas Pembangunan</span>
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 divide-x divide-blue-100/50 mb-2">
+                  <div className="grid grid-cols-2 gap-3 divide-x divide-[#CBD7EA] mb-2">
                     <div>
-                      <span className="text-[9px] text-slate-500 uppercase font-bold block">Kas Huria (Umum)</span>
-                      <h4 className="text-sm font-extrabold text-blue-700 mt-0.5 truncate">{formatRupiah(saldoKasHuria)}</h4>
+                      <span className="text-[9px] text-slate-600 uppercase font-bold block">Kas Huria (Umum)</span>
+                      <h4 className="text-sm font-extrabold text-[#0F2447] mt-0.5 truncate">{formatRupiah(saldoKasHuria)}</h4>
                     </div>
                     <div className="pl-3">
-                      <span className="text-[9px] text-slate-500 uppercase font-bold block">Kas Pembangunan</span>
-                      <h4 className="text-sm font-extrabold text-indigo-700 mt-0.5 truncate">{formatRupiah(saldoKasPembangunan)}</h4>
+                      <span className="text-[9px] text-slate-600 uppercase font-bold block">Kas Pembangunan</span>
+                      <h4 className="text-sm font-extrabold text-[#0F2447] mt-0.5 truncate">{formatRupiah(saldoKasPembangunan)}</h4>
                     </div>
                   </div>
-                  <div className="border-t border-dashed border-blue-200/60 pt-2 flex items-center justify-between text-[10px] font-bold text-slate-600">
+                  <div className="border-t border-dashed border-[#CBD7EA] pt-2 flex items-center justify-between text-[10px] font-bold text-slate-600">
                     <span>Gabungan Saldo Kas:</span>
-                    <span className="text-xs font-black text-slate-800">{formatRupiah(saldoKasHuria + saldoKasPembangunan)}</span>
+                    <span className="text-xs font-black text-[#0F2447]">{formatRupiah(saldoKasHuria + saldoKasPembangunan)}</span>
                   </div>
                 </div>
 
@@ -1558,13 +1457,13 @@ export default function MemberView({
                 <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-slate-500 uppercase font-semibold flex items-center space-x-1">
-                      <Heart className="w-3.5 h-3.5 text-pink-500" />
+                      <Heart className="w-3.5 h-3.5 text-[#0F2447]" />
                       <span>Saldo Diakonia Sosial</span>
                     </span>
-                    <h4 className="text-lg font-black text-slate-800 mt-1">{formatRupiah(saldoDiakoniaSosial)}</h4>
+                    <h4 className="text-lg font-black text-[#0F2447] mt-1">{formatRupiah(saldoDiakoniaSosial)}</h4>
                     <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Khusus pelayanan kasih & sosial</span>
                   </div>
-                  <div className="p-3 bg-pink-50 text-pink-500 rounded-xl shrink-0 border border-pink-100">
+                  <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-xl shrink-0 border border-[#CBD7EA]">
                     <Heart className="w-5 h-5" />
                   </div>
                 </div>
@@ -1573,13 +1472,13 @@ export default function MemberView({
                 <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-slate-500 uppercase font-semibold flex items-center space-x-1">
-                      <Coins className="w-3.5 h-3.5 text-amber-500" />
+                      <Coins className="w-3.5 h-3.5 text-[#0F2447]" />
                       <span className="truncate max-w-[160px] block" title={customBalanceTitle}>{customBalanceTitle}</span>
                     </span>
-                    <h4 className="text-lg font-black text-slate-800 mt-1">{formatRupiah(activeCustomBalanceValue)}</h4>
+                    <h4 className="text-lg font-black text-[#0F2447] mt-1">{formatRupiah(activeCustomBalanceValue)}</h4>
                     <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Saldo kustom (menggabungkan basis & transaksi)</span>
                   </div>
-                  <div className="p-3 bg-amber-50 text-amber-500 rounded-xl shrink-0 border border-amber-100">
+                  <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-xl shrink-0 border border-[#CBD7EA]">
                     <Coins className="w-5 h-5" />
                   </div>
                 </div>
@@ -1601,12 +1500,12 @@ export default function MemberView({
                       <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} />
                       <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
                       <Tooltip
-                        contentStyle={{ backgroundColor: '#ffffff', borderColor: '#E2E8F0', color: '#1e293b', borderRadius: '12px' }}
+                        contentStyle={{ backgroundColor: '#ffffff', borderColor: '#CBD7EA', color: '#0F2447', borderRadius: '12px' }}
                         formatter={(value) => [formatRupiah(Number(value))]}
                       />
                       <Legend wrapperStyle={{ fontSize: 10 }} />
-                      <Bar dataKey="pemasukan" fill="#10B981" name="Pemasukan" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="pengeluaran" fill="#EF4444" name="Pengeluaran" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="pemasukan" fill="#0F2447" name="Pemasukan" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="pengeluaran" fill="#4C6B9E" name="Pengeluaran" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -1621,7 +1520,7 @@ export default function MemberView({
                   <select
                     value={keuanganFilter}
                     onChange={(e: any) => setKeuanganFilter(e.target.value)}
-                    className="bg-white text-xs border border-slate-200 rounded-lg p-1.5 text-slate-700 focus:outline-none focus:border-blue-500"
+                    className="bg-white text-xs border border-slate-200 rounded-lg p-1.5 text-slate-700 focus:outline-none focus:border-[#0F2447]"
                   >
                     <option value="semua">Semua Transaksi</option>
                     <option value="pemasukan">Hanya Pemasukan</option>
@@ -1632,7 +1531,7 @@ export default function MemberView({
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left border-collapse text-[11px] md:text-xs">
                     <thead>
-                      <tr className="border-b border-slate-200 text-slate-500 bg-slate-50">
+                      <tr className="border-b border-[#1D3B6E] text-white bg-[#0F2447]">
                         <th className="p-3">Tanggal</th>
                         <th className="p-3">Kategori</th>
                         <th className="p-3">Kas</th>
@@ -1650,17 +1549,17 @@ export default function MemberView({
                               <span className="font-semibold text-slate-800 block">{t.kategori}</span>
                               <span
                                 className={`text-[9px] px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wide inline-block mt-0.5 ${
-                                  t.tipe === 'pemasukan' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
+                                  t.tipe === 'pemasukan' ? 'bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]' : 'bg-slate-100 text-slate-700 border border-slate-200'
                                 }`}
                               >
                                 {t.tipe}
                               </span>
                             </td>
                             <td className="p-3 whitespace-nowrap">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                                getTipeKasDisplayClass(getTipeKasOfTransaction(t, customBalanceTitle))
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                                getTipeKasDisplayClass(getTipeKasOfTransaction(t))
                               }`}>
-                                {getTipeKasLabel(getTipeKasOfTransaction(t, customBalanceTitle), customBalanceTitle)}
+                                {getTipeKasLabel(getTipeKasOfTransaction(t), customBalanceTitle)}
                               </span>
                             </td>
                             <td className="p-3 text-slate-600 break-words whitespace-normal min-w-[150px] max-w-[300px]" title={t.keterangan}>
@@ -1668,13 +1567,13 @@ export default function MemberView({
                             </td>
                             <td
                               className={`p-3 text-right font-bold font-mono whitespace-nowrap ${
-                                t.tipe === 'pemasukan' ? 'text-emerald-600' : 'text-red-600'
+                                t.tipe === 'pemasukan' ? 'text-[#0F2447]' : 'text-slate-600'
                               }`}
                             >
                               <div className="flex flex-col items-end">
                                 <span>{t.tipe === 'pemasukan' ? '+' : '-'} {formatRupiah(t.jumlah)}</span>
                                 {t.tipe === 'pemasukan' && t.sentralisasiPersen ? (
-                                  <span className="text-[10px] text-amber-600 font-medium font-sans">
+                                  <span className="text-[10px] text-slate-500 font-medium font-sans">
                                     (sentral {t.sentralisasiPersen}% = {formatRupiah(t.jumlah * t.sentralisasiPersen / 100)})
                                   </span>
                                 ) : null}
@@ -1696,18 +1595,18 @@ export default function MemberView({
                           <span className="text-[10px] font-bold text-slate-400 font-mono">{t.tanggal}</span>
                           <div className="flex items-center space-x-1.5">
                             <span
-                              className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider ${
+                              className={`text-[8px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider ${
                                 t.tipe === 'pemasukan'
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : 'bg-red-50 text-red-700 border border-red-200'
+                                  ? 'bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]'
+                                  : 'bg-slate-100 text-slate-700 border border-slate-200'
                               }`}
                             >
                               {t.tipe}
                             </span>
-                            <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full border ${
-                              getTipeKasDisplayClass(getTipeKasOfTransaction(t, customBalanceTitle))
+                            <span className={`text-[8px] font-bold px-2 py-0.5 rounded-md border ${
+                              getTipeKasDisplayClass(getTipeKasOfTransaction(t))
                             }`}>
-                              {getTipeKasLabel(getTipeKasOfTransaction(t, customBalanceTitle), customBalanceTitle)}
+                              {getTipeKasLabel(getTipeKasOfTransaction(t), customBalanceTitle)}
                             </span>
                           </div>
                         </div>
@@ -1721,13 +1620,13 @@ export default function MemberView({
                           <div className="text-right shrink-0">
                             <span
                               className={`font-mono text-xs font-black whitespace-nowrap block ${
-                                t.tipe === 'pemasukan' ? 'text-emerald-600' : 'text-red-600'
+                                t.tipe === 'pemasukan' ? 'text-[#0F2447]' : 'text-slate-600'
                               }`}
                             >
                               {t.tipe === 'pemasukan' ? '+' : '-'} {formatRupiah(t.jumlah)}
                             </span>
                             {t.tipe === 'pemasukan' && t.sentralisasiPersen ? (
-                              <span className="text-[9px] text-amber-600 font-medium font-sans block mt-0.5">
+                              <span className="text-[9px] text-slate-500 font-medium font-sans block mt-0.5">
                                 (sentral {t.sentralisasiPersen}% = {formatRupiah(t.jumlah * t.sentralisasiPersen / 100)})
                               </span>
                             ) : null}
@@ -1756,22 +1655,18 @@ export default function MemberView({
               className="space-y-4"
             >
               {/* Celeb Header Banner */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 p-5 rounded-2xl shadow-sm relative overflow-hidden text-center relative z-10">
-                <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-25 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-400 via-transparent to-transparent"></div>
-                <div className="absolute -top-6 -left-6 w-20 h-20 bg-amber-500/5 rounded-full blur-xl"></div>
-                <div className="absolute -bottom-6 -right-6 w-20 h-20 bg-blue-500/10 rounded-full blur-xl"></div>
-
-                <div className="inline-flex p-3 bg-white text-amber-600 rounded-full border border-amber-200 mb-3 shadow-sm">
-                  <Gift className="w-8 h-8 animate-bounce" />
+              <div className="bg-[#EDF2F9] border border-[#CBD7EA] p-5 rounded-2xl shadow-sm relative overflow-hidden text-center relative z-10">
+                <div className="inline-flex p-3 bg-white text-[#0F2447] rounded-2xl border border-[#CBD7EA] mb-3 shadow-sm">
+                  <Gift className="w-8 h-8" />
                 </div>
-                <h3 className="text-base md:text-lg font-black tracking-tight text-slate-900 leading-tight">
+                <h3 className="text-base md:text-lg font-black tracking-tight text-[#0F2447] leading-tight">
                   Ulang Tahun Jemaat (1 Minggu Ini)
                 </h3>
-                <div className="bg-white/80 border border-amber-100 rounded-xl p-3 my-2.5 shadow-2xs max-w-md mx-auto text-amber-950 italic text-[11px] font-semibold leading-relaxed">
-                  "{currentVerse.text}" <span className="block text-[10px] text-amber-700 font-extrabold mt-1 not-italic uppercase tracking-wider">— {currentVerse.verse}</span>
+                <div className="bg-white border border-[#CBD7EA] rounded-xl p-3 my-2.5 shadow-2xs max-w-md mx-auto text-[#0F2447] italic text-[11px] font-semibold leading-relaxed">
+                  "{currentVerse.text}" <span className="block text-[10px] text-[#0F2447] font-extrabold mt-1 not-italic uppercase tracking-wider">— {currentVerse.verse}</span>
                 </div>
                 <p className="text-xs text-slate-600 mt-2 max-w-sm mx-auto leading-relaxed">
-                  Di bawah ini adalah daftar ruas jemaat yang berulang tahun pada periode <span className="text-amber-700 font-bold">
+                  Di bawah ini adalah daftar ruas jemaat yang berulang tahun pada periode <span className="text-[#0F2447] font-bold">
                     {(() => {
                       const today = new Date();
                       const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -1792,8 +1687,8 @@ export default function MemberView({
                   bdayMembersThisWeek.map((member) => {
                     const info = getBdayDiffString(member.tanggalLahir);
                     const formattedBday = (() => {
-                      const d = new Date(member.tanggalLahir);
-                      if (isNaN(d.getTime())) return member.tanggalLahir;
+                      const d = parseLocalDate(member.tanggalLahir);
+                      if (!d) return member.tanggalLahir;
                       return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                     })();
 
@@ -1802,12 +1697,12 @@ export default function MemberView({
                         key={member.id}
                         className={`border rounded-2xl p-5 shadow-sm transition-all relative overflow-hidden flex flex-col justify-between hover:bg-slate-50/50 ${
                           info.isToday
-                            ? 'bg-gradient-to-br from-blue-50/50 to-indigo-50/50 border-amber-400 ring-1 ring-amber-400/20'
+                            ? 'bg-[#EDF2F9] border-[#0F2447] ring-1 ring-[#0F2447]/20'
                             : 'bg-white border-slate-200'
                         }`}
                       >
                         {info.isToday && (
-                          <div className="absolute top-0 right-0 bg-amber-400 text-slate-950 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-bl-lg flex items-center space-x-1 shadow-sm">
+                          <div className="absolute top-0 right-0 bg-[#0F2447] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-bl-lg flex items-center space-x-1 shadow-sm">
                             <Sparkles className="w-2.5 h-2.5 shrink-0" />
                             <span>Hari Ini!</span>
                           </div>
@@ -1815,12 +1710,12 @@ export default function MemberView({
 
                         <div>
                           <div className="flex items-center space-x-2.5">
-                            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
+                            <div className="p-2.5 rounded-xl bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]">
                               <Gift className="w-4 h-4" />
                             </div>
                             <div>
                               <h4 className="text-sm font-black text-slate-900 leading-tight">{member.nama}</h4>
-                              <p className="text-[10px] text-blue-600 font-extrabold mt-0.5 uppercase tracking-wide">{member.sektor}</p>
+                              <p className="text-[10px] text-[#0F2447] font-extrabold mt-0.5 uppercase tracking-wide">{member.sektor}</p>
                             </div>
                           </div>
 
@@ -1831,7 +1726,7 @@ export default function MemberView({
                             </div>
                             <div className="flex items-center justify-between text-[11px]">
                               <span className="text-slate-500">Memasuki Umur:</span>
-                              <span className="text-amber-700 font-bold">{info.age} Tahun</span>
+                              <span className="text-[#0F2447] font-bold">{info.age} Tahun</span>
                             </div>
                           </div>
                         </div>
@@ -1840,195 +1735,6 @@ export default function MemberView({
                   })
                 )}
               </div>
-
-
-
-              {/* Jemaat Form Editor Modal Overlay */}
-              {editingJemaatId !== null && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-                  <div className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-scale">
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-700 to-indigo-950 text-white p-5 flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-white/10 rounded-xl">
-                          <Users className="w-5 h-5 text-amber-400" />
-                        </div>
-                        <div>
-                          <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider leading-none">
-                            {editingJemaatId === 'new' ? 'Tambah Anggota Baru' : 'Ubah Data Anggota Jemaat'}
-                          </h3>
-                          <p className="text-[10px] text-blue-200 font-semibold tracking-wide mt-1">
-                            {editingJemaatId === 'new' ? 'Daftarkan anggota jemaat baru ke database' : 'Perbarui informasi biodata & kolom tambahan anggota'}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setEditingJemaatId(null)}
-                        className="p-1.5 hover:bg-white/10 rounded-lg text-white/80 hover:text-white transition cursor-pointer"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    {/* Body */}
-                    <div className="p-6 overflow-y-auto space-y-5 flex-1">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nama Lengkap Jemaat</label>
-                          <input
-                            type="text"
-                            value={jmNama}
-                            onChange={(e) => setJmNama(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all shadow-xs"
-                            placeholder="Contoh: Sahat Siregar"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Tanggal Lahir (Ulang Tahun)</label>
-                          <input
-                            type="date"
-                            value={jmTglLahir}
-                            onChange={(e) => setJmTglLahir(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all shadow-xs"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Sektor Jemaat (Wijk wilayah)</label>
-                          <select
-                            value={jmSektor}
-                            onChange={(e) => setJmSektor(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all shadow-xs"
-                          >
-                            <option value="Sektor I">Sektor I (Wijk Immanuel)</option>
-                            <option value="Sektor II">Sektor II (Wijk Jerusalem)</option>
-                            <option value="Sektor III">Sektor III (Wijk Nazareth)</option>
-                            <option value="Sektor IV">Sektor IV (Wijk Hebron)</option>
-                            <option value="Sektor V">Sektor V (Wijk Betlehem)</option>
-                            <option value="Sektor VI">Sektor VI (Wijk Kapernaum)</option>
-                            <option value="Sektor VII">Sektor VII (Wijk Sion)</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nomor WhatsApp / Telefon</label>
-                          <input
-                            type="text"
-                            value={jmNoHP}
-                            onChange={(e) => setJmNoHP(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold font-mono transition-all shadow-xs"
-                            placeholder="Contoh: 081234567890"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Dynamic Custom Fields */}
-                      {Object.keys(jmCustomFields).length > 0 && (
-                        <div className="border-t border-slate-100 pt-4 mt-4">
-                          <h4 className="text-xs font-black text-slate-850 uppercase tracking-wider mb-3">
-                            Informasi Kolom Tambahan (Dari Excel / Kustom)
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {Object.keys(jmCustomFields).map((key) => (
-                              <div key={key} className="bg-slate-50/50 p-3 rounded-xl border border-slate-200/80">
-                                <div className="flex items-center justify-between mb-1.5">
-                                  <label className="block text-[10px] font-black text-slate-600 uppercase tracking-wide">{key}</label>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const next = { ...jmCustomFields };
-                                      delete next[key];
-                                      setJmCustomFields(next);
-                                    }}
-                                    className="text-[10px] text-red-500 font-extrabold hover:underline cursor-pointer"
-                                  >
-                                    Hapus Kolom
-                                  </button>
-                                </div>
-                                <input
-                                  type="text"
-                                  value={jmCustomFields[key]}
-                                  onChange={(e) => {
-                                    setJmCustomFields({
-                                      ...jmCustomFields,
-                                      [key]: e.target.value
-                                    });
-                                  }}
-                                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Add New Custom Column */}
-                      <div className="border-t border-slate-150 pt-4 mt-4 bg-slate-50/30 p-4 rounded-2xl border border-dashed border-slate-200">
-                        <div className="flex flex-col sm:flex-row items-end gap-3">
-                          <div className="flex-1">
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Tambah Kolom Informasi Baru</label>
-                            <input
-                              type="text"
-                              placeholder="Nama Kolom Baru (contoh: Pekerjaan, Alamat, Status)"
-                              id="member-new-column-name-input"
-                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-blue-500 font-semibold transition-all shadow-xs"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const inputEl = document.getElementById('member-new-column-name-input') as HTMLInputElement;
-                              const rawName = inputEl?.value.trim();
-                              if (!rawName) {
-                                showMemberToast('Harap isi nama kolom baru!');
-                                return;
-                              }
-                              const cleanName = rawName;
-                              if (['id', 'nama', 'sektor', 'tanggalLahir', 'noHP'].includes(cleanName.toLowerCase())) {
-                                showMemberToast('Nama kolom tersebut sudah ada sebagai kolom standar.');
-                                return;
-                              }
-                              if (jmCustomFields[cleanName] !== undefined) {
-                                showMemberToast('Kolom tersebut sudah ada.');
-                                return;
-                              }
-                              setJmCustomFields({
-                                ...jmCustomFields,
-                                [cleanName]: ''
-                              });
-                              if (inputEl) inputEl.value = '';
-                              showMemberToast(`Kolom "${cleanName}" ditambahkan!`);
-                            }}
-                            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 border border-slate-300 text-slate-800 text-xs font-black rounded-xl transition cursor-pointer shrink-0"
-                          >
-                            Tambah Kolom
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="bg-slate-50 border-t border-slate-150 p-4.5 flex items-center justify-end space-x-2.5">
-                      <button
-                        type="button"
-                        onClick={() => setEditingJemaatId(null)}
-                        className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:text-slate-800 rounded-xl transition cursor-pointer"
-                      >
-                        Batal
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSaveJemaat}
-                        className="px-5 py-2 bg-gradient-to-r from-blue-700 to-indigo-700 hover:brightness-105 active:scale-[0.99] text-xs font-extrabold text-white rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
-                      >
-                        <Save className="w-4 h-4" />
-                        <span>Simpan Perubahan</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </motion.div>
           )}
 
@@ -2040,13 +1746,13 @@ export default function MemberView({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 w-screen h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-y-auto z-50 flex flex-col font-sans"
+              className="fixed inset-0 w-screen h-screen bg-[#091731] overflow-y-auto z-50 flex flex-col font-sans"
               id="projector-live-frame"
             >
               {/* Top Navigation Bar */}
-              <div className="sticky top-0 z-30 w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
+              <div className="sticky top-0 z-30 w-full bg-[#0F2447]/95 backdrop-blur-md border-b border-[#1D3B6E] px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 border border-white/20 flex items-center justify-center p-0.5">
+                  <div className="w-9 h-9 rounded-xl overflow-hidden bg-white shadow-sm border border-white/40 flex items-center justify-center p-1 shrink-0">
                     <img
                       src="/hkbp.png"
                       alt="HKBP Logo"
@@ -2058,10 +1764,10 @@ export default function MemberView({
                     <h2 className="text-xs font-bold text-white leading-tight">HKBP Hinalang Silalahi</h2>
                     <div className="flex items-center space-x-1.5 mt-0.5">
                       <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/70 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                       </span>
-                      <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">
+                      <span className="text-[10px] font-semibold text-white/80 uppercase tracking-wider">
                         Live: Sedang Perbaikan
                       </span>
                     </div>
@@ -2071,7 +1777,7 @@ export default function MemberView({
                 <button
                   type="button"
                   onClick={() => setActiveTab('minggu')}
-                  className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-full transition-all border border-blue-400/40 cursor-pointer shadow-lg shadow-blue-900/30"
+                  className="flex items-center space-x-1.5 bg-[#173361] hover:bg-[#1E4078] text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all border border-[#2C5290] cursor-pointer shadow-sm"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Kembali</span>
@@ -2082,16 +1788,16 @@ export default function MemberView({
               <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 max-w-2xl mx-auto w-full text-center">
                 {/* Animated Badge & Icon */}
                 <div className="relative mb-6">
-                  <div className="w-24 h-24 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shadow-2xl shadow-amber-500/10 mx-auto">
+                  <div className="w-24 h-24 rounded-3xl bg-[#0F2447] border border-[#1D3B6E] flex items-center justify-center shadow-2xl mx-auto">
                     <div className="relative">
-                      <Tv className="w-12 h-12 text-slate-400" />
-                      <div className="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 p-1.5 rounded-xl border-2 border-slate-900 shadow-md">
+                      <Tv className="w-12 h-12 text-white/80" />
+                      <div className="absolute -bottom-1 -right-1 bg-[#1D3B6E] text-white p-1.5 rounded-xl border-2 border-[#091731] shadow-md">
                         <Wrench className="w-4 h-4 animate-spin" style={{ animationDuration: '4s' }} />
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider bg-[#0F2447] text-white border border-[#1D3B6E] shadow-sm">
+                    <AlertTriangle className="w-3.5 h-3.5 text-white/90" />
                     <span>Sedang Dalam Perbaikan</span>
                   </div>
                 </div>
@@ -2100,38 +1806,38 @@ export default function MemberView({
                 <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-3">
                   Menu Live Sedang Dalam Perbaikan
                 </h1>
-                <p className="text-sm text-slate-300 leading-relaxed max-w-lg mb-8">
+                <p className="text-sm text-white/75 leading-relaxed max-w-lg mb-8">
                   Mohon maaf atas ketidaknyamanannya. Layanan siaran langsung dan tayangan proyektor ibadah HKBP Hinalang Silalahi saat ini sedang dalam proses pemeliharaan serta optimalisasi server.
                 </p>
 
                 {/* Status Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mb-8 text-left">
-                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-2.5">
-                      <Wrench className="w-4 h-4 text-amber-400" />
+                  <div className="bg-[#0F2447] border border-[#1D3B6E] rounded-2xl p-4">
+                    <div className="w-8 h-8 rounded-lg bg-[#16305C] border border-[#24467D] flex items-center justify-center mb-2.5">
+                      <Wrench className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="text-xs font-bold text-white mb-1">Status Sistem</h3>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <p className="text-[11px] text-white/70 leading-relaxed">
                       Sedang dilakukan konfigurasi dan sinkronisasi proyektor.
                     </p>
                   </div>
 
-                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
-                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-2.5">
-                      <BookOpen className="w-4 h-4 text-blue-400" />
+                  <div className="bg-[#0F2447] border border-[#1D3B6E] rounded-2xl p-4">
+                    <div className="w-8 h-8 rounded-lg bg-[#16305C] border border-[#24467D] flex items-center justify-center mb-2.5">
+                      <BookOpen className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="text-xs font-bold text-white mb-1">Buku Acara</h3>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
-                      Jemaat tetap dapat mengakses tata ibadah lengkap di menu <span className="text-blue-300 font-semibold">Kebaktian</span>.
+                    <p className="text-[11px] text-white/70 leading-relaxed">
+                      Jemaat tetap dapat mengakses tata ibadah lengkap di menu <span className="text-white font-semibold">Kebaktian</span>.
                     </p>
                   </div>
 
-                  <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-2.5">
-                      <Clock className="w-4 h-4 text-emerald-400" />
+                  <div className="bg-[#0F2447] border border-[#1D3B6E] rounded-2xl p-4">
+                    <div className="w-8 h-8 rounded-lg bg-[#16305C] border border-[#24467D] flex items-center justify-center mb-2.5">
+                      <Clock className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="text-xs font-bold text-white mb-1">Perkiraan Aktif</h3>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <p className="text-[11px] text-white/70 leading-relaxed">
                       Akan segera aktif kembali untuk ibadah jemaat mendatang.
                     </p>
                   </div>
@@ -2142,7 +1848,7 @@ export default function MemberView({
                   <button
                     type="button"
                     onClick={() => setActiveTab('minggu')}
-                    className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider py-3 px-5 rounded-xl shadow-lg shadow-blue-900/30 transition cursor-pointer border border-blue-400/20"
+                    className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 bg-[#173361] hover:bg-[#1E4078] text-white font-bold text-xs uppercase tracking-wider py-3 px-5 rounded-xl shadow-md transition cursor-pointer border border-[#2C5290]"
                   >
                     <BookOpen className="w-4 h-4" />
                     <span>Kembali ke Kebaktian</span>
@@ -2151,22 +1857,22 @@ export default function MemberView({
                   <button
                     type="button"
                     onClick={() => setActiveTab('warta')}
-                    className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs uppercase tracking-wider py-3 px-5 rounded-xl transition cursor-pointer border border-slate-700"
+                    className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 bg-[#0F2447] hover:bg-[#16305C] text-white font-bold text-xs uppercase tracking-wider py-3 px-5 rounded-xl transition cursor-pointer border border-[#1D3B6E]"
                   >
-                    <FileText className="w-4 h-4 text-slate-400" />
+                    <FileText className="w-4 h-4 text-white/80" />
                     <span>Lihat Warta Jemaat</span>
                   </button>
                 </div>
 
                 {/* Emergency Link for Church Media Operators */}
-                <div className="mt-8 pt-6 border-t border-slate-800/80 w-full text-center">
-                  <p className="text-[11px] text-slate-500">
+                <div className="mt-8 pt-6 border-t border-[#1D3B6E] w-full text-center">
+                  <p className="text-[11px] text-white/60">
                     Operator Media / Parhalado membutuhkan tautan manual?{' '}
                     <a
                       href="https://church-presenter.ai.studio/projector?mode=share&account=acc_default"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 font-semibold underline inline-flex items-center gap-1"
+                      className="text-white hover:text-white/80 font-semibold underline inline-flex items-center gap-1"
                     >
                       Buka Tautan Layar Proyektor
                       <ExternalLink className="w-3 h-3 inline" />
@@ -2180,17 +1886,51 @@ export default function MemberView({
         </AnimatePresence>
       </main>
 
+      {/* FLOATING QUICK ZOOM CONTROLS (SEMUA MENU KECUALI LIVE) */}
+      {activeTab !== 'live' && (
+        <div className="fixed bottom-16 right-3.5 z-30 flex items-center bg-white/95 backdrop-blur-md border border-[#CBD7EA] shadow-lg rounded-xl px-2 py-1 space-x-1 animate-fadeIn">
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            disabled={zoomLevel <= 80}
+            className="p-1.5 text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center"
+            title="Perkecil Ukuran Teks Acara (Zoom Out)"
+          >
+            <ZoomOut className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-black ml-0.5">A-</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleZoomReset}
+            className="px-1.5 py-0.5 text-[10px] font-mono font-bold text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
+            title="Klik untuk Reset Ukuran Teks Acara (100%)"
+          >
+            {zoomLevel}%
+          </button>
+          <button
+            type="button"
+            onClick={handleZoomIn}
+            disabled={zoomLevel >= 160}
+            className="p-1.5 text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center"
+            title="Perbesar Ukuran Teks Acara (Zoom In)"
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-black ml-0.5">A+</span>
+          </button>
+        </div>
+      )}
+
       {/* PERSISTENT FLOATING BOTTOM NAVIGATION BAR */}
       {activeTab !== 'live' && (
-        <footer className="fixed bottom-0 left-0 w-full bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 border-t border-white/10 py-2.5 px-2 flex items-center justify-around z-40 shadow-lg backdrop-blur-md">
+        <footer className="fixed bottom-0 left-0 w-full bg-[#0F2447] border-t border-[#1D3B6E] py-2 px-2 flex items-center justify-around z-40 shadow-lg">
           <div className="max-w-2xl mx-auto w-full flex items-center justify-around gap-1">
             <button
               onClick={() => {
                 setActiveTab('minggu');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center space-y-1 cursor-pointer transition-all ${
-                activeTab === 'minggu' ? 'text-amber-300 font-bold scale-105' : 'text-blue-100/70 hover:text-white'
+              className={`flex flex-col items-center space-y-1 px-2.5 py-1 rounded-xl cursor-pointer transition-all ${
+                activeTab === 'minggu' ? 'bg-white/15 text-white font-bold' : 'text-white/65 hover:text-white'
               }`}
             >
               <BookOpen className="w-5 h-5" />
@@ -2202,8 +1942,8 @@ export default function MemberView({
                 setActiveTab('petugas');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center space-y-1 cursor-pointer transition-all ${
-                activeTab === 'petugas' ? 'text-amber-300 font-bold scale-105' : 'text-blue-100/70 hover:text-white'
+              className={`flex flex-col items-center space-y-1 px-2.5 py-1 rounded-xl cursor-pointer transition-all ${
+                activeTab === 'petugas' ? 'bg-white/15 text-white font-bold' : 'text-white/65 hover:text-white'
               }`}
             >
               <Users className="w-5 h-5" />
@@ -2215,8 +1955,8 @@ export default function MemberView({
                 setActiveTab('warta');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center space-y-1 cursor-pointer transition-all ${
-                activeTab === 'warta' ? 'text-amber-300 font-bold scale-105' : 'text-blue-100/70 hover:text-white'
+              className={`flex flex-col items-center space-y-1 px-2.5 py-1 rounded-xl cursor-pointer transition-all ${
+                activeTab === 'warta' ? 'bg-white/15 text-white font-bold' : 'text-white/65 hover:text-white'
               }`}
             >
               <FileText className="w-5 h-5" />
@@ -2228,8 +1968,8 @@ export default function MemberView({
                 setActiveTab('keuangan');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center space-y-1 cursor-pointer transition-all ${
-                activeTab === 'keuangan' ? 'text-amber-300 font-bold scale-105' : 'text-blue-100/70 hover:text-white'
+              className={`flex flex-col items-center space-y-1 px-2.5 py-1 rounded-xl cursor-pointer transition-all ${
+                activeTab === 'keuangan' ? 'bg-white/15 text-white font-bold' : 'text-white/65 hover:text-white'
               }`}
             >
               <DollarSign className="w-5 h-5" />
@@ -2241,8 +1981,8 @@ export default function MemberView({
                 setActiveTab('ultah');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center space-y-1 cursor-pointer transition-all ${
-                activeTab === 'ultah' ? 'text-amber-300 font-bold scale-105' : 'text-blue-100/70 hover:text-white'
+              className={`flex flex-col items-center space-y-1 px-2.5 py-1 rounded-xl cursor-pointer transition-all ${
+                activeTab === 'ultah' ? 'bg-white/15 text-white font-bold' : 'text-white/65 hover:text-white'
               }`}
             >
               <Gift className="w-5 h-5" />
@@ -2254,14 +1994,14 @@ export default function MemberView({
                 setActiveTab('live');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center space-y-1 cursor-pointer transition-all relative ${
-                activeTab === 'live' ? 'text-amber-300 font-bold scale-105' : 'text-blue-100/70 hover:text-white'
+              className={`flex flex-col items-center space-y-1 px-2.5 py-1 rounded-xl cursor-pointer transition-all relative ${
+                activeTab === 'live' ? 'bg-white/15 text-white font-bold' : 'text-white/65 hover:text-white'
               }`}
               title="Layar Live (Sedang Perbaikan)"
             >
               <div className="relative">
                 <Tv className="w-5 h-5" />
-                <span className="absolute -top-1.5 -right-3.5 px-1 py-0.5 bg-amber-400 text-slate-950 text-[7px] font-black rounded-full uppercase leading-none tracking-tighter shadow-sm">
+                <span className="absolute -top-1.5 -right-3.5 px-1 py-0.5 bg-white text-[#0F2447] text-[7px] font-black rounded-md uppercase leading-none tracking-tighter shadow-sm">
                   Perbaikan
                 </span>
               </div>
@@ -2291,9 +2031,9 @@ export default function MemberView({
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
               className="fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 shadow-2xl flex flex-col border-r border-slate-100 font-sans"
             >
-              <div className="p-5 bg-gradient-to-r from-blue-700 to-indigo-700 text-white flex items-center justify-between">
+              <div className="p-5 bg-[#0F2447] text-white flex items-center justify-between border-b border-[#1D3B6E]">
                 <div className="flex items-center space-x-3">
-                  <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/10 border border-white/20 flex items-center justify-center p-0.5 shadow-md">
+                  <div className="w-11 h-11 rounded-2xl overflow-hidden bg-white shadow-md border border-white/40 flex items-center justify-center p-1.5 shrink-0">
                     <img
                       src="/hkbp.png"
                       alt="HKBP Logo"
@@ -2303,7 +2043,7 @@ export default function MemberView({
                   </div>
                   <div>
                     <h2 className="text-sm font-black tracking-tight leading-none">HKBP Hinalang</h2>
-                    <p className="text-[10px] text-blue-100 mt-1 font-semibold leading-none">Silalahi</p>
+                    <p className="text-[10px] text-white/75 mt-1 font-semibold leading-none">Silalahi</p>
                   </div>
                 </div>
                 <button
@@ -2324,9 +2064,9 @@ export default function MemberView({
                     setActiveMenuModal('jadwal');
                     setIsDrawerOpen(false);
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-slate-50 text-slate-700 hover:text-blue-700 font-extrabold text-xs transition-all text-left border border-transparent hover:border-slate-100 cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
-                  <Clock className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+                  <Clock className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Jadwal Ibadah</span>
                 </button>
 
@@ -2336,9 +2076,9 @@ export default function MemberView({
                     setIsDrawerOpen(false);
                     window.open(window.location.origin + window.location.pathname + '?view=tentang', '_blank');
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-slate-50 text-slate-700 hover:text-blue-700 font-extrabold text-xs transition-all text-left border border-transparent hover:border-slate-100 cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
-                  <History className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+                  <History className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Tentang HKBP</span>
                 </button>
 
@@ -2348,9 +2088,9 @@ export default function MemberView({
                     setActiveMenuModal('parhalado');
                     setIsDrawerOpen(false);
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-slate-50 text-slate-700 hover:text-blue-700 font-extrabold text-xs transition-all text-left border border-transparent hover:border-slate-100 cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
-                  <Users className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+                  <Users className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Daftar Parhalado</span>
                 </button>
 
@@ -2360,9 +2100,9 @@ export default function MemberView({
                     setActiveMenuModal('alamat');
                     setIsDrawerOpen(false);
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-slate-50 text-slate-700 hover:text-blue-700 font-extrabold text-xs transition-all text-left border border-transparent hover:border-slate-100 cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
-                  <MapPin className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+                  <MapPin className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Alamat & Lokasi</span>
                 </button>
 
@@ -2372,9 +2112,9 @@ export default function MemberView({
                     setActiveMenuModal('developer');
                     setIsDrawerOpen(false);
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-slate-50 text-slate-700 hover:text-blue-700 font-extrabold text-xs transition-all text-left border border-transparent hover:border-slate-100 cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
-                  <Phone className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+                  <Phone className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Hubungi Developer</span>
                 </button>
               </div>
@@ -2408,13 +2148,13 @@ export default function MemberView({
               className="relative bg-white w-full max-w-xl rounded-3xl overflow-hidden shadow-2xl flex flex-col font-sans max-h-[85vh] border border-slate-100"
             >
               {/* Modal Header */}
-              <div className="px-6 py-4.5 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white flex items-center justify-between shadow-sm shrink-0">
+              <div className="px-6 py-4.5 bg-[#0F2447] text-white flex items-center justify-between shadow-sm shrink-0 border-b border-[#1D3B6E]">
                 <div className="flex items-center space-x-2.5">
-                  {activeMenuModal === 'jadwal' && <Clock className="w-5 h-5 text-amber-300" />}
-                  {activeMenuModal === 'sejarah' && <History className="w-5 h-5 text-amber-300" />}
-                  {activeMenuModal === 'parhalado' && <Users className="w-5 h-5 text-amber-300" />}
-                  {activeMenuModal === 'alamat' && <MapPin className="w-5 h-5 text-amber-300" />}
-                  {activeMenuModal === 'developer' && <Phone className="w-5 h-5 text-amber-300" />}
+                  {activeMenuModal === 'jadwal' && <Clock className="w-5 h-5 text-white" />}
+                  {activeMenuModal === 'sejarah' && <History className="w-5 h-5 text-white" />}
+                  {activeMenuModal === 'parhalado' && <Users className="w-5 h-5 text-white" />}
+                  {activeMenuModal === 'alamat' && <MapPin className="w-5 h-5 text-white" />}
+                  {activeMenuModal === 'developer' && <Phone className="w-5 h-5 text-white" />}
                   <h3 className="font-extrabold text-sm md:text-base tracking-tight leading-none">
                     {activeMenuModal === 'jadwal' && 'Jadwal Ibadah Hari Minggu'}
                     {activeMenuModal === 'sejarah' && 'Tentang HKBP Hinalang Silalahi'}
@@ -2441,9 +2181,9 @@ export default function MemberView({
                     </p>
 
                     <div className="grid grid-cols-1 gap-3">
-                      <div className="p-4 bg-emerald-50/70 border border-emerald-100 rounded-2xl flex items-center justify-between shadow-sm">
+                      <div className="p-4 bg-[#EDF2F9] border border-[#CBD7EA] rounded-2xl flex items-center justify-between shadow-sm">
                         <div className="flex items-center space-x-3.5">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow">
+                          <div className="w-10 h-10 rounded-xl bg-[#0F2447] flex items-center justify-center text-white shrink-0 shadow-xs">
                             <Sparkles className="w-5 h-5" />
                           </div>
                           <div>
@@ -2451,14 +2191,14 @@ export default function MemberView({
                             <p className="text-[10px] text-slate-500 mt-0.5">Anak-anak & Balita</p>
                           </div>
                         </div>
-                        <span className="px-3.5 py-1.5 bg-emerald-100 text-emerald-800 rounded-xl font-mono text-xs md:text-sm font-black border border-emerald-200">
+                        <span className="px-3.5 py-1.5 bg-white text-[#0F2447] rounded-xl font-mono text-xs md:text-sm font-black border border-[#CBD7EA]">
                           {jadwalIbadah.sekolahMinggu || '07.30 WIB'}
                         </span>
                       </div>
 
-                      <div className="p-4 bg-blue-50/70 border border-blue-100 rounded-2xl flex items-center justify-between shadow-sm">
+                      <div className="p-4 bg-[#EDF2F9] border border-[#CBD7EA] rounded-2xl flex items-center justify-between shadow-sm">
                         <div className="flex items-center space-x-3.5">
-                          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow">
+                          <div className="w-10 h-10 rounded-xl bg-[#0F2447] flex items-center justify-center text-white shrink-0 shadow-xs">
                             <Users className="w-5 h-5" />
                           </div>
                           <div>
@@ -2466,14 +2206,14 @@ export default function MemberView({
                             <p className="text-[10px] text-slate-500 mt-0.5">Umum</p>
                           </div>
                         </div>
-                        <span className="px-3.5 py-1.5 bg-blue-100 text-blue-800 rounded-xl font-mono text-xs md:text-sm font-black border border-blue-200">
+                        <span className="px-3.5 py-1.5 bg-white text-[#0F2447] rounded-xl font-mono text-xs md:text-sm font-black border border-[#CBD7EA]">
                           {jadwalIbadah.shift1 || '08.00 WIB'}
                         </span>
                       </div>
 
-                      <div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center justify-between shadow-sm">
+                      <div className="p-4 bg-[#EDF2F9] border border-[#CBD7EA] rounded-2xl flex items-center justify-between shadow-sm">
                         <div className="flex items-center space-x-3.5">
-                          <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shrink-0 shadow">
+                          <div className="w-10 h-10 rounded-xl bg-[#0F2447] flex items-center justify-center text-white shrink-0 shadow-xs">
                             <Building className="w-5 h-5" />
                           </div>
                           <div>
@@ -2481,7 +2221,7 @@ export default function MemberView({
                             <p className="text-[10px] text-slate-500 mt-0.5">Umum</p>
                           </div>
                         </div>
-                        <span className="px-3.5 py-1.5 bg-indigo-100 text-indigo-800 rounded-xl font-mono text-xs md:text-sm font-black border border-indigo-200">
+                        <span className="px-3.5 py-1.5 bg-white text-[#0F2447] rounded-xl font-mono text-xs md:text-sm font-black border border-[#CBD7EA]">
                           {jadwalIbadah.shift2 || '10.00 WIB'}
                         </span>
                       </div>
@@ -2507,7 +2247,7 @@ export default function MemberView({
                               <div className="bg-white border border-slate-150 rounded-xl p-3 space-y-1 shadow-xs">
                                 {item.judulGambar && (
                                   <p className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block shrink-0"></span>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0F2447] inline-block shrink-0"></span>
                                     <span>{item.judulGambar}</span>
                                   </p>
                                 )}
@@ -2529,7 +2269,7 @@ export default function MemberView({
                               </span>
                             )}
                           </h4>
-                          <div className="h-0.5 w-12 bg-blue-600 rounded-full" />
+                          <div className="h-0.5 w-12 bg-[#0F2447] rounded-full" />
                         </div>
                         <div className="space-y-2.5">
                           {item.isi.split('\n\n').map((paragraph, idx) => (
@@ -2555,7 +2295,7 @@ export default function MemberView({
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {parhaladoList.map((member, idx) => {
+                      {parhaladoList.map((member) => {
                         // Generate dynamic initial for badge icon
                         const initials = member.nama
                           .split(' ')
@@ -2564,20 +2304,19 @@ export default function MemberView({
                           .slice(0, 2)
                           .join('') || 'PH';
 
-                        // Decide nice theme color for background badge
-                        let badgeBg = 'bg-slate-600';
+                        let badgeBg = 'bg-[#0F2447]';
                         if (member.jabatan.toLowerCase().includes('pimpinan') || member.jabatan.toLowerCase().includes('pendeta resort')) {
-                          badgeBg = 'bg-blue-600';
+                          badgeBg = 'bg-[#091731]';
                         } else if (member.jabatan.toLowerCase().includes('pendeta')) {
-                          badgeBg = 'bg-indigo-600';
+                          badgeBg = 'bg-[#0F2447]';
                         } else if (member.jabatan.toLowerCase().includes('calon') || member.jabatan.toLowerCase().includes('bikaris')) {
-                          badgeBg = 'bg-amber-600';
+                          badgeBg = 'bg-[#1D3E75]';
                         } else if (member.jabatan.toLowerCase().includes('sekretaris') || member.jabatan.toLowerCase().includes('bendahara')) {
-                          badgeBg = 'bg-teal-600';
+                          badgeBg = 'bg-[#36578E]';
                         }
 
                         return (
-                          <div key={member.id} className="p-3.5 bg-slate-50 border border-slate-200/80 hover:border-slate-300 rounded-xl flex flex-col justify-between transition-all space-y-2 shadow-xs">
+                          <div key={member.id} className="p-3.5 bg-slate-50 border border-slate-200/80 hover:border-[#CBD7EA] rounded-xl flex flex-col justify-between transition-all space-y-2 shadow-xs">
                             <div className="flex items-start space-x-3">
                               <div className={`w-10 h-10 rounded-full ${badgeBg} flex items-center justify-center text-white font-extrabold text-xs font-mono shadow-sm shrink-0`}>
                                 {initials.toUpperCase()}
@@ -2595,13 +2334,13 @@ export default function MemberView({
                             {member.noTelp && (
                               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                                 <div className="flex items-center space-x-1.5 text-slate-500 font-semibold font-mono">
-                                  <Phone className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                  <Phone className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                                   <span>{member.noTelp}</span>
                                 </div>
                                 <div className="flex items-center space-x-1">
                                   <a
                                     href={`tel:${member.noTelp}`}
-                                    className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition"
+                                    className="p-1.5 rounded-lg hover:bg-[#EDF2F9] text-[#0F2447] transition"
                                     title="Hubungi Telepon"
                                   >
                                     <Phone className="w-3.5 h-3.5" />
@@ -2610,7 +2349,7 @@ export default function MemberView({
                                     href={`https://wa.me/${member.noTelp.replace(/[^0-9]/g, '')}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="p-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 transition"
+                                    className="p-1.5 rounded-lg hover:bg-[#EDF2F9] text-[#0F2447] transition"
                                     title="Hubungi WhatsApp"
                                   >
                                     <MessageCircle className="w-3.5 h-3.5" />
@@ -2628,28 +2367,28 @@ export default function MemberView({
                 {activeMenuModal === 'alamat' && (
                   <div className="space-y-4">
                     {/* Header Banner Lokasi Akurat */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50/70 p-4.5 rounded-2xl border border-blue-100 shadow-xs space-y-3">
+                    <div className="bg-[#EDF2F9] p-4.5 rounded-2xl border border-[#CBD7EA] shadow-xs space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start space-x-3">
-                          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-600/30 mt-0.5">
+                          <div className="w-10 h-10 rounded-xl bg-[#0F2447] text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
                             <MapPin className="w-5 h-5 text-white" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-black text-slate-900 text-sm tracking-tight">HKBP Hinalang Silalahi</h4>
-                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1 shadow-2xs">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-white text-[#0F2447] border border-[#CBD7EA] inline-flex items-center gap-1 shadow-2xs">
+                                <CheckCircle2 className="w-3 h-3 text-[#0F2447]" />
                                 Lokasi Akurat
                               </span>
                             </div>
-                            <p className="text-[10px] text-blue-700 font-extrabold uppercase tracking-wide mt-0.5">
+                            <p className="text-[10px] text-[#0F2447] font-extrabold uppercase tracking-wide mt-0.5">
                               HKBP Resort Hinalang Silalahi • Distrik XI Toba Hasundutan
                             </p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-white rounded-xl p-3.5 border border-blue-150/70 space-y-2 text-xs shadow-2xs">
+                      <div className="bg-white rounded-xl p-3.5 border border-[#CBD7EA] space-y-2 text-xs shadow-2xs">
                         <div className="flex items-start space-x-2">
                           <span className="font-extrabold text-slate-800 shrink-0">Alamat:</span>
                           <span className="text-slate-700 font-semibold leading-relaxed">
@@ -2661,7 +2400,7 @@ export default function MemberView({
                             Titik Koordinat: <strong className="font-mono text-slate-900 font-bold">2.3346565, 99.0417933</strong>
                           </span>
                           <span className="text-slate-500 font-medium">
-                            Plus Code: <strong className="font-mono text-blue-700 font-bold">897R+VP Hinalang Bagasan</strong>
+                            Plus Code: <strong className="font-mono text-[#0F2447] font-bold">897R+VP Hinalang Bagasan</strong>
                           </span>
                         </div>
                       </div>
@@ -2685,7 +2424,7 @@ export default function MemberView({
                         href="https://maps.app.goo.gl/MsdAzCJwb64EB8eP6"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-extrabold rounded-xl text-xs transition cursor-pointer shadow-sm shadow-blue-600/20"
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white font-extrabold rounded-xl text-xs transition cursor-pointer shadow-sm"
                       >
                         <ExternalLink className="w-4 h-4 shrink-0" />
                         <span>Buka di Google Maps</span>
@@ -2695,7 +2434,7 @@ export default function MemberView({
                         href="https://www.google.com/maps/dir/?api=1&destination=2.3346565,99.0417933"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-extrabold rounded-xl text-xs transition cursor-pointer shadow-sm shadow-emerald-600/20"
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-white hover:bg-[#EDF2F9] text-[#0F2447] border border-[#0F2447] font-extrabold rounded-xl text-xs transition cursor-pointer shadow-sm"
                       >
                         <Navigation className="w-4 h-4 shrink-0" />
                         <span>Petunjuk Arah</span>
@@ -2712,16 +2451,16 @@ export default function MemberView({
                           setCopiedLocation(true);
                           setTimeout(() => setCopiedLocation(false), 2500);
                         }}
-                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-[11px] font-bold text-slate-600 transition cursor-pointer shadow-2xs"
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-[#EDF2F9] text-[11px] font-bold text-[#0F2447] transition cursor-pointer shadow-2xs"
                       >
                         {copiedLocation ? (
                           <>
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="text-emerald-700 font-extrabold">Alamat & Koordinat Tersalin!</span>
+                            <Check className="w-3.5 h-3.5 text-[#0F2447]" />
+                            <span className="text-[#0F2447] font-extrabold">Alamat & Koordinat Tersalin!</span>
                           </>
                         ) : (
                           <>
-                            <Copy className="w-3.5 h-3.5 text-slate-500" />
+                            <Copy className="w-3.5 h-3.5 text-[#0F2447]" />
                             <span>Salin Alamat & Titik Koordinat</span>
                           </>
                         )}
@@ -2732,26 +2471,26 @@ export default function MemberView({
 
                 {activeMenuModal === 'developer' && (
                   <div className="space-y-4">
-                    <div className="p-5 bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl border border-slate-800 shadow-lg space-y-3.5">
+                    <div className="p-5 bg-[#0F2447] text-white rounded-2xl border border-[#1D3B6E] shadow-lg space-y-3.5">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center font-extrabold text-sm shadow-md text-white font-mono shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-[#173361] border border-[#2C5290] flex items-center justify-center font-extrabold text-sm shadow-md text-white font-mono shrink-0">
                           DEV
                         </div>
                         <div>
                           <h4 className="font-extrabold text-sm tracking-tight leading-none">Tim Pengembang Aplikasi</h4>
-                          <span className="text-[10px] text-blue-300 font-extrabold uppercase tracking-wider block mt-1.5">Sistem Informasi HKBP Hinalang</span>
+                          <span className="text-[10px] text-white/75 font-extrabold uppercase tracking-wider block mt-1.5">Sistem Informasi HKBP Hinalang</span>
                         </div>
                       </div>
 
-                      <p className="text-[11px] md:text-xs text-slate-300 leading-relaxed font-semibold">
+                      <p className="text-[11px] md:text-xs text-white/85 leading-relaxed font-semibold">
                         Aplikasi ini dikembangkan secara sukarela untuk mempermudah pelayanan digital Huria HKBP Hinalang Silalahi. Menyediakan akses instan ke Tata Ibadah, Warta Jemaat, dan Transparansi Keuangan secara real-time.
                       </p>
 
-                      <div className="pt-2 border-t border-slate-800/80 space-y-2 text-xs">
-                        <div className="flex items-center space-x-2 text-slate-300">
-                          <Sparkles className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
+                      <div className="pt-2 border-t border-[#1D3B6E] space-y-2 text-xs">
+                        <div className="flex items-center space-x-2 text-white/80">
+                          <Sparkles className="w-4 h-4 text-white shrink-0" />
                           <span>Didukung oleh</span>
-                          <span className="text-amber-300 font-black tracking-wide font-sans">AI Studio Developer Hub</span>
+                          <span className="text-white font-black tracking-wide font-sans">AI Studio Developer Hub</span>
                         </div>
                       </div>
                     </div>
@@ -2767,34 +2506,34 @@ export default function MemberView({
                           href="https://wa.me/6287814180634"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex flex-col items-center justify-center p-3.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition hover:scale-105 active:scale-95 cursor-pointer group text-center"
+                          className="flex flex-col items-center justify-center p-3.5 bg-white hover:bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl transition active:scale-95 cursor-pointer group text-center"
                         >
-                          <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:shadow-md transition">
+                          <div className="w-10 h-10 rounded-full bg-[#0F2447] text-white flex items-center justify-center shrink-0 shadow-sm transition">
                             <MessageCircle className="w-5.5 h-5.5" />
                           </div>
-                          <span className="text-[10px] text-emerald-800 font-extrabold uppercase tracking-wide mt-2 block">WhatsApp</span>
+                          <span className="text-[10px] text-[#0F2447] font-extrabold uppercase tracking-wide mt-2 block">WhatsApp</span>
                         </a>
 
                         <a
                           href="https://instagram.com/_prmshn_"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex flex-col items-center justify-center p-3.5 bg-pink-50/70 hover:bg-pink-100 border border-pink-100 rounded-xl transition hover:scale-105 active:scale-95 cursor-pointer group text-center"
+                          className="flex flex-col items-center justify-center p-3.5 bg-white hover:bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl transition active:scale-95 cursor-pointer group text-center"
                         >
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:shadow-md transition">
+                          <div className="w-10 h-10 rounded-full bg-[#0F2447] text-white flex items-center justify-center shrink-0 shadow-sm transition">
                             <Instagram className="w-5.5 h-5.5" />
                           </div>
-                          <span className="text-[10px] text-pink-800 font-extrabold uppercase tracking-wide mt-2 block">Instagram</span>
+                          <span className="text-[10px] text-[#0F2447] font-extrabold uppercase tracking-wide mt-2 block">Instagram</span>
                         </a>
 
                         <a
                           href="mailto:pirmasiahaan1234@gmail.com?subject=Saran%20Aplikasi%20HKBP%20Hinalang"
-                          className="flex flex-col items-center justify-center p-3.5 bg-blue-50/70 hover:bg-blue-100 border border-blue-100 rounded-xl transition hover:scale-105 active:scale-95 cursor-pointer group text-center"
+                          className="flex flex-col items-center justify-center p-3.5 bg-white hover:bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl transition active:scale-95 cursor-pointer group text-center"
                         >
-                          <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:shadow-md transition">
+                          <div className="w-10 h-10 rounded-full bg-[#0F2447] text-white flex items-center justify-center shrink-0 shadow-sm transition">
                             <Mail className="w-5.5 h-5.5" />
                           </div>
-                          <span className="text-[10px] text-blue-800 font-extrabold uppercase tracking-wide mt-2 block">E-Mail</span>
+                          <span className="text-[10px] text-[#0F2447] font-extrabold uppercase tracking-wide mt-2 block">E-Mail</span>
                         </a>
                       </div>
                     </div>
@@ -2807,7 +2546,7 @@ export default function MemberView({
                 <button
                   type="button"
                   onClick={() => setActiveMenuModal(null)}
-                  className="px-4.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer"
+                  className="px-4.5 py-2 bg-[#0F2447] hover:bg-[#173361] text-white font-bold rounded-xl text-xs transition cursor-pointer"
                 >
                   Tutup Dialog
                 </button>
@@ -2816,43 +2555,6 @@ export default function MemberView({
           </div>
         )}
       </AnimatePresence>
-
-      {/* CUSTOM CONFIRMATION DIALOG FOR MEMBER VIEW */}
-      {confirmDialog.isOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm font-sans">
-          <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4 animate-fadeIn">
-            <div className="flex items-center space-x-3 text-red-600">
-              <div className="p-2.5 bg-red-50 border border-red-100 rounded-xl">
-                <AlertCircle className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">{confirmDialog.title}</h3>
-            </div>
-            <p className="text-xs text-slate-600 font-medium leading-relaxed">
-              {confirmDialog.message}
-            </p>
-            <div className="flex items-center justify-end space-x-2 pt-2">
-              <button
-                onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                onClick={confirmDialog.onConfirm}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-md shadow-red-500/15"
-              >
-                Ya, Hapus
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* ALKITAB INDONESIA & BIBEL BATAK TOBA MODAL */}
-      <AlkitabModal
-        isOpen={isAlkitabModalOpen}
-        onClose={() => setIsAlkitabModalOpen(false)}
-        initialQuery={alkitabQuery}
-      />
     </div>
   );
 }

@@ -26,6 +26,7 @@ export interface BukuSong {
   lirikOleh?: string | null;
   notasiUrl?: string | null;
   midiUrl?: string | null;
+  isCustom?: boolean;
 }
 
 export interface BukuEndeCatalogItem {
