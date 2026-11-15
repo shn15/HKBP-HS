@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   BookOpen,
@@ -36,7 +36,9 @@ import {
   Check,
   ZoomIn,
   ZoomOut,
-  RefreshCw
+  RefreshCw,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import {
   BarChart,
@@ -255,21 +257,95 @@ export default function MemberView({
   const [copiedLocation, setCopiedLocation] = useState(false);
   const [liveFrameKey, setLiveFrameKey] = useState(0);
   const [isLiveFrameLoading, setIsLiveFrameLoading] = useState(true);
+  const [isLiveHeaderVisible, setIsLiveHeaderVisible] = useState(true);
+  const [isLiveFullscreen, setIsLiveFullscreen] = useState(false);
+  const liveHeaderTimerRef = useRef<number | null>(null);
 
   const LIVE_PROJECTOR_URL = 'https://church-presenter-sandy.vercel.app/projector?mode=share&account=acc_default&room=cp-acc_default-0l7v14';
 
+  const clearLiveHeaderTimer = () => {
+    if (liveHeaderTimerRef.current !== null) {
+      window.clearTimeout(liveHeaderTimerRef.current);
+      liveHeaderTimerRef.current = null;
+    }
+  };
+
+  const scheduleHideLiveHeader = (delayMs = 3000) => {
+    clearLiveHeaderTimer();
+    liveHeaderTimerRef.current = window.setTimeout(() => {
+      setIsLiveHeaderVisible(false);
+    }, delayMs);
+  };
+
+  const enterLiveFullscreen = () => {
+    try {
+      const doc = document as any;
+      if (doc.fullscreenElement || doc.webkitFullscreenElement) return;
+      const el = document.documentElement as any;
+      if (typeof el.requestFullscreen === 'function') {
+        const res = el.requestFullscreen({ navigationUI: 'hide' });
+        if (res && typeof res.catch === 'function') res.catch(() => {});
+      } else if (typeof el.webkitRequestFullscreen === 'function') {
+        el.webkitRequestFullscreen();
+      } else if (typeof el.mozRequestFullScreen === 'function') {
+        el.mozRequestFullScreen();
+      } else if (typeof el.msRequestFullscreen === 'function') {
+        el.msRequestFullscreen();
+      }
+    } catch {
+      // Ignore if browser rejects fullscreen outside user gesture
+    }
+  };
+
+  const exitLiveFullscreen = () => {
+    try {
+      const doc = document as any;
+      if (!doc.fullscreenElement && !doc.webkitFullscreenElement) return;
+      if (typeof doc.exitFullscreen === 'function') {
+        const res = doc.exitFullscreen();
+        if (res && typeof res.catch === 'function') res.catch(() => {});
+      } else if (typeof doc.webkitExitFullscreen === 'function') {
+        doc.webkitExitFullscreen();
+      } else if (typeof doc.mozCancelFullScreen === 'function') {
+        doc.mozCancelFullScreen();
+      } else if (typeof doc.msExitFullscreen === 'function') {
+        doc.msExitFullscreen();
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   const currentVerse = useMemo(() => getWeeklyVerse(), []);
 
+  // Track browser fullscreen state
+  useEffect(() => {
+    const syncFullscreenState = () => {
+      const doc = document as any;
+      setIsLiveFullscreen(Boolean(doc.fullscreenElement || doc.webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', syncFullscreenState);
+    document.addEventListener('webkitfullscreenchange', syncFullscreenState);
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreenState);
+      document.removeEventListener('webkitfullscreenchange', syncFullscreenState);
+    };
+  }, []);
 
-  // Disable body scroll when Live mode (Fullscreen) is active to prevent page scrolling behind the iframe
+  // Manage Live mode body scroll, initial headbar auto-hide, and fullscreen cleanup
   useEffect(() => {
     if (activeTab === 'live') {
       document.body.style.overflow = 'hidden';
+      setIsLiveHeaderVisible(true);
+      scheduleHideLiveHeader(3000);
     } else {
       document.body.style.overflow = '';
+      clearLiveHeaderTimer();
+      exitLiveFullscreen();
     }
     return () => {
       document.body.style.overflow = '';
+      clearLiveHeaderTimer();
     };
   }, [activeTab]);
 
@@ -1749,11 +1825,21 @@ export default function MemberView({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 w-screen h-screen bg-[#091731] overflow-hidden z-50 flex flex-col font-sans"
+              className="fixed inset-0 w-screen h-[100dvh] bg-[#091731] overflow-hidden z-50 font-sans"
               id="projector-live-frame"
             >
-              {/* Top Navigation Bar */}
-              <div className="shrink-0 z-30 w-full bg-[#0F2447]/95 backdrop-blur-md border-b border-[#1D3B6E] px-4 py-2.5 flex items-center justify-between gap-2">
+              {/* Floating Auto-Hide Top Navigation Bar */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  scheduleHideLiveHeader(3500);
+                }}
+                className={`fixed top-0 left-0 right-0 z-30 w-full bg-[#0F2447]/95 backdrop-blur-md border-b border-[#1D3B6E] px-4 py-2.5 flex items-center justify-between gap-2 transition-all duration-300 ease-out ${
+                  isLiveHeaderVisible
+                    ? 'translate-y-0 opacity-100 pointer-events-auto'
+                    : '-translate-y-full opacity-0 pointer-events-none'
+                }`}
+              >
                 <div className="flex items-center space-x-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl overflow-hidden bg-white shadow-sm border border-white/40 flex items-center justify-center p-1 shrink-0">
                     <img
@@ -1783,6 +1869,7 @@ export default function MemberView({
                     onClick={() => {
                       setIsLiveFrameLoading(true);
                       setLiveFrameKey(prev => prev + 1);
+                      scheduleHideLiveHeader(3500);
                     }}
                     className="flex items-center space-x-1.5 bg-[#16305C] hover:bg-[#1E4078] text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all border border-[#2C5290] cursor-pointer shadow-sm"
                     title="Muat Ulang Layar Live"
@@ -1791,20 +1878,30 @@ export default function MemberView({
                     <span className="hidden sm:inline">Muat Ulang</span>
                   </button>
 
-                  <a
-                    href={LIVE_PROJECTOR_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isLiveFullscreen) {
+                        exitLiveFullscreen();
+                      } else {
+                        enterLiveFullscreen();
+                      }
+                      scheduleHideLiveHeader(3000);
+                    }}
                     className="flex items-center space-x-1.5 bg-[#16305C] hover:bg-[#1E4078] text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all border border-[#2C5290] cursor-pointer shadow-sm"
-                    title="Buka Layar Proyektor di Tab Baru"
+                    title={isLiveFullscreen ? 'Keluar Layar Penuh' : 'Masuk Layar Penuh'}
                   >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Buka Penuh</span>
-                  </a>
+                    {isLiveFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                    <span className="hidden sm:inline">{isLiveFullscreen ? 'Normal' : 'Full Screen'}</span>
+                  </button>
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('minggu')}
+                    onClick={() => {
+                      clearLiveHeaderTimer();
+                      exitLiveFullscreen();
+                      setActiveTab('minggu');
+                    }}
                     className="flex items-center space-x-1.5 bg-[#173361] hover:bg-[#1E4078] text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all border border-[#2C5290] cursor-pointer shadow-sm"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
@@ -1813,8 +1910,8 @@ export default function MemberView({
                 </div>
               </div>
 
-              {/* Embedded Live Projector Frame */}
-              <div className="relative flex-1 w-full bg-[#091731]">
+              {/* Fullscreen Embedded Live Projector Frame */}
+              <div className="relative w-full h-full bg-[#091731]">
                 {isLiveFrameLoading && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#091731] text-white z-10 pointer-events-none">
                     <div className="w-12 h-12 rounded-2xl bg-[#0F2447] border border-[#1D3B6E] flex items-center justify-center mb-3 shadow-lg">
@@ -1831,6 +1928,24 @@ export default function MemberView({
                   allow="autoplay; fullscreen; picture-in-picture"
                   allowFullScreen
                   onLoad={() => setIsLiveFrameLoading(false)}
+                />
+
+                {/* Screen Click Overlay to Toggle Headbar & Trigger Fullscreen (Chrome header auto-hide) */}
+                <div
+                  role="button"
+                  tabIndex={-1}
+                  aria-label="Ketuk layar untuk menampilkan atau menyembunyikan menu atas"
+                  onClick={() => {
+                    enterLiveFullscreen();
+                    if (isLiveHeaderVisible) {
+                      clearLiveHeaderTimer();
+                      setIsLiveHeaderVisible(false);
+                    } else {
+                      setIsLiveHeaderVisible(true);
+                      scheduleHideLiveHeader(3500);
+                    }
+                  }}
+                  className="absolute inset-0 z-20 cursor-pointer bg-transparent"
                 />
               </div>
             </motion.div>
@@ -1944,7 +2059,9 @@ export default function MemberView({
 
             <button
               onClick={() => {
+                enterLiveFullscreen();
                 setIsLiveFrameLoading(true);
+                setIsLiveHeaderVisible(true);
                 setActiveTab('live');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
