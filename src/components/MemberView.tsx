@@ -31,13 +31,12 @@ import {
   History,
   Instagram,
   Mail,
-  Wrench,
-  AlertTriangle,
   Navigation,
   Copy,
   Check,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  RefreshCw
 } from 'lucide-react';
 import {
   BarChart,
@@ -254,6 +253,10 @@ export default function MemberView({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeMenuModal, setActiveMenuModal] = useState<'jadwal' | 'sejarah' | 'parhalado' | 'alamat' | 'developer' | null>(null);
   const [copiedLocation, setCopiedLocation] = useState(false);
+  const [liveFrameKey, setLiveFrameKey] = useState(0);
+  const [isLiveFrameLoading, setIsLiveFrameLoading] = useState(true);
+
+  const LIVE_PROJECTOR_URL = 'https://church-presenter-sandy.vercel.app/projector?mode=share&account=acc_default&room=cp-acc_default-0l7v14';
 
   const currentVerse = useMemo(() => getWeeklyVerse(), []);
 
@@ -1738,7 +1741,7 @@ export default function MemberView({
             </motion.div>
           )}
 
-          {/* TAB 6: LIVE ACARA PROJECTOR - STATUS SEDANG PERBAIKAN */}
+          {/* TAB 6: LIVE ACARA PROJECTOR */}
           {activeTab === 'live' && (
             <motion.div
               key="tab-live"
@@ -1746,12 +1749,12 @@ export default function MemberView({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 w-screen h-screen bg-[#091731] overflow-y-auto z-50 flex flex-col font-sans"
+              className="fixed inset-0 w-screen h-screen bg-[#091731] overflow-hidden z-50 flex flex-col font-sans"
               id="projector-live-frame"
             >
               {/* Top Navigation Bar */}
-              <div className="sticky top-0 z-30 w-full bg-[#0F2447]/95 backdrop-blur-md border-b border-[#1D3B6E] px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+              <div className="shrink-0 z-30 w-full bg-[#0F2447]/95 backdrop-blur-md border-b border-[#1D3B6E] px-4 py-2.5 flex items-center justify-between gap-2">
+                <div className="flex items-center space-x-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl overflow-hidden bg-white shadow-sm border border-white/40 flex items-center justify-center p-1 shrink-0">
                     <img
                       src="/hkbp.png"
@@ -1760,125 +1763,75 @@ export default function MemberView({
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <div>
-                    <h2 className="text-xs font-bold text-white leading-tight">HKBP Hinalang Silalahi</h2>
+                  <div className="min-w-0">
+                    <h2 className="text-xs font-bold text-white leading-tight truncate">HKBP Hinalang Silalahi</h2>
                     <div className="flex items-center space-x-1.5 mt-0.5">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/70 opacity-75"></span>
+                      <span className="relative flex h-2 w-2 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/75 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                       </span>
-                      <span className="text-[10px] font-semibold text-white/80 uppercase tracking-wider">
-                        Live: Sedang Perbaikan
+                      <span className="text-[10px] font-semibold text-white/85 uppercase tracking-wider truncate">
+                        Live Projector
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('minggu')}
-                  className="flex items-center space-x-1.5 bg-[#173361] hover:bg-[#1E4078] text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all border border-[#2C5290] cursor-pointer shadow-sm"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Kembali</span>
-                </button>
-              </div>
+                <div className="flex items-center space-x-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsLiveFrameLoading(true);
+                      setLiveFrameKey(prev => prev + 1);
+                    }}
+                    className="flex items-center space-x-1.5 bg-[#16305C] hover:bg-[#1E4078] text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all border border-[#2C5290] cursor-pointer shadow-sm"
+                    title="Muat Ulang Layar Live"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isLiveFrameLoading ? 'animate-spin' : ''}`} />
+                    <span className="hidden sm:inline">Muat Ulang</span>
+                  </button>
 
-              {/* Maintenance Hero Content */}
-              <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 max-w-2xl mx-auto w-full text-center">
-                {/* Animated Badge & Icon */}
-                <div className="relative mb-6">
-                  <div className="w-24 h-24 rounded-3xl bg-[#0F2447] border border-[#1D3B6E] flex items-center justify-center shadow-2xl mx-auto">
-                    <div className="relative">
-                      <Tv className="w-12 h-12 text-white/80" />
-                      <div className="absolute -bottom-1 -right-1 bg-[#1D3B6E] text-white p-1.5 rounded-xl border-2 border-[#091731] shadow-md">
-                        <Wrench className="w-4 h-4 animate-spin" style={{ animationDuration: '4s' }} />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider bg-[#0F2447] text-white border border-[#1D3B6E] shadow-sm">
-                    <AlertTriangle className="w-3.5 h-3.5 text-white/90" />
-                    <span>Sedang Dalam Perbaikan</span>
-                  </div>
-                </div>
+                  <a
+                    href={LIVE_PROJECTOR_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-1.5 bg-[#16305C] hover:bg-[#1E4078] text-white text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all border border-[#2C5290] cursor-pointer shadow-sm"
+                    title="Buka Layar Proyektor di Tab Baru"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Buka Penuh</span>
+                  </a>
 
-                {/* Title and Message */}
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-3">
-                  Menu Live Sedang Dalam Perbaikan
-                </h1>
-                <p className="text-sm text-white/75 leading-relaxed max-w-lg mb-8">
-                  Mohon maaf atas ketidaknyamanannya. Layanan siaran langsung dan tayangan proyektor ibadah HKBP Hinalang Silalahi saat ini sedang dalam proses pemeliharaan serta optimalisasi server.
-                </p>
-
-                {/* Status Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mb-8 text-left">
-                  <div className="bg-[#0F2447] border border-[#1D3B6E] rounded-2xl p-4">
-                    <div className="w-8 h-8 rounded-lg bg-[#16305C] border border-[#24467D] flex items-center justify-center mb-2.5">
-                      <Wrench className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="text-xs font-bold text-white mb-1">Status Sistem</h3>
-                    <p className="text-[11px] text-white/70 leading-relaxed">
-                      Sedang dilakukan konfigurasi dan sinkronisasi proyektor.
-                    </p>
-                  </div>
-
-                  <div className="bg-[#0F2447] border border-[#1D3B6E] rounded-2xl p-4">
-                    <div className="w-8 h-8 rounded-lg bg-[#16305C] border border-[#24467D] flex items-center justify-center mb-2.5">
-                      <BookOpen className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="text-xs font-bold text-white mb-1">Buku Acara</h3>
-                    <p className="text-[11px] text-white/70 leading-relaxed">
-                      Jemaat tetap dapat mengakses tata ibadah lengkap di menu <span className="text-white font-semibold">Kebaktian</span>.
-                    </p>
-                  </div>
-
-                  <div className="bg-[#0F2447] border border-[#1D3B6E] rounded-2xl p-4">
-                    <div className="w-8 h-8 rounded-lg bg-[#16305C] border border-[#24467D] flex items-center justify-center mb-2.5">
-                      <Clock className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="text-xs font-bold text-white mb-1">Perkiraan Aktif</h3>
-                    <p className="text-[11px] text-white/70 leading-relaxed">
-                      Akan segera aktif kembali untuk ibadah jemaat mendatang.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Primary Action Buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-md">
                   <button
                     type="button"
                     onClick={() => setActiveTab('minggu')}
-                    className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 bg-[#173361] hover:bg-[#1E4078] text-white font-bold text-xs uppercase tracking-wider py-3 px-5 rounded-xl shadow-md transition cursor-pointer border border-[#2C5290]"
+                    className="flex items-center space-x-1.5 bg-[#173361] hover:bg-[#1E4078] text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all border border-[#2C5290] cursor-pointer shadow-sm"
                   >
-                    <BookOpen className="w-4 h-4" />
-                    <span>Kembali ke Kebaktian</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('warta')}
-                    className="w-full sm:w-auto flex-1 flex items-center justify-center space-x-2 bg-[#0F2447] hover:bg-[#16305C] text-white font-bold text-xs uppercase tracking-wider py-3 px-5 rounded-xl transition cursor-pointer border border-[#1D3B6E]"
-                  >
-                    <FileText className="w-4 h-4 text-white/80" />
-                    <span>Lihat Warta Jemaat</span>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Kembali</span>
                   </button>
                 </div>
+              </div>
 
-                {/* Emergency Link for Church Media Operators */}
-                <div className="mt-8 pt-6 border-t border-[#1D3B6E] w-full text-center">
-                  <p className="text-[11px] text-white/60">
-                    Operator Media / Parhalado membutuhkan tautan manual?{' '}
-                    <a
-                      href="https://church-presenter.ai.studio/projector?mode=share&account=acc_default"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white hover:text-white/80 font-semibold underline inline-flex items-center gap-1"
-                    >
-                      Buka Tautan Layar Proyektor
-                      <ExternalLink className="w-3 h-3 inline" />
-                    </a>
-                  </p>
-                </div>
+              {/* Embedded Live Projector Frame */}
+              <div className="relative flex-1 w-full bg-[#091731]">
+                {isLiveFrameLoading && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#091731] text-white z-10 pointer-events-none">
+                    <div className="w-12 h-12 rounded-2xl bg-[#0F2447] border border-[#1D3B6E] flex items-center justify-center mb-3 shadow-lg">
+                      <Tv className="w-6 h-6 text-white animate-pulse" />
+                    </div>
+                    <p className="text-xs font-bold tracking-wide text-white/90">Memuat Layar Live Proyektor...</p>
+                  </div>
+                )}
+                <iframe
+                  key={liveFrameKey}
+                  src={LIVE_PROJECTOR_URL}
+                  title="Live Proyektor HKBP Hinalang Silalahi"
+                  className="w-full h-full border-0 bg-[#091731]"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  onLoad={() => setIsLiveFrameLoading(false)}
+                />
               </div>
             </motion.div>
           )}
@@ -1991,18 +1944,20 @@ export default function MemberView({
 
             <button
               onClick={() => {
+                setIsLiveFrameLoading(true);
                 setActiveTab('live');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className={`flex flex-col items-center space-y-1 px-2.5 py-1 rounded-xl cursor-pointer transition-all relative ${
                 activeTab === 'live' ? 'bg-white/15 text-white font-bold' : 'text-white/65 hover:text-white'
               }`}
-              title="Layar Live (Sedang Perbaikan)"
+              title="Layar Live Proyektor"
             >
               <div className="relative">
                 <Tv className="w-5 h-5" />
-                <span className="absolute -top-1.5 -right-3.5 px-1 py-0.5 bg-white text-[#0F2447] text-[7px] font-black rounded-md uppercase leading-none tracking-tighter shadow-sm">
-                  Perbaikan
+                <span className="absolute -top-0.5 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/75 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                 </span>
               </div>
               <span className="text-[9px] font-semibold">Live</span>
