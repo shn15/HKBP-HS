@@ -249,6 +249,7 @@ export default function MemberView({
   }, [zoomLevel]);
 
   const [expandedLiturgySteps, setExpandedLiturgySteps] = useState<Record<string, boolean>>({});
+  const [showKeluargaLiturgy, setShowKeluargaLiturgy] = useState(false);
   const [wartaFilter, setWartaFilter] = useState<WartaKategori | 'semua'>('semua');
   const [wartaSearch, setWartaSearch] = useState('');
   const [keuanganFilter, setKeuanganFilter] = useState<'semua' | 'pemasukan' | 'pengeluaran'>('semua');
@@ -769,120 +770,171 @@ export default function MemberView({
                     </div>
                   );
                 })
+              ) : partangianganMode === 'selesai' ? (
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10">
+                  <div className="p-8 bg-[#EDF2F9]/60 text-center space-y-3">
+                    <div className="w-14 h-14 bg-[#0F2447] text-white rounded-2xl flex items-center justify-center mx-auto border border-[#1D3B6E] shadow-sm">
+                      <Calendar className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-[#0F2447] px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
+                        Informasi Akhir Tahun
+                      </span>
+                      <h4 className="text-base font-black text-[#0F2447] mt-2">Status Ibadah Partangiangan</h4>
+                    </div>
+                    <p className="text-xs sm:text-sm font-bold text-[#0F2447] leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
+                      "tidak ada ibadah partangiangan karena ibadah partangiangann untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
+                    </p>
+                  </div>
+                </div>
               ) : (
-                /* Partangiangan Liturgy */
-                liturgiPartangiangan.slice(0, 1).map((liturgy) => {
-                  return (
-                    <div key={liturgy.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10" id="agenda-partangiangan-container">
-                      
-                      {/* Card header with info */}
-                      <div className="p-5 bg-[#EDF2F9]/60 border-b border-slate-200">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div>
-                            <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
-                              <span className="text-[10px] bg-[#0F2447] text-white font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
-                                Ibadah Lingkungan/Keluarga
-                              </span>
-                            </div>
-                            <h3 
-                              style={zoomStyles.judulUtama}
-                              className="font-extrabold text-[#0F2447] mt-2.5 transition-all"
-                            >
-                              {liturgy.judul}
-                            </h3>
-                            <div 
-                              style={zoomStyles.topikAcara}
-                              className="flex items-center space-x-2 text-slate-600 mt-1.5 transition-all"
-                            >
-                              <Clock className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
-                              <span>Jadwal: {liturgy.tanggal} (Pkl 19:30 WIB)</span>
-                            </div>
-                            {(liturgy.ayatReferensi || liturgy.ayatBacaan) && (
-                              <div className="mt-2 flex flex-wrap gap-2 items-center">
-                                {liturgy.ayatReferensi && (
-                                  <div 
-                                    style={zoomStyles.topikAcara}
-                                    className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
-                                  >
-                                    <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
-                                    <span>Epistel: {liturgy.ayatReferensi}</span>
-                                  </div>
-                                )}
-                                {liturgy.ayatBacaan && (
-                                  <div 
-                                    style={zoomStyles.topikAcara}
-                                    className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
-                                  >
-                                    <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
-                                    <span>Khotbah: {liturgy.ayatBacaan}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                <div className="space-y-4">
+                  {partangianganMode === 'keluarga' && (
+                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10">
+                      <div className="p-8 bg-[#EDF2F9]/60 text-center space-y-3">
+                        <div className="w-14 h-14 bg-[#0F2447] text-white rounded-2xl flex items-center justify-center mx-auto border border-[#1D3B6E] shadow-sm">
+                          <Building className="w-7 h-7 text-white" />
                         </div>
-                      </div>
-
-                      {/* Manual liturgy */}
-                      <div className="p-4 divide-y divide-slate-100 bg-transparent">
-                        {liturgy.teksLiturgi && liturgy.teksLiturgi.length > 0 ? (
-                          <>
-                            {liturgy.teksLiturgi.map((step) => {
-                              const isExpanded = !!expandedLiturgySteps[step.id];
-                              return (
-                                <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-[#F4F6FA]">
-                                  <button
-                                    onClick={() => toggleStep(step.id)}
-                                    className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group py-1"
-                                  >
-                                    <div className="flex items-start space-x-2.5 flex-1 pr-2">
-                                      <span 
-                                        style={zoomStyles.judulAcara}
-                                        className="font-bold text-slate-800 group-hover:text-[#0F2447] transition-all leading-snug"
-                                      >
-                                        {step.label}
-                                      </span>
-                                    </div>
-                                    <div className="text-slate-400 group-hover:text-[#0F2447] pl-2 shrink-0">
-                                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                    </div>
-                                  </button>
-
-                                  <AnimatePresence>
-                                    {isExpanded && (
-                                      <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.15 }}
-                                        className="overflow-hidden"
-                                      >
-                                        <div 
-                                          style={zoomStyles.isiAcara}
-                                          className="mt-2.5 pl-3.5 border-l-2 border-[#0F2447] text-slate-700 whitespace-pre-line bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-200/80 leading-relaxed transition-all font-sans"
-                                        >
-                                          {step.isi}
-                                        </div>
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
-                              );
-                            })}
-                            <div className="pt-3 text-center text-[11px] text-slate-400 italic">
-                              (Ketuk pada baris acara di atas untuk memunculkan isi acara)
-                            </div>
-                          </>
-                        ) : (
-                          <div className="p-8 text-center bg-[#F4F6FA] rounded-xl m-2 border border-dashed border-slate-200">
-                            <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
-                            <p className="text-xs font-bold text-slate-700">Acara belum di isi oleh pengurus</p>
+                        <div>
+                          <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-[#0F2447] px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
+                            Partangiangan Keluarga (Ibadah Keluarga)
+                          </span>
+                          <h4 className="text-base font-black text-[#0F2447] mt-2">Ibadah Partangiangan Sektor</h4>
+                        </div>
+                        <p className="text-xs sm:text-sm font-bold text-[#0F2447] leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
+                          "tidak ada petugas ibadah partangiangan dikarenakan ibadah keluarga akan dilakukan di rumah masing masing"
+                        </p>
+                        {liturgiPartangiangan.length > 0 && (
+                          <div className="pt-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowKeluargaLiturgy(prev => !prev)}
+                              className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#0F2447] hover:bg-[#173361] text-white text-xs font-bold transition cursor-pointer shadow-xs"
+                            >
+                              <BookOpen className="w-3.5 h-3.5" />
+                              <span>{showKeluargaLiturgy ? 'Sembunyikan Tata Ibadah' : 'Lihat Tata Ibadah Keluarga'}</span>
+                              {showKeluargaLiturgy ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            </button>
                           </div>
                         )}
                       </div>
                     </div>
-                  );
-                })
+                  )}
+
+                  {(partangianganMode === 'normal' || (partangianganMode === 'keluarga' && showKeluargaLiturgy)) &&
+                    liturgiPartangiangan.slice(0, 1).map((liturgy) => {
+                      return (
+                        <div key={liturgy.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10" id="agenda-partangiangan-container">
+                          
+                          {/* Card header with info */}
+                          <div className="p-5 bg-[#EDF2F9]/60 border-b border-slate-200">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div>
+                                <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
+                                  <span className="text-[10px] bg-[#0F2447] text-white font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
+                                    Ibadah Lingkungan/Keluarga
+                                  </span>
+                                </div>
+                                <h3 
+                                  style={zoomStyles.judulUtama}
+                                  className="font-extrabold text-[#0F2447] mt-2.5 transition-all"
+                                >
+                                  {liturgy.judul}
+                                </h3>
+                                <div 
+                                  style={zoomStyles.topikAcara}
+                                  className="flex items-center space-x-2 text-slate-600 mt-1.5 transition-all"
+                                >
+                                  <Clock className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
+                                  <span>Jadwal: {liturgy.tanggal} (Pkl 19:30 WIB)</span>
+                                </div>
+                                {(liturgy.ayatReferensi || liturgy.ayatBacaan) && (
+                                  <div className="mt-2 flex flex-wrap gap-2 items-center">
+                                    {liturgy.ayatReferensi && (
+                                      <div 
+                                        style={zoomStyles.topikAcara}
+                                        className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                      >
+                                        <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
+                                        <span>Epistel: {liturgy.ayatReferensi}</span>
+                                      </div>
+                                    )}
+                                    {liturgy.ayatBacaan && (
+                                      <div 
+                                        style={zoomStyles.topikAcara}
+                                        className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                      >
+                                        <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
+                                        <span>Khotbah: {liturgy.ayatBacaan}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Manual liturgy */}
+                          <div className="p-4 divide-y divide-slate-100 bg-transparent">
+                            {liturgy.teksLiturgi && liturgy.teksLiturgi.length > 0 ? (
+                              <>
+                                {liturgy.teksLiturgi.map((step) => {
+                                  const isExpanded = !!expandedLiturgySteps[step.id];
+                                  return (
+                                    <div key={step.id} className="py-3 px-2 transition-all rounded-xl hover:bg-[#F4F6FA]">
+                                      <button
+                                        onClick={() => toggleStep(step.id)}
+                                        className="w-full flex items-center justify-between text-left cursor-pointer focus:outline-none group py-1"
+                                      >
+                                        <div className="flex items-start space-x-2.5 flex-1 pr-2">
+                                          <span 
+                                            style={zoomStyles.judulAcara}
+                                            className="font-bold text-slate-800 group-hover:text-[#0F2447] transition-all leading-snug"
+                                          >
+                                            {step.label}
+                                          </span>
+                                        </div>
+                                        <div className="text-slate-400 group-hover:text-[#0F2447] pl-2 shrink-0">
+                                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                        </div>
+                                      </button>
+
+                                      <AnimatePresence>
+                                        {isExpanded && (
+                                          <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="overflow-hidden"
+                                          >
+                                            <div 
+                                              style={zoomStyles.isiAcara}
+                                              className="mt-2.5 pl-3.5 border-l-2 border-[#0F2447] text-slate-700 whitespace-pre-line bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-200/80 leading-relaxed transition-all font-sans"
+                                            >
+                                              {step.isi}
+                                            </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  );
+                                })}
+                                <div className="pt-3 text-center text-[11px] text-slate-400 italic">
+                                  (Ketuk pada baris acara di atas untuk memunculkan isi acara)
+                                </div>
+                              </>
+                            ) : (
+                              <div className="p-8 text-center bg-[#F4F6FA] rounded-xl m-2 border border-dashed border-slate-200">
+                                <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
+                                <p className="text-xs font-bold text-slate-700">Acara belum di isi oleh pengurus</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
               )}
             </motion.div>
           )}
