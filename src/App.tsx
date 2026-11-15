@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import MemberView from './components/MemberView';
 import AdminLogin from './components/AdminLogin';
@@ -153,77 +153,88 @@ export default function App() {
       return !isLocallyPendingWrite(key);
     };
 
+    const setIfChanged = <T,>(setter: Dispatch<SetStateAction<T>>, nextVal: T) => {
+      setter(prev => {
+        try {
+          if (JSON.stringify(prev) === JSON.stringify(nextVal)) return prev;
+        } catch {
+          // fall through
+        }
+        return nextVal;
+      });
+    };
+
     if (db.hkbp_liturgi_minggu !== undefined && shouldApply('hkbp_liturgi_minggu')) {
-      setLiturgiMinggu(db.hkbp_liturgi_minggu);
+      setIfChanged(setLiturgiMinggu, db.hkbp_liturgi_minggu);
       localStorage.setItem('hkbp_liturgi_minggu', JSON.stringify(db.hkbp_liturgi_minggu));
     }
     if (db.hkbp_liturgi_partangiangan !== undefined && shouldApply('hkbp_liturgi_partangiangan')) {
-      setLiturgiPartangiangan(db.hkbp_liturgi_partangiangan);
+      setIfChanged(setLiturgiPartangiangan, db.hkbp_liturgi_partangiangan);
       localStorage.setItem('hkbp_liturgi_partangiangan', JSON.stringify(db.hkbp_liturgi_partangiangan));
     }
     if (db.hkbp_warta_list !== undefined && shouldApply('hkbp_warta_list')) {
-      setWartaList(db.hkbp_warta_list);
+      setIfChanged(setWartaList, db.hkbp_warta_list);
       localStorage.setItem('hkbp_warta_list', JSON.stringify(db.hkbp_warta_list));
     }
     if (db.hkbp_petugas_minggu !== undefined && shouldApply('hkbp_petugas_minggu')) {
-      setPetugasMinggu(db.hkbp_petugas_minggu);
+      setIfChanged(setPetugasMinggu, db.hkbp_petugas_minggu);
       localStorage.setItem('hkbp_petugas_minggu', JSON.stringify(db.hkbp_petugas_minggu));
     }
     if (db.hkbp_partangiangan_attendance !== undefined && shouldApply('hkbp_partangiangan_attendance')) {
-      setPartangianganAttendance(db.hkbp_partangiangan_attendance);
+      setIfChanged(setPartangianganAttendance, db.hkbp_partangiangan_attendance);
       localStorage.setItem('hkbp_partangiangan_attendance', JSON.stringify(db.hkbp_partangiangan_attendance));
     }
     if (db.hkbp_petugas_partangiangan !== undefined && shouldApply('hkbp_petugas_partangiangan')) {
-      setPetugasPartangiangan(db.hkbp_petugas_partangiangan);
+      setIfChanged(setPetugasPartangiangan, db.hkbp_petugas_partangiangan);
       localStorage.setItem('hkbp_petugas_partangiangan', JSON.stringify(db.hkbp_petugas_partangiangan));
     }
     if (db.hkbp_partangiangan_attendance_date !== undefined && shouldApply('hkbp_partangiangan_attendance_date')) {
-      setPartangianganAttendanceDate(db.hkbp_partangiangan_attendance_date);
+      setIfChanged(setPartangianganAttendanceDate, db.hkbp_partangiangan_attendance_date);
       localStorage.setItem('hkbp_partangiangan_attendance_date', db.hkbp_partangiangan_attendance_date);
     }
     if (db.hkbp_petugas_partangiangan_date !== undefined && shouldApply('hkbp_petugas_partangiangan_date')) {
-      setPetugasPartangianganDate(db.hkbp_petugas_partangiangan_date);
+      setIfChanged(setPetugasPartangianganDate, db.hkbp_petugas_partangiangan_date);
       localStorage.setItem('hkbp_petugas_partangiangan_date', db.hkbp_petugas_partangiangan_date);
     }
     if (db.hkbp_petugas_minggu_date !== undefined && shouldApply('hkbp_petugas_minggu_date')) {
-      setPetugasMingguDate(db.hkbp_petugas_minggu_date);
+      setIfChanged(setPetugasMingguDate, db.hkbp_petugas_minggu_date);
       localStorage.setItem('hkbp_petugas_minggu_date', db.hkbp_petugas_minggu_date);
     }
     if (db.hkbp_partangiangan_mode !== undefined && shouldApply('hkbp_partangiangan_mode')) {
-      setPartangianganMode(db.hkbp_partangiangan_mode as PartangianganMode);
+      setIfChanged(setPartangianganMode, db.hkbp_partangiangan_mode as PartangianganMode);
       localStorage.setItem('hkbp_partangiangan_mode', db.hkbp_partangiangan_mode);
     }
     if (db.hkbp_transaksi_list !== undefined && shouldApply('hkbp_transaksi_list')) {
-      setTransaksiList(db.hkbp_transaksi_list);
+      setIfChanged(setTransaksiList, db.hkbp_transaksi_list);
       localStorage.setItem('hkbp_transaksi_list', JSON.stringify(db.hkbp_transaksi_list));
     }
     if (db.hkbp_jemaat_list !== undefined && shouldApply('hkbp_jemaat_list')) {
-      setJemaatList(db.hkbp_jemaat_list);
+      setIfChanged(setJemaatList, db.hkbp_jemaat_list);
       localStorage.setItem('hkbp_jemaat_list', JSON.stringify(db.hkbp_jemaat_list));
     }
     if (db.hkbp_custom_balance_title !== undefined && shouldApply('hkbp_custom_balance_title')) {
-      setCustomBalanceTitle(db.hkbp_custom_balance_title);
+      setIfChanged(setCustomBalanceTitle, db.hkbp_custom_balance_title);
       localStorage.setItem('hkbp_custom_balance_title', db.hkbp_custom_balance_title);
     }
     if (db.hkbp_custom_balance_value !== undefined && shouldApply('hkbp_custom_balance_value')) {
       const val = Number(db.hkbp_custom_balance_value) || 0;
-      setCustomBalanceValue(val);
+      setIfChanged(setCustomBalanceValue, val);
       localStorage.setItem('hkbp_custom_balance_value', String(val));
     }
     if (db.hkbp_jadwal_ibadah !== undefined && shouldApply('hkbp_jadwal_ibadah')) {
-      setJadwalIbadah(db.hkbp_jadwal_ibadah);
+      setIfChanged(setJadwalIbadah, db.hkbp_jadwal_ibadah);
       localStorage.setItem('hkbp_jadwal_ibadah', JSON.stringify(db.hkbp_jadwal_ibadah));
     }
     if (db.hkbp_tentang_gereja_list !== undefined && shouldApply('hkbp_tentang_gereja_list')) {
-      setTentangGerejaList(db.hkbp_tentang_gereja_list);
+      setIfChanged(setTentangGerejaList, db.hkbp_tentang_gereja_list);
       localStorage.setItem('hkbp_tentang_gereja_list', JSON.stringify(db.hkbp_tentang_gereja_list));
     }
     if (db.hkbp_parhalado_list !== undefined && shouldApply('hkbp_parhalado_list')) {
-      setParhaladoList(db.hkbp_parhalado_list);
+      setIfChanged(setParhaladoList, db.hkbp_parhalado_list);
       localStorage.setItem('hkbp_parhalado_list', JSON.stringify(db.hkbp_parhalado_list));
     }
     if (db.hkbp_attendance_trends !== undefined && shouldApply('hkbp_attendance_trends')) {
-      setAttendanceTrends(db.hkbp_attendance_trends);
+      setIfChanged(setAttendanceTrends, db.hkbp_attendance_trends);
       localStorage.setItem('hkbp_attendance_trends', JSON.stringify(db.hkbp_attendance_trends));
     }
     if (db.hkbp_registered_admins !== undefined && shouldApply('hkbp_registered_admins')) {

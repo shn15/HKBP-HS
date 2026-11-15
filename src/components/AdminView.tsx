@@ -337,11 +337,13 @@ export default function AdminView({
   const [tempCustomTitle, setTempCustomTitle] = useState(customBalanceTitle);
   const [tempCustomValue, setTempCustomValue] = useState(customBalanceValue);
 
-  // Sync temp states if prop changes
+  // Sync temp states if prop changes (only when not actively editing)
   useEffect(() => {
-    setTempCustomTitle(customBalanceTitle);
-    setTempCustomValue(customBalanceValue);
-  }, [customBalanceTitle, customBalanceValue]);
+    if (!isEditingCustomBalance) {
+      setTempCustomTitle(customBalanceTitle);
+      setTempCustomValue(customBalanceValue);
+    }
+  }, [customBalanceTitle, customBalanceValue, isEditingCustomBalance]);
 
   // Jadwal state variables
   const [editSekolahMinggu, setEditSekolahMinggu] = useState(jadwalIbadah.sekolahMinggu || '');
@@ -498,12 +500,15 @@ export default function AdminView({
   // ----------------------------------------------------
   const [tempAttendanceTrends, setTempAttendanceTrends] = useState<WeeklyAttendanceTrend[]>([]);
   const [chartTab, setChartTab] = useState<'total' | 'minggu' | 'partangiangan'>('total');
+  const isTrendsDirtyRef = useRef(false);
+  const lastSyncedTrendsRef = useRef('');
 
   useEffect(() => {
-    if (attendanceTrends && attendanceTrends.length > 0) {
-      setTempAttendanceTrends(attendanceTrends);
-    } else {
-      setTempAttendanceTrends(INITIAL_ATTENDANCE_TRENDS);
+    const source = attendanceTrends && attendanceTrends.length > 0 ? attendanceTrends : INITIAL_ATTENDANCE_TRENDS;
+    const serialized = JSON.stringify(source);
+    if (!isTrendsDirtyRef.current && serialized !== lastSyncedTrendsRef.current) {
+      lastSyncedTrendsRef.current = serialized;
+      setTempAttendanceTrends(source);
     }
   }, [attendanceTrends]);
 
@@ -599,6 +604,7 @@ export default function AdminView({
   }, [chartData]);
 
   const handleTrendCellChange = (index: number, field: keyof WeeklyAttendanceTrend, value: number | string) => {
+    isTrendsDirtyRef.current = true;
     const updated = [...tempAttendanceTrends];
     if (field === 'weekLabel' || field === 'tanggalRange') {
       updated[index] = { ...updated[index], [field]: value } as any;
@@ -610,6 +616,8 @@ export default function AdminView({
 
   const handleSaveAttendanceTrends = () => {
     if (onUpdateAttendanceTrends) {
+      isTrendsDirtyRef.current = false;
+      lastSyncedTrendsRef.current = JSON.stringify(tempAttendanceTrends);
       onUpdateAttendanceTrends(tempAttendanceTrends);
       setSavedSuccessMessage('Tren Kehadiran Berhasil Disimpan!');
       setTimeout(() => setSavedSuccessMessage(''), 3000);
@@ -1115,33 +1123,76 @@ export default function AdminView({
   const [litSteps, setLitSteps] = useState<LiturgiSection[]>([]);
 
   // ----------------------------------------------------
-  // STATE FOR PETUGAS EDITING (SPREADSHEET FOR MINGGU)
+  // STATE FOR PETUGAS EDITING (SPREADSHEET FOR MINGGU & PARTANGIANGAN)
   // ----------------------------------------------------
   const [adminPetugasSubTab, setAdminPetugasSubTab] = useState<'minggu' | 'partangiangan'>('minggu');
-  const [tempPetugasMinggu, setTempPetugasMinggu] = useState<PetugasMingguRow[]>([]);
-  const [tempPartangianganAttendance, setTempPartangianganAttendance] = useState<PartangianganAttendanceRow[]>([]);
-  const [tempPetugasPartangiangan, setTempPetugasPartangiangan] = useState<PetugasPartangianganRow[]>([]);
+  const [tempPetugasMinggu, setTempPetugasMinggu] = useState<PetugasMingguRow[]>(petugasMinggu || []);
+  const [tempPartangianganAttendance, setTempPartangianganAttendance] = useState<PartangianganAttendanceRow[]>(partangianganAttendance || []);
+  const [tempPetugasPartangiangan, setTempPetugasPartangiangan] = useState<PetugasPartangianganRow[]>(petugasPartangiangan || []);
 
-  // Synchronize from props
+  const [tempPetugasMingguDate, setTempPetugasMingguDate] = useState(petugasMingguDate || '');
+  const [tempPartangianganAttendanceDate, setTempPartangianganAttendanceDate] = useState(partangianganAttendanceDate || '');
+  const [tempPetugasPartangianganDate, setTempPetugasPartangianganDate] = useState(petugasPartangianganDate || '');
+
+  const isPetugasMingguDirtyRef = useRef(false);
+  const isAttendanceDirtyRef = useRef(false);
+  const isPetugasPartangianganDirtyRef = useRef(false);
+  const isPetugasMingguDateDirtyRef = useRef(false);
+  const isAttendanceDateDirtyRef = useRef(false);
+  const isPetugasPartangianganDateDirtyRef = useRef(false);
+
+  const lastSyncedPetugasMingguRef = useRef('');
+  const lastSyncedAttendanceRef = useRef('');
+  const lastSyncedPetugasPartangianganRef = useRef('');
+
+  // Synchronize from props ONLY when admin has no unsaved edits and server data actually changed
   useEffect(() => {
-    if (petugasMinggu) {
+    if (!petugasMinggu) return;
+    const serialized = JSON.stringify(petugasMinggu);
+    if (!isPetugasMingguDirtyRef.current && serialized !== lastSyncedPetugasMingguRef.current) {
+      lastSyncedPetugasMingguRef.current = serialized;
       setTempPetugasMinggu(petugasMinggu);
     }
   }, [petugasMinggu]);
 
   useEffect(() => {
-    if (partangianganAttendance) {
+    if (!partangianganAttendance) return;
+    const serialized = JSON.stringify(partangianganAttendance);
+    if (!isAttendanceDirtyRef.current && serialized !== lastSyncedAttendanceRef.current) {
+      lastSyncedAttendanceRef.current = serialized;
       setTempPartangianganAttendance(partangianganAttendance);
     }
   }, [partangianganAttendance]);
 
   useEffect(() => {
-    if (petugasPartangiangan) {
+    if (!petugasPartangiangan) return;
+    const serialized = JSON.stringify(petugasPartangiangan);
+    if (!isPetugasPartangianganDirtyRef.current && serialized !== lastSyncedPetugasPartangianganRef.current) {
+      lastSyncedPetugasPartangianganRef.current = serialized;
       setTempPetugasPartangiangan(petugasPartangiangan);
     }
   }, [petugasPartangiangan]);
 
+  useEffect(() => {
+    if (!isPetugasMingguDateDirtyRef.current) {
+      setTempPetugasMingguDate(petugasMingguDate || '');
+    }
+  }, [petugasMingguDate]);
+
+  useEffect(() => {
+    if (!isAttendanceDateDirtyRef.current) {
+      setTempPartangianganAttendanceDate(partangianganAttendanceDate || '');
+    }
+  }, [partangianganAttendanceDate]);
+
+  useEffect(() => {
+    if (!isPetugasPartangianganDateDirtyRef.current) {
+      setTempPetugasPartangianganDate(petugasPartangianganDate || '');
+    }
+  }, [petugasPartangianganDate]);
+
   const handleCellChange = (rowIndex: number, colKey: 'tugas' | 'shift1' | 'shift2' | 'sekolahMinggu', value: string) => {
+    isPetugasMingguDirtyRef.current = true;
     const updated = [...tempPetugasMinggu];
     updated[rowIndex] = {
       ...updated[rowIndex],
@@ -1151,6 +1202,7 @@ export default function AdminView({
   };
 
   const handleAddPetugasMingguRow = () => {
+    isPetugasMingguDirtyRef.current = true;
     setTempPetugasMinggu(prev => [
       ...prev,
       { tugas: 'Tugas Baru', shift1: '', shift2: '', sekolahMinggu: '' }
@@ -1158,23 +1210,30 @@ export default function AdminView({
   };
 
   const handleDeletePetugasMingguRow = (index: number) => {
+    isPetugasMingguDirtyRef.current = true;
     setTempPetugasMinggu(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSavePetugasMinggu = () => {
+    isPetugasMingguDirtyRef.current = false;
+    isPetugasMingguDateDirtyRef.current = false;
+    lastSyncedPetugasMingguRef.current = JSON.stringify(tempPetugasMinggu);
+    if (tempPetugasMingguDate !== petugasMingguDate) {
+      onUpdatePetugasMingguDate(tempPetugasMingguDate);
+    }
     onUpdatePetugasMinggu(tempPetugasMinggu);
 
     // Automatically backup Petugas Minggu to arsipPdfs (Arsip Berkas & PDF)
     backupToArsip({
-      id: `arsip-petugas-minggu-${petugasMingguDate.replace(/\s+/g, '_')}`,
-      judul: `Jadwal Pelayan Ibadah Minggu - ${petugasMingguDate}`,
-      keterangan: `Daftar pelayan ibadah minggu (Shift 1, Shift 2, Sekolah Minggu) tanggal ${petugasMingguDate}`,
+      id: `arsip-petugas-minggu-${tempPetugasMingguDate.replace(/\s+/g, '_')}`,
+      judul: `Jadwal Pelayan Ibadah Minggu - ${tempPetugasMingguDate}`,
+      keterangan: `Daftar pelayan ibadah minggu (Shift 1, Shift 2, Sekolah Minggu) tanggal ${tempPetugasMingguDate}`,
       tanggalUpload: new Date().toISOString().split('T')[0],
       tanggalMinggu: new Date().toISOString().split('T')[0],
       kategori: 'petugas',
       isPdfMode: false,
       petugasMingguData: tempPetugasMinggu,
-      tanggalPetugas: petugasMingguDate
+      tanggalPetugas: tempPetugasMingguDate
     });
 
     setSavedSuccessMessage('Data Petugas Minggu berhasil diperbarui & dicadangkan ke Arsip!');
@@ -1185,6 +1244,7 @@ export default function AdminView({
   // HANDLERS FOR NEW PARTANGIANGAN TABLES (2 TABLES)
   // ----------------------------------------------------
   const handleAttendanceCellChange = (index: number, field: keyof PartangianganAttendanceRow, value: any) => {
+    isAttendanceDirtyRef.current = true;
     const updated = [...tempPartangianganAttendance];
     updated[index] = {
       ...updated[index],
@@ -1194,6 +1254,7 @@ export default function AdminView({
   };
 
   const handleAddPartangianganAttendanceRow = () => {
+    isAttendanceDirtyRef.current = true;
     setTempPartangianganAttendance(prev => [
       ...prev,
       { hari: 'Selasa', lunggu: 'Lunggu Baru', ama: 0, ina: 0, sm: 0, rena: 0, parhalado: 0 }
@@ -1201,23 +1262,30 @@ export default function AdminView({
   };
 
   const handleDeletePartangianganAttendanceRow = (index: number) => {
+    isAttendanceDirtyRef.current = true;
     setTempPartangianganAttendance(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSavePartangianganAttendance = () => {
+    isAttendanceDirtyRef.current = false;
+    isAttendanceDateDirtyRef.current = false;
+    lastSyncedAttendanceRef.current = JSON.stringify(tempPartangianganAttendance);
+    if (tempPartangianganAttendanceDate !== partangianganAttendanceDate) {
+      onUpdatePartangianganAttendanceDate(tempPartangianganAttendanceDate);
+    }
     onUpdatePartangianganAttendance(tempPartangianganAttendance);
 
     // Automatically backup Attendance to arsipPdfs (Arsip Berkas & PDF)
     backupToArsip({
-      id: `arsip-kehadiran-partangiangan-${partangianganAttendanceDate.replace(/\s+/g, '_')}`,
-      judul: `Statistik Kehadiran Partangiangan - ${partangianganAttendanceDate}`,
-      keterangan: `Rekapitulasi kehadiran jemaat (Ama, Ina, SM, Rena, Parhalado) partangiangan lingkungan ${partangianganAttendanceDate}`,
+      id: `arsip-kehadiran-partangiangan-${tempPartangianganAttendanceDate.replace(/\s+/g, '_')}`,
+      judul: `Statistik Kehadiran Partangiangan - ${tempPartangianganAttendanceDate}`,
+      keterangan: `Rekapitulasi kehadiran jemaat (Ama, Ina, SM, Rena, Parhalado) partangiangan lingkungan ${tempPartangianganAttendanceDate}`,
       tanggalUpload: new Date().toISOString().split('T')[0],
       tanggalMinggu: new Date().toISOString().split('T')[0],
       kategori: 'petugas',
       isPdfMode: false,
       attendanceData: tempPartangianganAttendance,
-      tanggalKehadiran: partangianganAttendanceDate
+      tanggalKehadiran: tempPartangianganAttendanceDate
     });
 
     setSavedSuccessMessage('Tabel Kehadiran Partangiangan berhasil disimpan & dicadangkan ke Arsip!');
@@ -1225,6 +1293,7 @@ export default function AdminView({
   };
 
   const handlePetugasPartangianganCellChange = (index: number, field: keyof PetugasPartangianganRow, value: string) => {
+    isPetugasPartangianganDirtyRef.current = true;
     const updated = [...tempPetugasPartangiangan];
     updated[index] = {
       ...updated[index],
@@ -1234,19 +1303,25 @@ export default function AdminView({
   };
 
   const handleSavePetugasPartangianganTable = () => {
+    isPetugasPartangianganDirtyRef.current = false;
+    isPetugasPartangianganDateDirtyRef.current = false;
+    lastSyncedPetugasPartangianganRef.current = JSON.stringify(tempPetugasPartangiangan);
+    if (tempPetugasPartangianganDate !== petugasPartangianganDate) {
+      onUpdatePetugasPartangianganDate(tempPetugasPartangianganDate);
+    }
     onUpdatePetugasPartangiangan(tempPetugasPartangiangan);
 
     // Automatically backup Petugas Partangiangan to arsipPdfs (Arsip Berkas & PDF)
     backupToArsip({
-      id: `arsip-petugas-partangiangan-${petugasPartangianganDate.replace(/\s+/g, '_')}`,
-      judul: `Jadwal Petugas Partangiangan - ${petugasPartangianganDate}`,
-      keterangan: `Daftar pelayan & tuan rumah ibadah partangiangan lingkungan untuk ${petugasPartangianganDate}`,
+      id: `arsip-petugas-partangiangan-${tempPetugasPartangianganDate.replace(/\s+/g, '_')}`,
+      judul: `Jadwal Petugas Partangiangan - ${tempPetugasPartangianganDate}`,
+      keterangan: `Daftar pelayan & tuan rumah ibadah partangiangan lingkungan untuk ${tempPetugasPartangianganDate}`,
       tanggalUpload: new Date().toISOString().split('T')[0],
       tanggalMinggu: new Date().toISOString().split('T')[0],
       kategori: 'petugas',
       isPdfMode: false,
       petugasPartangianganData: tempPetugasPartangiangan,
-      tanggalPetugas: petugasPartangianganDate
+      tanggalPetugas: tempPetugasPartangianganDate
     });
 
     setSavedSuccessMessage('Tabel Petugas Partangiangan berhasil disimpan & dicadangkan ke Arsip!');
@@ -1254,6 +1329,7 @@ export default function AdminView({
   };
 
   const handleAddPetugasPartangianganRow = () => {
+    isPetugasPartangianganDirtyRef.current = true;
     setTempPetugasPartangiangan([
       ...tempPetugasPartangiangan,
       { hari: 'Selasa', lunggu: '', keluarga: '', alamat: '', jamita: '', agenda: '', ende: '' }
@@ -1261,6 +1337,7 @@ export default function AdminView({
   };
 
   const handleRemovePetugasPartangianganRow = (index: number) => {
+    isPetugasPartangianganDirtyRef.current = true;
     const updated = tempPetugasPartangiangan.filter((_, i) => i !== index);
     setTempPetugasPartangiangan(updated);
   };
@@ -3820,8 +3897,19 @@ export default function AdminView({
                       <label className="text-[11px] font-bold text-slate-600 uppercase shrink-0">Tanggal Petugas Minggu:</label>
                       <input
                         type="text"
-                        value={petugasMingguDate}
-                        onChange={(e) => onUpdatePetugasMingguDate(e.target.value)}
+                        value={tempPetugasMingguDate}
+                        onChange={(e) => {
+                          isPetugasMingguDateDirtyRef.current = true;
+                          setTempPetugasMingguDate(e.target.value);
+                        }}
+                        onBlur={() => {
+                          if (isPetugasMingguDateDirtyRef.current) {
+                            isPetugasMingguDateDirtyRef.current = false;
+                            if (tempPetugasMingguDate !== petugasMingguDate) {
+                              onUpdatePetugasMingguDate(tempPetugasMingguDate);
+                            }
+                          }
+                        }}
                         className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
                         placeholder="Contoh: Minggu, 14 Juni 2026"
                       />
@@ -3954,8 +4042,19 @@ export default function AdminView({
                         <label className="text-[11px] font-bold text-slate-600 uppercase shrink-0">Hari/Tanggal:</label>
                         <input
                           type="text"
-                          value={partangianganAttendanceDate}
-                          onChange={(e) => onUpdatePartangianganAttendanceDate(e.target.value)}
+                          value={tempPartangianganAttendanceDate}
+                          onChange={(e) => {
+                            isAttendanceDateDirtyRef.current = true;
+                            setTempPartangianganAttendanceDate(e.target.value);
+                          }}
+                          onBlur={() => {
+                            if (isAttendanceDateDirtyRef.current) {
+                              isAttendanceDateDirtyRef.current = false;
+                              if (tempPartangianganAttendanceDate !== partangianganAttendanceDate) {
+                                onUpdatePartangianganAttendanceDate(tempPartangianganAttendanceDate);
+                              }
+                            }
+                          }}
                           className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
                           placeholder="Contoh: Selasa 09 Juni & Rabu 10 Juni 2026"
                         />
@@ -4170,8 +4269,19 @@ export default function AdminView({
                         <label className="text-[11px] font-bold text-slate-600 uppercase shrink-0">Hari/Tanggal:</label>
                         <input
                           type="text"
-                          value={petugasPartangianganDate}
-                          onChange={(e) => onUpdatePetugasPartangianganDate(e.target.value)}
+                          value={tempPetugasPartangianganDate}
+                          onChange={(e) => {
+                            isPetugasPartangianganDateDirtyRef.current = true;
+                            setTempPetugasPartangianganDate(e.target.value);
+                          }}
+                          onBlur={() => {
+                            if (isPetugasPartangianganDateDirtyRef.current) {
+                              isPetugasPartangianganDateDirtyRef.current = false;
+                              if (tempPetugasPartangianganDate !== petugasPartangianganDate) {
+                                onUpdatePetugasPartangianganDate(tempPetugasPartangianganDate);
+                              }
+                            }
+                          }}
                           className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
                           placeholder="Contoh: Selasa 16 Juni & Rabu 17 Juni 2026"
                         />
