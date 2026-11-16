@@ -8,7 +8,7 @@ interface StandaloneTentangProps {
 
 export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: StandaloneTentangProps) {
   return (
-    <div className="bg-[#F4F6FA] min-h-screen font-sans flex flex-col selection:bg-[#0F2447]/15 text-slate-800">
+    <div className="bg-[#F4F6FA] min-h-screen font-sans flex flex-col selection:bg-[#0F2447]/15 text-black">
       
       {/* Top Editorial Header */}
       <header className="bg-[#0F2447] text-white border-b border-[#1D3B6E] relative overflow-hidden">
@@ -54,23 +54,23 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
         {/* Intro Card */}
         <section className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1.5 md:max-w-xl">
-            <h2 className="text-sm font-extrabold text-[#0F2447] uppercase tracking-wider flex items-center gap-2">
+            <h2 className="text-sm font-extrabold text-black uppercase tracking-wider flex items-center gap-2">
               <Globe className="w-4 h-4 text-[#0F2447]" />
               <span>Informasi Umum & Dokumentasi</span>
             </h2>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            <p className="text-xs text-black leading-relaxed font-medium">
               Selamat datang di portal informasi resmi HKBP Hinalang Silalahi. Di sini Anda dapat menemukan sejarah pendirian gereja, visi dan misi pelayanan, profil jemaat, serta foto dokumentasi kegiatan pelayanan kami.
             </p>
           </div>
           <div className="flex items-center space-x-4 shrink-0 bg-[#F4F6FA] border border-slate-200 px-5 py-3 rounded-xl">
             <div className="text-center">
-              <p className="text-sm font-extrabold text-[#0F2447] leading-none font-mono">{tentangGerejaList.length}</p>
-              <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-1">Konten Aktif</p>
+              <p className="text-sm font-extrabold text-black leading-none font-mono">{tentangGerejaList.length}</p>
+              <p className="text-[10px] text-black font-semibold uppercase tracking-wider mt-1">Konten Aktif</p>
             </div>
             <div className="h-8 w-[1px] bg-slate-200" />
             <div className="text-center">
-              <p className="text-xs font-extrabold text-[#0F2447] leading-none">Terpadu</p>
-              <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-1">Sinkronisasi</p>
+              <p className="text-xs font-extrabold text-black leading-none">Terpadu</p>
+              <p className="text-[10px] text-black font-semibold uppercase tracking-wider mt-1">Sinkronisasi</p>
             </div>
           </div>
         </section>
@@ -110,12 +110,12 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
               <div className="p-6 md:p-8 space-y-4">
                 <div className="space-y-2 pb-3 border-b border-slate-100">
                   <div className="flex items-center justify-between flex-wrap gap-2">
-                    <h3 className="text-base md:text-lg font-extrabold text-[#0F2447] tracking-tight">
+                    <h3 className="text-base md:text-lg font-extrabold text-black tracking-tight">
                       {item.judul}
                     </h3>
                     
                     {item.tanggalUpdate && (
-                      <div className="flex items-center space-x-1.5 text-[11px] text-slate-500 font-medium font-mono">
+                      <div className="flex items-center space-x-1.5 text-[11px] text-black font-medium font-mono">
                         <Calendar className="w-3.5 h-3.5 text-[#0F2447]" />
                         <span>Update: {item.tanggalUpdate}</span>
                       </div>
@@ -127,7 +127,7 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
                   {item.isi.split('\n\n').map((paragraph, index) => (
                     <p 
                       key={index} 
-                      className="text-slate-700 leading-relaxed text-xs md:text-sm font-medium text-justify"
+                      className="text-black leading-relaxed text-xs md:text-sm font-medium text-justify"
                       style={{ textIndent: paragraph.trim().length > 40 ? '2rem' : '0' }}
                     >
                       {paragraph}
@@ -140,8 +140,8 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
 
           {tentangGerejaList.length === 0 && (
             <div className="bg-white border border-slate-200 rounded-2xl py-16 text-center space-y-3">
-              <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
-              <p className="text-slate-400 text-xs italic">
+              <BookOpen className="w-12 h-12 text-slate-400 mx-auto" />
+              <p className="text-black text-xs italic">
                 Belum ada konten informasi tentang gereja yang dimasukkan oleh Administrator.
               </p>
             </div>
@@ -152,15 +152,15 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
         <section className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 space-y-5 shadow-xs">
           <div className="space-y-1.5 pb-3 border-b border-slate-100">
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <h3 className="text-base md:text-lg font-extrabold text-[#0F2447] tracking-tight flex items-center gap-2">
+              <h3 className="text-base md:text-lg font-extrabold text-black tracking-tight flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-[#0F2447]" />
                 <span>Lokasi Gereja HKBP Hinalang Silalahi</span>
               </h3>
-              <span className="text-[11px] font-semibold text-[#0F2447]">
+              <span className="text-[11px] font-semibold text-black">
                 Titik Koordinat Akurat
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-black font-medium">
               Desa Hinalang Bagasan, Kecamatan Balige, Kabupaten Toba, Sumatera Utara 22312, Indonesia. (Plus Code: 897R+VP Hinalang Bagasan)
             </p>
           </div>
@@ -191,7 +191,7 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
               href="https://www.google.com/maps/dir/?api=1&destination=2.3346565,99.0417933"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-2.5 bg-white hover:bg-[#EDF2F9] text-[#0F2447] border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-2.5 bg-white hover:bg-[#EDF2F9] text-black border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer"
             >
               <Navigation className="w-4 h-4 shrink-0" />
               <span>Petunjuk Arah</span>
@@ -203,13 +203,13 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-6 mt-10">
         <div className="max-w-4xl mx-auto px-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
+          <p className="text-[11px] text-black font-semibold uppercase tracking-wider">
             © {new Date().getFullYear()} HKBP Hinalang Silalahi. All rights reserved.
           </p>
           <div className="flex items-center space-x-4">
             <button
               onClick={onBackToMain}
-              className="text-[11px] font-bold text-[#0F2447] hover:underline uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+              className="text-[11px] font-bold text-black hover:underline uppercase tracking-wider flex items-center gap-1 cursor-pointer"
             >
               <span>Portal Jemaat</span>
               <ExternalLink className="w-3 h-3" />

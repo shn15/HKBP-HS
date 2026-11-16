@@ -441,10 +441,10 @@ export default function MemberView({
   };
 
   const getTipeKasDisplayClass = (resolved: 'Kas Huria' | 'Kas Pembangunan' | 'Kas Diakonia' | 'Kas Kustom') => {
-    if (resolved === 'Kas Huria') return 'bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]';
-    if (resolved === 'Kas Pembangunan') return 'bg-[#F4F6FA] text-[#1D3B6E] border-slate-300';
-    if (resolved === 'Kas Diakonia') return 'bg-slate-100 text-slate-700 border-slate-300';
-    return 'bg-white text-[#0F2447] border-[#0F2447]/30';
+    if (resolved === 'Kas Huria') return 'bg-[#EDF2F9] text-black border-[#CBD7EA]';
+    if (resolved === 'Kas Pembangunan') return 'bg-[#F4F6FA] text-black border-slate-300';
+    if (resolved === 'Kas Diakonia') return 'bg-slate-100 text-black border-slate-300';
+    return 'bg-white text-black border-[#0F2447]/30';
   };
 
   // Kas Huria
@@ -568,7 +568,7 @@ export default function MemberView({
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA] text-slate-800 flex flex-col font-sans relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#F4F6FA] text-black flex flex-col font-sans relative overflow-x-hidden">
       
       {/* HEADER BAR */}
       {activeTab !== 'live' && (
@@ -635,7 +635,7 @@ export default function MemberView({
                   className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                     kebaktianSubTab === 'minggu'
                       ? 'bg-[#0F2447] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-[#0F2447]'
+                      : 'text-black hover:bg-white/60'
                   }`}
                 >
                   <BookOpen className="w-4 h-4" />
@@ -646,7 +646,7 @@ export default function MemberView({
                   className={`flex-1 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                     kebaktianSubTab === 'partangiangan'
                       ? 'bg-[#0F2447] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-[#0F2447]'
+                      : 'text-black hover:bg-white/60'
                   }`}
                 >
                   <Calendar className="w-4 h-4" />
@@ -671,14 +671,14 @@ export default function MemberView({
                             </div>
                             <h3 
                               style={zoomStyles.judulUtama}
-                              className="font-extrabold text-[#0F2447] mt-2.5 transition-all"
+                              className="font-extrabold text-black mt-2.5 transition-all"
                             >
                               {liturgy.judul}
                             </h3>
                             {liturgy.topik && (
                               <div 
                                 style={zoomStyles.topikAcara}
-                                className="mt-2 font-bold text-[#0F2447] bg-white border border-[#CBD7EA] px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 max-w-full transition-all"
+                                className="mt-2 font-bold text-black bg-white border border-[#CBD7EA] px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 max-w-full transition-all"
                               >
                                 <span className="w-1.5 h-1.5 bg-[#0F2447] rounded-full shrink-0"></span>
                                 <span className="break-words">Topik: {liturgy.topik}</span>
@@ -689,7 +689,7 @@ export default function MemberView({
                                 {liturgy.ayatReferensi && (
                                   <div 
                                     style={zoomStyles.topikAcara}
-                                    className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                    className="text-black font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
                                   >
                                     <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                                     <span>Epistel: {liturgy.ayatReferensi}</span>
@@ -698,7 +698,7 @@ export default function MemberView({
                                 {liturgy.ayatBacaan && (
                                   <div 
                                     style={zoomStyles.topikAcara}
-                                    className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                    className="text-black font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
                                   >
                                     <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                                     <span>Khotbah: {liturgy.ayatBacaan}</span>
@@ -725,12 +725,12 @@ export default function MemberView({
                                      <div className="flex items-start space-x-2.5 flex-1 pr-2">
                                        <span 
                                          style={zoomStyles.judulAcara}
-                                         className="font-bold text-slate-800 group-hover:text-[#0F2447] transition-all leading-snug"
+                                         className="font-bold text-black transition-all leading-snug"
                                        >
                                          {step.label}
                                        </span>
                                      </div>
-                                     <div className="text-slate-400 group-hover:text-[#0F2447] pl-2 shrink-0">
+                                     <div className="text-black pl-2 shrink-0">
                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                      </div>
                                    </button>
@@ -746,7 +746,7 @@ export default function MemberView({
                                        >
                                          <div 
                                            style={zoomStyles.isiAcara}
-                                           className="mt-2.5 pl-3.5 border-l-2 border-[#0F2447] text-slate-700 leading-relaxed whitespace-pre-line bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-200/80 transition-all font-sans"
+                                           className="mt-2.5 pl-3.5 border-l-2 border-[#0F2447] text-black leading-relaxed whitespace-pre-line bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-200/80 transition-all font-sans"
                                          >
                                            {step.isi}
                                          </div>
@@ -756,14 +756,14 @@ export default function MemberView({
                                  </div>
                                );
                             })}
-                            <div className="pt-3 text-center text-[11px] text-slate-400 italic">
+                            <div className="pt-3 text-center text-[11px] text-black/80 italic">
                               (Ketuk pada baris acara di atas untuk memunculkan isi acara)
                             </div>
                           </>
                         ) : (
                           <div className="p-8 text-center bg-[#F4F6FA] rounded-xl m-2 border border-dashed border-slate-200">
-                            <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
-                            <p className="text-xs font-bold text-slate-700">Acara belum di isi oleh pengurus</p>
+                            <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                            <p className="text-xs font-bold text-black">Acara belum di isi oleh pengurus</p>
                           </div>
                         )}
                       </div>
@@ -777,12 +777,12 @@ export default function MemberView({
                       <Calendar className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-[#0F2447] px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
+                      <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-black px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
                         Informasi Akhir Tahun
                       </span>
-                      <h4 className="text-base font-black text-[#0F2447] mt-2">Status Ibadah Partangiangan</h4>
+                      <h4 className="text-base font-black text-black mt-2">Status Ibadah Partangiangan</h4>
                     </div>
-                    <p className="text-xs sm:text-sm font-bold text-[#0F2447] leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
+                    <p className="text-xs sm:text-sm font-bold text-black leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
                       "tidak ada ibadah partangiangan karena ibadah partangiangann untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
                     </p>
                   </div>
@@ -796,12 +796,12 @@ export default function MemberView({
                           <Building className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                          <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-[#0F2447] px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
+                          <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-black px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
                             Partangiangan Keluarga (Ibadah Keluarga)
                           </span>
-                          <h4 className="text-base font-black text-[#0F2447] mt-2">Ibadah Partangiangan Sektor</h4>
+                          <h4 className="text-base font-black text-black mt-2">Ibadah Partangiangan Sektor</h4>
                         </div>
-                        <p className="text-xs sm:text-sm font-bold text-[#0F2447] leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
+                        <p className="text-xs sm:text-sm font-bold text-black leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
                           "tidak ada petugas ibadah partangiangan dikarenakan ibadah keluarga akan dilakukan di rumah masing masing"
                         </p>
                         {liturgiPartangiangan.length > 0 && (
@@ -837,13 +837,13 @@ export default function MemberView({
                                 </div>
                                 <h3 
                                   style={zoomStyles.judulUtama}
-                                  className="font-extrabold text-[#0F2447] mt-2.5 transition-all"
+                                  className="font-extrabold text-black mt-2.5 transition-all"
                                 >
                                   {liturgy.judul}
                                 </h3>
                                 <div 
                                   style={zoomStyles.topikAcara}
-                                  className="flex items-center space-x-2 text-slate-600 mt-1.5 transition-all"
+                                  className="flex items-center space-x-2 text-black mt-1.5 transition-all"
                                 >
                                   <Clock className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                                   <span>Jadwal: {liturgy.tanggal} (Pkl 19:30 WIB)</span>
@@ -853,7 +853,7 @@ export default function MemberView({
                                     {liturgy.ayatReferensi && (
                                       <div 
                                         style={zoomStyles.topikAcara}
-                                        className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                        className="text-black font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
                                       >
                                         <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                                         <span>Epistel: {liturgy.ayatReferensi}</span>
@@ -862,7 +862,7 @@ export default function MemberView({
                                     {liturgy.ayatBacaan && (
                                       <div 
                                         style={zoomStyles.topikAcara}
-                                        className="text-[#0F2447] font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
+                                        className="text-black font-semibold bg-white border border-slate-200 px-3 py-1.5 rounded-xl inline-flex items-center space-x-1.5 transition-all"
                                       >
                                         <BookOpen className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                                         <span>Khotbah: {liturgy.ayatBacaan}</span>
@@ -889,12 +889,12 @@ export default function MemberView({
                                         <div className="flex items-start space-x-2.5 flex-1 pr-2">
                                           <span 
                                             style={zoomStyles.judulAcara}
-                                            className="font-bold text-slate-800 group-hover:text-[#0F2447] transition-all leading-snug"
+                                            className="font-bold text-black transition-all leading-snug"
                                           >
                                             {step.label}
                                           </span>
                                         </div>
-                                        <div className="text-slate-400 group-hover:text-[#0F2447] pl-2 shrink-0">
+                                        <div className="text-black pl-2 shrink-0">
                                           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                         </div>
                                       </button>
@@ -910,7 +910,7 @@ export default function MemberView({
                                           >
                                             <div 
                                               style={zoomStyles.isiAcara}
-                                              className="mt-2.5 pl-3.5 border-l-2 border-[#0F2447] text-slate-700 whitespace-pre-line bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-200/80 leading-relaxed transition-all font-sans"
+                                              className="mt-2.5 pl-3.5 border-l-2 border-[#0F2447] text-black whitespace-pre-line bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-200/80 leading-relaxed transition-all font-sans"
                                             >
                                               {step.isi}
                                             </div>
@@ -920,14 +920,14 @@ export default function MemberView({
                                     </div>
                                   );
                                 })}
-                                <div className="pt-3 text-center text-[11px] text-slate-400 italic">
+                                <div className="pt-3 text-center text-[11px] text-black/80 italic">
                                   (Ketuk pada baris acara di atas untuk memunculkan isi acara)
                                 </div>
                               </>
                             ) : (
                               <div className="p-8 text-center bg-[#F4F6FA] rounded-xl m-2 border border-dashed border-slate-200">
-                                <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-60" />
-                                <p className="text-xs font-bold text-slate-700">Acara belum di isi oleh pengurus</p>
+                                <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                                <p className="text-xs font-bold text-black">Acara belum di isi oleh pengurus</p>
                               </div>
                             )}
                           </div>
@@ -954,8 +954,8 @@ export default function MemberView({
                   <Users className="w-6 h-6 text-[#0F2447]" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 leading-tight">Daftar Petugas & Pelayan Ibadah</h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <h3 className="text-sm font-bold text-black leading-tight">Daftar Petugas & Pelayan Ibadah</h3>
+                  <p className="text-xs text-black mt-1">
                     Jadwal tugas parhalado,operator, song leader, dan jadwal partangiangan lingkungan HKBP.
                   </p>
                 </div>
@@ -968,7 +968,7 @@ export default function MemberView({
                   className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                     petugasSubTab === 'minggu'
                       ? 'bg-[#0F2447] text-white shadow-sm'
-                      : 'text-slate-600 hover:text-[#0F2447]'
+                      : 'text-black hover:bg-white/60'
                   }`}
                 >
                   <Users className="w-4 h-4" />
@@ -979,7 +979,7 @@ export default function MemberView({
                   className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                     petugasSubTab === 'partangiangan'
                       ? 'bg-[#0F2447] text-white shadow-sm'
-                      : 'text-slate-600 hover:text-[#0F2447]'
+                      : 'text-black hover:bg-white/60'
                   }`}
                 >
                   <Users className="w-4 h-4" />
@@ -996,14 +996,14 @@ export default function MemberView({
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="flex items-center space-x-2">
                           <div className="w-2.5 h-2.5 bg-[#0F2447] rounded-full"></div>
-                          <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Jadwal Petugas Ibadah Minggu</span>
+                          <span className="text-xs font-black text-black uppercase tracking-wider">Jadwal Petugas Ibadah Minggu</span>
                         </div>
                       </div>
 
                       {/* DATE FOR PETUGAS MINGGU */}
-                      <div className="mt-3 flex items-center space-x-2 text-xs bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl px-3.5 py-2 text-[#0F2447] font-semibold max-w-md">
+                      <div className="mt-3 flex items-center space-x-2 text-xs bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl px-3.5 py-2 text-black font-semibold max-w-md">
                         <Calendar className="w-4 h-4 text-[#0F2447] shrink-0" />
-                        <span>Tanggal: <span className="font-extrabold text-[#0F2447]">{petugasMingguDate || 'Belum diatur'}</span></span>
+                        <span>Tanggal: <span className="font-extrabold text-black">{petugasMingguDate || 'Belum diatur'}</span></span>
                       </div>
                     </div>
 
@@ -1034,23 +1034,23 @@ export default function MemberView({
                           {petugasMinggu && petugasMinggu.length > 0 ? (
                             petugasMinggu.map((row, index) => (
                               <tr key={index} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-4 py-3 text-xs font-bold text-slate-900 border-r border-slate-200 bg-slate-50/80">
+                                <td className="px-4 py-3 text-xs font-bold text-black border-r border-slate-200 bg-slate-50/80">
                                   {row.tugas}
                                 </td>
-                                <td className="px-4 py-3 text-xs text-slate-800 font-semibold border-r border-slate-200 text-center">
-                                  {row.shift1 || <span className="text-slate-400 italic">Belum ditentukan</span>}
+                                <td className="px-4 py-3 text-xs text-black font-semibold border-r border-slate-200 text-center">
+                                  {row.shift1 || <span className="text-black/65 italic">Belum ditentukan</span>}
                                 </td>
-                                <td className="px-4 py-3 text-xs text-slate-800 font-semibold border-r border-slate-200 text-center">
-                                  {row.shift2 || <span className="text-slate-400 italic">Belum ditentukan</span>}
+                                <td className="px-4 py-3 text-xs text-black font-semibold border-r border-slate-200 text-center">
+                                  {row.shift2 || <span className="text-black/65 italic">Belum ditentukan</span>}
                                 </td>
-                                <td className="px-4 py-3 text-xs text-slate-800 font-semibold text-center">
-                                  {row.sekolahMinggu || <span className="text-slate-400 italic">Belum ditentukan</span>}
+                                <td className="px-4 py-3 text-xs text-black font-semibold text-center">
+                                  {row.sekolahMinggu || <span className="text-black/65 italic">Belum ditentukan</span>}
                                 </td>
                               </tr>
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={4} className="px-4 py-8 text-center text-xs text-slate-400 italic">
+                              <td colSpan={4} className="px-4 py-8 text-center text-xs text-black italic">
                                 Data petugas ibadah minggu belum tersedia, silakan hubungi admin.
                               </td>
                             </tr>
@@ -1058,7 +1058,7 @@ export default function MemberView({
                         </tbody>
                       </table>
                     </div>
-                    <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-slate-500 font-medium">
+                    <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-black font-medium">
                       Seret tabel ke samping jika Anda menggunakan layar HP / perangkat seluler.
                     </div>
                   </div>
@@ -1083,19 +1083,19 @@ export default function MemberView({
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                               <div className="flex items-center space-x-2">
                                 <div className="w-3 h-3 bg-[#0F2447] rounded-full"></div>
-                                <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide">
+                                <h4 className="text-sm font-black text-black uppercase tracking-wide">
                                   Torop Naro Mandohoti Partangiangan di Minggu Naung Salpu
                                 </h4>
                               </div>
-                              <span className="text-[10px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-2.5 py-0.5 rounded-lg uppercase self-start sm:self-auto">
+                              <span className="text-[10px] font-bold text-black bg-[#EDF2F9] border border-[#CBD7EA] px-2.5 py-0.5 rounded-lg uppercase self-start sm:self-auto">
                                 Statistik Kehadiran
                               </span>
                             </div>
 
                             {/* DATE FOR TABEL 1 */}
-                            <div className="mt-3 flex items-center space-x-2 text-xs bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl px-3.5 py-2 text-[#0F2447] font-semibold max-w-md">
+                            <div className="mt-3 flex items-center space-x-2 text-xs bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl px-3.5 py-2 text-black font-semibold max-w-md">
                               <Calendar className="w-4 h-4 text-[#0F2447] shrink-0" />
-                              <span>Tanggal: <span className="font-extrabold text-[#0F2447]">{partangianganAttendanceDate || 'Belum diatur'}</span></span>
+                              <span>Tanggal: <span className="font-extrabold text-black">{partangianganAttendanceDate || 'Belum diatur'}</span></span>
                             </div>
                           </div>
 
@@ -1138,32 +1138,32 @@ export default function MemberView({
                                                    (Number(row.parhalado) || 0);
                                   return (
                                     <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                      <td className="px-4 py-3 text-xs font-bold text-slate-700 text-center border-r border-slate-200">
+                                      <td className="px-4 py-3 text-xs font-bold text-black text-center border-r border-slate-200">
                                         <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
-                                          row.hari === 'Selasa' ? 'bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]' : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                          row.hari === 'Selasa' ? 'bg-[#EDF2F9] text-black border border-[#CBD7EA]' : 'bg-slate-100 text-black border border-slate-200'
                                         }`}>
                                           {row.hari}
                                         </span>
                                       </td>
-                                      <td className="px-4 py-3 text-xs font-bold text-slate-900 border-r border-slate-200">
+                                      <td className="px-4 py-3 text-xs font-bold text-black border-r border-slate-200">
                                         {row.lunggu}
                                       </td>
-                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                      <td className="px-3 py-3 text-xs font-semibold text-black text-center border-r border-slate-200">
                                         {row.ama}
                                       </td>
-                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                      <td className="px-3 py-3 text-xs font-semibold text-black text-center border-r border-slate-200">
                                         {row.ina}
                                       </td>
-                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                      <td className="px-3 py-3 text-xs font-semibold text-black text-center border-r border-slate-200">
                                         {row.sm}
                                       </td>
-                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                      <td className="px-3 py-3 text-xs font-semibold text-black text-center border-r border-slate-200">
                                         {row.rena}
                                       </td>
-                                      <td className="px-3 py-3 text-xs font-semibold text-slate-800 text-center border-r border-slate-200">
+                                      <td className="px-3 py-3 text-xs font-semibold text-black text-center border-r border-slate-200">
                                         {row.parhalado}
                                       </td>
-                                      <td className="px-4 py-3 text-xs font-extrabold text-[#0F2447] text-center bg-[#EDF2F9]/60">
+                                      <td className="px-4 py-3 text-xs font-extrabold text-black text-center bg-[#EDF2F9]/60">
                                         {rowTotal}
                                       </td>
                                     </tr>
@@ -1171,23 +1171,23 @@ export default function MemberView({
                                 })}
 
                                 {/* BARIS 7: TOROP NARO (GRAND TOTALS) */}
-                                <tr className="bg-[#EDF2F9] border-t-2 border-[#CBD7EA] font-extrabold text-[#0F2447]">
-                                  <td colSpan={2} className="px-4 py-3.5 text-xs font-black text-[#0F2447] uppercase tracking-wide border-r border-[#CBD7EA] text-left bg-[#E8EEF6]">
+                                <tr className="bg-[#EDF2F9] border-t-2 border-[#CBD7EA] font-extrabold text-black">
+                                  <td colSpan={2} className="px-4 py-3.5 text-xs font-black text-black uppercase tracking-wide border-r border-[#CBD7EA] text-left bg-[#E8EEF6]">
                                     Torop Naro (Total Jumlah)
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-black">
                                     {totalAma}
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-black">
                                     {totalIna}
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-black">
                                     {totalSM}
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-black">
                                     {totalReNa}
                                   </td>
-                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-[#0F2447]">
+                                  <td className="px-3 py-3.5 text-xs text-center border-r border-[#CBD7EA] text-black">
                                     {totalParhalado}
                                   </td>
                                   <td className="px-4 py-3.5 text-xs text-center bg-[#0F2447] text-white font-black">
@@ -1197,7 +1197,7 @@ export default function MemberView({
                               </tbody>
                             </table>
                           </div>
-                          <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-slate-500 font-medium">
+                          <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-black font-medium">
                             Jumlah "Torop Naro" dihitung secara otomatis sebagai gabungan per kolom dari seluruh Lunggu.
                           </div>
                         </div>
@@ -1209,19 +1209,19 @@ export default function MemberView({
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div className="flex items-center space-x-2">
                               <div className="w-3 h-3 bg-[#0F2447] rounded-full"></div>
-                              <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide">
+                              <h4 className="text-sm font-black text-black uppercase tracking-wide">
                                 Petugas Partangiangan
                               </h4>
                             </div>
-                            <span className="text-[10px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-2.5 py-0.5 rounded-lg uppercase self-start sm:self-auto">
+                            <span className="text-[10px] font-bold text-black bg-[#EDF2F9] border border-[#CBD7EA] px-2.5 py-0.5 rounded-lg uppercase self-start sm:self-auto">
                               Pelayan Sektor
                             </span>
                           </div>
 
                           {/* DATE FOR TABEL 2 */}
-                          <div className="mt-3 flex items-center space-x-2 text-xs bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl px-3.5 py-2 text-[#0F2447] font-semibold max-w-md">
+                          <div className="mt-3 flex items-center space-x-2 text-xs bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl px-3.5 py-2 text-black font-semibold max-w-md">
                             <Calendar className="w-4 h-4 text-[#0F2447] shrink-0" />
-                            <span>Tanggal: <span className="font-extrabold text-[#0F2447]">{petugasPartangianganDate || 'Belum diatur'}</span></span>
+                            <span>Tanggal: <span className="font-extrabold text-black">{petugasPartangianganDate || 'Belum diatur'}</span></span>
                           </div>
                         </div>
 
@@ -1231,12 +1231,12 @@ export default function MemberView({
                               <Building className="w-7 h-7 text-white" />
                             </div>
                             <div>
-                              <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-[#0F2447] px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
+                              <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-black px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
                                 Partangiangan Keluarga (Ibadah Keluarga)
                               </span>
-                              <h4 className="text-base font-black text-[#0F2447] mt-2">Ibadah Partangiangan Sektor</h4>
+                              <h4 className="text-base font-black text-black mt-2">Ibadah Partangiangan Sektor</h4>
                             </div>
-                            <p className="text-xs sm:text-sm font-bold text-[#0F2447] leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
+                            <p className="text-xs sm:text-sm font-bold text-black leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
                               "tidak ada petugas ibadah partangiangan dikarenakan ibadah keluarga akan dilakukan di rumah masing masing"
                             </p>
                           </div>
@@ -1246,12 +1246,12 @@ export default function MemberView({
                               <Calendar className="w-7 h-7 text-white" />
                             </div>
                             <div>
-                              <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-[#0F2447] px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
+                              <span className="text-[10px] font-extrabold uppercase bg-[#E8EEF6] text-black px-3 py-1 rounded-lg tracking-wider border border-[#CBD7EA]">
                                 Informasi Akhir Tahun
                               </span>
-                              <h4 className="text-base font-black text-[#0F2447] mt-2">Status Ibadah Partangiangan</h4>
+                              <h4 className="text-base font-black text-black mt-2">Status Ibadah Partangiangan</h4>
                             </div>
-                            <p className="text-xs sm:text-sm font-bold text-[#0F2447] leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
+                            <p className="text-xs sm:text-sm font-bold text-black leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
                               "tidak ada ibadah partangiangan karena ibadah partangiangann untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
                             </p>
                           </div>
@@ -1288,36 +1288,36 @@ export default function MemberView({
                                   {petugasPartangiangan && petugasPartangiangan.length > 0 ? (
                                     petugasPartangiangan.map((row, idx) => (
                                       <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-3 py-3 text-xs font-bold text-slate-700 text-center border-r border-slate-200">
+                                        <td className="px-3 py-3 text-xs font-bold text-black text-center border-r border-slate-200">
                                           <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold ${
-                                            row.hari === 'Selasa' ? 'bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]' : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                            row.hari === 'Selasa' ? 'bg-[#EDF2F9] text-black border border-[#CBD7EA]' : 'bg-slate-100 text-black border border-slate-200'
                                           }`}>
                                             {row.hari}
                                           </span>
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-bold text-slate-900 border-r border-slate-200">
+                                        <td className="px-4 py-3 text-xs font-bold text-black border-r border-slate-200">
                                           {row.lunggu}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-bold text-slate-800 border-r border-slate-200">
-                                          {row.keluarga || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        <td className="px-4 py-3 text-xs font-bold text-black border-r border-slate-200">
+                                          {row.keluarga || <span className="text-black/65 italic font-normal">Belum ditentukan</span>}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-medium text-slate-600 border-r border-slate-200">
-                                          {row.alamat || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        <td className="px-4 py-3 text-xs font-medium text-black border-r border-slate-200">
+                                          {row.alamat || <span className="text-black/65 italic font-normal">Belum ditentukan</span>}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-black text-[#0F2447] bg-[#EDF2F9]/30 border-r border-slate-200">
-                                          {row.jamita || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        <td className="px-4 py-3 text-xs font-black text-black bg-[#EDF2F9]/30 border-r border-slate-200">
+                                          {row.jamita || <span className="text-black/65 italic font-normal">Belum ditentukan</span>}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-black text-[#0F2447] bg-[#EDF2F9]/30 border-r border-slate-200">
-                                          {row.agenda || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        <td className="px-4 py-3 text-xs font-black text-black bg-[#EDF2F9]/30 border-r border-slate-200">
+                                          {row.agenda || <span className="text-black/65 italic font-normal">Belum ditentukan</span>}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-black text-[#0F2447] bg-[#EDF2F9]/30">
-                                          {row.ende || <span className="text-slate-400 italic font-normal">Belum ditentukan</span>}
+                                        <td className="px-4 py-3 text-xs font-black text-black bg-[#EDF2F9]/30">
+                                          {row.ende || <span className="text-black/65 italic font-normal">Belum ditentukan</span>}
                                         </td>
                                       </tr>
                                     ))
                                   ) : (
                                     <tr>
-                                      <td colSpan={7} className="px-6 py-8 text-center text-xs text-slate-400 italic">
+                                      <td colSpan={7} className="px-6 py-8 text-center text-xs text-black italic">
                                         Data petugas pelayanan belum tersedia.
                                       </td>
                                     </tr>
@@ -1325,7 +1325,7 @@ export default function MemberView({
                                 </tbody>
                               </table>
                             </div>
-                            <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-slate-500 font-medium">
+                            <div className="bg-slate-50 border-t border-slate-200 px-4 py-2.5 text-center text-[10px] text-black font-medium">
                               3 kolom terakhir (Jamita, Agenda, Ende) merupakan daftar petugas pelayanan ibadah partangiangan.
                             </div>
                           </>
@@ -1414,13 +1414,13 @@ export default function MemberView({
               {/* Filter and Search Box */}
               <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm space-y-3.5 relative z-10">
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-3.5 text-slate-400 w-4 h-4" />
+                  <Search className="absolute left-3.5 top-3.5 text-slate-600 w-4 h-4" />
                   <input
                     type="text"
                     placeholder="Cari pokok warta jemaat..."
                     value={wartaSearch}
                     onChange={(e) => setWartaSearch(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447]/30 transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs text-black placeholder-slate-500 focus:outline-none focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447]/30 transition-all"
                   />
                 </div>
 
@@ -1433,7 +1433,7 @@ export default function MemberView({
                       className={`text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-lg border cursor-pointer transition-all shrink-0 ${
                         wartaFilter === kategori
                           ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-sm'
-                          : 'bg-[#F1F5F9] border-slate-200 text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                          : 'bg-[#F1F5F9] border-slate-200 text-black hover:bg-[#EDF2F9]'
                       }`}
                     >
                       {kategori === 'semua'
@@ -1457,7 +1457,7 @@ export default function MemberView({
               {/* LIST WARTA */}
               <div className="space-y-3">
                 {filteredWarta.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center text-slate-500 text-xs shadow-sm">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center text-black text-xs shadow-sm">
                     Tidak ditemukan berita warta jemaat yang sesuai.
                   </div>
                 ) : (
@@ -1482,7 +1482,7 @@ export default function MemberView({
                           className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wide border ${
                             warta.prioritas
                               ? 'bg-[#0F2447] text-white border-[#0F2447]'
-                              : 'bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]'
+                              : 'bg-[#EDF2F9] text-black border-[#CBD7EA]'
                           }`}
                         >
                           {warta.kategori === 'duka'
@@ -1493,26 +1493,26 @@ export default function MemberView({
                             ? 'Warta Sektor'
                             : warta.kategori}
                         </span>
-                        <span className="text-[10px] text-slate-500 font-medium">{warta.tanggal}</span>
+                        <span className="text-[10px] text-black font-medium">{warta.tanggal}</span>
                       </div>
 
                       <h4 
                         style={zoomStyles.judulAcara}
-                        className="font-bold text-slate-900 mt-2.5 leading-tight transition-all"
+                        className="font-bold text-black mt-2.5 leading-tight transition-all"
                       >
                         {warta.judul}
                       </h4>
 
                       <div 
                         style={zoomStyles.isiAcara}
-                        className="text-slate-700 mt-3 whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150 transition-all font-sans"
+                        className="text-black mt-3 whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-150 transition-all font-sans"
                       >
                         {warta.isi}
                       </div>
 
                       {warta.penulis && (
-                        <p className="text-[10px] text-slate-400 mt-2.5 text-right font-medium">
-                          Oleh: <span className="text-slate-600 font-semibold">{warta.penulis}</span>
+                        <p className="text-[10px] text-black mt-2.5 text-right font-medium">
+                          Oleh: <span className="text-black font-semibold">{warta.penulis}</span>
                         </p>
                       )}
                     </div>
@@ -1537,24 +1537,24 @@ export default function MemberView({
                 {/* 1. GABUNGAN: TOTAL PEMASUKAN & PENGELUARAN */}
                 <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#0F2447] flex items-center space-x-1.5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-black flex items-center space-x-1.5">
                       <Activity className="w-4 h-4 text-[#0F2447]" />
                       <span>Total Kas Masuk & Keluar</span>
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 divide-x divide-slate-100">
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Pemasukan</span>
+                      <span className="text-[10px] text-black uppercase font-semibold block">Total Pemasukan</span>
                       <div className="flex items-center space-x-1 mt-1">
                         <ArrowUpRight className="w-4 h-4 text-[#0F2447] shrink-0" />
-                        <h4 className="text-base font-black text-[#0F2447] truncate">{formatRupiah(totalPemasukan)}</h4>
+                        <h4 className="text-base font-black text-black truncate">{formatRupiah(totalPemasukan)}</h4>
                       </div>
                     </div>
                     <div className="pl-4">
-                      <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Pengeluaran</span>
+                      <span className="text-[10px] text-black uppercase font-semibold block">Total Pengeluaran</span>
                       <div className="flex items-center space-x-1 mt-1">
-                        <ArrowDownRight className="w-4 h-4 text-slate-500 shrink-0" />
-                        <h4 className="text-base font-black text-slate-700 truncate">{formatRupiah(totalPengeluaran)}</h4>
+                        <ArrowDownRight className="w-4 h-4 text-[#0F2447] shrink-0" />
+                        <h4 className="text-base font-black text-black truncate">{formatRupiah(totalPengeluaran)}</h4>
                       </div>
                     </div>
                   </div>
@@ -1563,36 +1563,36 @@ export default function MemberView({
                 {/* 2. GABUNGAN: SALDO KAS HURIA & KAS PEMBANGUNAN */}
                 <div className="bg-[#EDF2F9] border border-[#CBD7EA] p-5 rounded-2xl shadow-sm flex flex-col justify-between">
                   <div className="flex items-center justify-between border-b border-[#CBD7EA] pb-3 mb-2.5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#0F2447] flex items-center space-x-1.5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-black flex items-center space-x-1.5">
                       <Building className="w-4 h-4 text-[#0F2447]" />
                       <span>Saldo Kas Huria & Kas Pembangunan</span>
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-3 divide-x divide-[#CBD7EA] mb-2">
                     <div>
-                      <span className="text-[9px] text-slate-600 uppercase font-bold block">Kas Huria (Umum)</span>
-                      <h4 className="text-sm font-extrabold text-[#0F2447] mt-0.5 truncate">{formatRupiah(saldoKasHuria)}</h4>
+                      <span className="text-[9px] text-black uppercase font-bold block">Kas Huria (Umum)</span>
+                      <h4 className="text-sm font-extrabold text-black mt-0.5 truncate">{formatRupiah(saldoKasHuria)}</h4>
                     </div>
                     <div className="pl-3">
-                      <span className="text-[9px] text-slate-600 uppercase font-bold block">Kas Pembangunan</span>
-                      <h4 className="text-sm font-extrabold text-[#0F2447] mt-0.5 truncate">{formatRupiah(saldoKasPembangunan)}</h4>
+                      <span className="text-[9px] text-black uppercase font-bold block">Kas Pembangunan</span>
+                      <h4 className="text-sm font-extrabold text-black mt-0.5 truncate">{formatRupiah(saldoKasPembangunan)}</h4>
                     </div>
                   </div>
-                  <div className="border-t border-dashed border-[#CBD7EA] pt-2 flex items-center justify-between text-[10px] font-bold text-slate-600">
+                  <div className="border-t border-dashed border-[#CBD7EA] pt-2 flex items-center justify-between text-[10px] font-bold text-black">
                     <span>Gabungan Saldo Kas:</span>
-                    <span className="text-xs font-black text-[#0F2447]">{formatRupiah(saldoKasHuria + saldoKasPembangunan)}</span>
+                    <span className="text-xs font-black text-black">{formatRupiah(saldoKasHuria + saldoKasPembangunan)}</span>
                   </div>
                 </div>
 
                 {/* 3. SALDO DIAKONIA SOSIAL */}
                 <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold flex items-center space-x-1">
+                    <span className="text-[10px] text-black uppercase font-semibold flex items-center space-x-1">
                       <Heart className="w-3.5 h-3.5 text-[#0F2447]" />
                       <span>Saldo Diakonia Sosial</span>
                     </span>
-                    <h4 className="text-lg font-black text-[#0F2447] mt-1">{formatRupiah(saldoDiakoniaSosial)}</h4>
-                    <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Khusus pelayanan kasih & sosial</span>
+                    <h4 className="text-lg font-black text-black mt-1">{formatRupiah(saldoDiakoniaSosial)}</h4>
+                    <span className="text-[9px] text-black font-medium block mt-0.5">Khusus pelayanan kasih & sosial</span>
                   </div>
                   <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-xl shrink-0 border border-[#CBD7EA]">
                     <Heart className="w-5 h-5" />
@@ -1602,12 +1602,12 @@ export default function MemberView({
                 {/* 4. SALDO KUSTOM */}
                 <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold flex items-center space-x-1">
+                    <span className="text-[10px] text-black uppercase font-semibold flex items-center space-x-1">
                       <Coins className="w-3.5 h-3.5 text-[#0F2447]" />
                       <span className="truncate max-w-[160px] block" title={customBalanceTitle}>{customBalanceTitle}</span>
                     </span>
-                    <h4 className="text-lg font-black text-[#0F2447] mt-1">{formatRupiah(activeCustomBalanceValue)}</h4>
-                    <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Saldo kustom (menggabungkan basis & transaksi)</span>
+                    <h4 className="text-lg font-black text-black mt-1">{formatRupiah(activeCustomBalanceValue)}</h4>
+                    <span className="text-[9px] text-black font-medium block mt-0.5">Saldo kustom (menggabungkan basis & transaksi)</span>
                   </div>
                   <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-xl shrink-0 border border-[#CBD7EA]">
                     <Coins className="w-5 h-5" />
@@ -1618,8 +1618,8 @@ export default function MemberView({
               {/* RECHARTS VISUALIZATION */}
               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Grafik Kas Jemaat</h4>
-                  <span className="text-[10px] text-slate-500 italic">Disusun berdasarkan Kategori Terdaftar</span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-black">Grafik Kas Jemaat</h4>
+                  <span className="text-[10px] text-black italic">Disusun berdasarkan Kategori Terdaftar</span>
                 </div>
                 <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
@@ -1628,13 +1628,13 @@ export default function MemberView({
                       margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                      <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} />
-                      <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
+                      <XAxis dataKey="name" stroke="#000000" fontSize={10} tickLine={false} />
+                      <YAxis stroke="#000000" fontSize={10} tickLine={false} />
                       <Tooltip
-                        contentStyle={{ backgroundColor: '#ffffff', borderColor: '#CBD7EA', color: '#0F2447', borderRadius: '12px' }}
+                        contentStyle={{ backgroundColor: '#ffffff', borderColor: '#CBD7EA', color: '#000000', borderRadius: '12px' }}
                         formatter={(value) => [formatRupiah(Number(value))]}
                       />
-                      <Legend wrapperStyle={{ fontSize: 10 }} />
+                      <Legend wrapperStyle={{ fontSize: 10, color: '#000000' }} />
                       <Bar dataKey="pemasukan" fill="#0F2447" name="Pemasukan" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="pengeluaran" fill="#4C6B9E" name="Pengeluaran" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -1645,13 +1645,13 @@ export default function MemberView({
               {/* DETAILED TRANSACTION TABLE LEDGER */}
               <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
                 <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Buku Jurnal Keuangan Kas</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-black">Buku Jurnal Keuangan Kas</h4>
                   
                   {/* Ledger Type Filter */}
                   <select
                     value={keuanganFilter}
                     onChange={(e: any) => setKeuanganFilter(e.target.value)}
-                    className="bg-white text-xs border border-slate-200 rounded-lg p-1.5 text-slate-700 focus:outline-none focus:border-[#0F2447]"
+                    className="bg-white text-xs border border-slate-200 rounded-lg p-1.5 text-black focus:outline-none focus:border-[#0F2447]"
                   >
                     <option value="semua">Semua Transaksi</option>
                     <option value="pemasukan">Hanya Pemasukan</option>
@@ -1675,12 +1675,12 @@ export default function MemberView({
                         .filter((t) => keuanganFilter === 'semua' || t.tipe === keuanganFilter)
                         .map((t) => (
                           <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="p-3 text-slate-500 whitespace-nowrap">{t.tanggal}</td>
+                            <td className="p-3 text-black whitespace-nowrap">{t.tanggal}</td>
                             <td className="p-3">
-                              <span className="font-semibold text-slate-800 block">{t.kategori}</span>
+                              <span className="font-semibold text-black block">{t.kategori}</span>
                               <span
                                 className={`text-[9px] px-1.5 py-0.5 rounded-md font-extrabold uppercase tracking-wide inline-block mt-0.5 ${
-                                  t.tipe === 'pemasukan' ? 'bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]' : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                  t.tipe === 'pemasukan' ? 'bg-[#EDF2F9] text-black border border-[#CBD7EA]' : 'bg-slate-100 text-black border border-slate-200'
                                 }`}
                               >
                                 {t.tipe}
@@ -1693,18 +1693,14 @@ export default function MemberView({
                                 {getTipeKasLabel(getTipeKasOfTransaction(t), customBalanceTitle)}
                               </span>
                             </td>
-                            <td className="p-3 text-slate-600 break-words whitespace-normal min-w-[150px] max-w-[300px]" title={t.keterangan}>
+                            <td className="p-3 text-black break-words whitespace-normal min-w-[150px] max-w-[300px]" title={t.keterangan}>
                               {t.keterangan}
                             </td>
-                            <td
-                              className={`p-3 text-right font-bold font-mono whitespace-nowrap ${
-                                t.tipe === 'pemasukan' ? 'text-[#0F2447]' : 'text-slate-600'
-                              }`}
-                            >
+                            <td className="p-3 text-right font-bold font-mono whitespace-nowrap text-black">
                               <div className="flex flex-col items-end">
                                 <span>{t.tipe === 'pemasukan' ? '+' : '-'} {formatRupiah(t.jumlah)}</span>
                                 {t.tipe === 'pemasukan' && t.sentralisasiPersen ? (
-                                  <span className="text-[10px] text-slate-500 font-medium font-sans">
+                                  <span className="text-[10px] text-black font-medium font-sans">
                                     (sentral {t.sentralisasiPersen}% = {formatRupiah(t.jumlah * t.sentralisasiPersen / 100)})
                                   </span>
                                 ) : null}
@@ -1723,13 +1719,13 @@ export default function MemberView({
                     .map((t) => (
                       <div key={t.id} className="p-4 hover:bg-slate-50 transition-colors flex flex-col space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 font-mono">{t.tanggal}</span>
+                          <span className="text-[10px] font-bold text-black font-mono">{t.tanggal}</span>
                           <div className="flex items-center space-x-1.5">
                             <span
                               className={`text-[8px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider ${
                                 t.tipe === 'pemasukan'
-                                  ? 'bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]'
-                                  : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                  ? 'bg-[#EDF2F9] text-black border border-[#CBD7EA]'
+                                  : 'bg-slate-100 text-black border border-slate-200'
                               }`}
                             >
                               {t.tipe}
@@ -1743,21 +1739,17 @@ export default function MemberView({
                         </div>
                         <div className="flex justify-between items-start gap-3">
                           <div className="flex-1 min-w-0">
-                            <span className="font-extrabold text-xs text-slate-800 block mb-0.5">{t.kategori}</span>
-                            <p className="text-[11px] text-slate-600 leading-relaxed font-medium break-words whitespace-normal">
+                            <span className="font-extrabold text-xs text-black block mb-0.5">{t.kategori}</span>
+                            <p className="text-[11px] text-black leading-relaxed font-medium break-words whitespace-normal">
                               {t.keterangan}
                             </p>
                           </div>
                           <div className="text-right shrink-0">
-                            <span
-                              className={`font-mono text-xs font-black whitespace-nowrap block ${
-                                t.tipe === 'pemasukan' ? 'text-[#0F2447]' : 'text-slate-600'
-                              }`}
-                            >
+                            <span className="font-mono text-xs font-black whitespace-nowrap block text-black">
                               {t.tipe === 'pemasukan' ? '+' : '-'} {formatRupiah(t.jumlah)}
                             </span>
                             {t.tipe === 'pemasukan' && t.sentralisasiPersen ? (
-                              <span className="text-[9px] text-slate-500 font-medium font-sans block mt-0.5">
+                              <span className="text-[9px] text-black font-medium font-sans block mt-0.5">
                                 (sentral {t.sentralisasiPersen}% = {formatRupiah(t.jumlah * t.sentralisasiPersen / 100)})
                               </span>
                             ) : null}
@@ -1766,7 +1758,7 @@ export default function MemberView({
                       </div>
                     ))}
                   {transaksiList.filter((t) => keuanganFilter === 'semua' || t.tipe === keuanganFilter).length === 0 && (
-                    <div className="p-8 text-center text-slate-400 text-xs font-medium">
+                    <div className="p-8 text-center text-black text-xs font-medium">
                       Tidak ada transaksi untuk ditampilkan
                     </div>
                   )}
@@ -1790,14 +1782,14 @@ export default function MemberView({
                 <div className="inline-flex p-3 bg-white text-[#0F2447] rounded-2xl border border-[#CBD7EA] mb-3 shadow-sm">
                   <Gift className="w-8 h-8" />
                 </div>
-                <h3 className="text-base md:text-lg font-black tracking-tight text-[#0F2447] leading-tight">
+                <h3 className="text-base md:text-lg font-black tracking-tight text-black leading-tight">
                   Ulang Tahun Jemaat (1 Minggu Ini)
                 </h3>
-                <div className="bg-white border border-[#CBD7EA] rounded-xl p-3 my-2.5 shadow-2xs max-w-md mx-auto text-[#0F2447] italic text-[11px] font-semibold leading-relaxed">
-                  "{currentVerse.text}" <span className="block text-[10px] text-[#0F2447] font-extrabold mt-1 not-italic uppercase tracking-wider">— {currentVerse.verse}</span>
+                <div className="bg-white border border-[#CBD7EA] rounded-xl p-3 my-2.5 shadow-2xs max-w-md mx-auto text-black italic text-[11px] font-semibold leading-relaxed">
+                  "{currentVerse.text}" <span className="block text-[10px] text-black font-extrabold mt-1 not-italic uppercase tracking-wider">— {currentVerse.verse}</span>
                 </div>
-                <p className="text-xs text-slate-600 mt-2 max-w-sm mx-auto leading-relaxed">
-                  Di bawah ini adalah daftar ruas jemaat yang berulang tahun pada periode <span className="text-[#0F2447] font-bold">
+                <p className="text-xs text-black mt-2 max-w-sm mx-auto leading-relaxed">
+                  Di bawah ini adalah daftar ruas jemaat yang berulang tahun pada periode <span className="text-black font-bold">
                     {(() => {
                       const today = new Date();
                       const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -1811,7 +1803,7 @@ export default function MemberView({
               {/* LIST CELEB */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
                 {bdayMembersThisWeek.length === 0 ? (
-                  <div className="col-span-full bg-white border border-slate-200 rounded-2xl p-10 text-center text-slate-500 text-xs shadow-sm">
+                  <div className="col-span-full bg-white border border-slate-200 rounded-2xl p-10 text-center text-black text-xs shadow-sm">
                     Tidak ada jemaat yang berulang tahun minggu ini.
                   </div>
                 ) : (
@@ -1845,19 +1837,19 @@ export default function MemberView({
                               <Gift className="w-4 h-4" />
                             </div>
                             <div>
-                              <h4 className="text-sm font-black text-slate-900 leading-tight">{member.nama}</h4>
-                              <p className="text-[10px] text-[#0F2447] font-extrabold mt-0.5 uppercase tracking-wide">{member.sektor}</p>
+                              <h4 className="text-sm font-black text-black leading-tight">{member.nama}</h4>
+                              <p className="text-[10px] text-black font-extrabold mt-0.5 uppercase tracking-wide">{member.sektor}</p>
                             </div>
                           </div>
 
                           <div className="mt-4 space-y-2 border-t border-slate-100 pt-3">
                             <div className="flex items-center justify-between text-[11px]">
-                              <span className="text-slate-500">Tanggal Lahir:</span>
-                              <span className="text-slate-800 font-semibold">{formattedBday}</span>
+                              <span className="text-black">Tanggal Lahir:</span>
+                              <span className="text-black font-semibold">{formattedBday}</span>
                             </div>
                             <div className="flex items-center justify-between text-[11px]">
-                              <span className="text-slate-500">Memasuki Umur:</span>
-                              <span className="text-[#0F2447] font-bold">{info.age} Tahun</span>
+                              <span className="text-black">Memasuki Umur:</span>
+                              <span className="text-black font-bold">{info.age} Tahun</span>
                             </div>
                           </div>
                         </div>
@@ -2013,7 +2005,7 @@ export default function MemberView({
             type="button"
             onClick={handleZoomOut}
             disabled={zoomLevel <= 80}
-            className="p-1.5 text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center"
+            className="p-1.5 text-black hover:bg-[#EDF2F9] rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center"
             title="Perkecil Ukuran Teks Acara (Zoom Out)"
           >
             <ZoomOut className="w-3.5 h-3.5" />
@@ -2022,7 +2014,7 @@ export default function MemberView({
           <button
             type="button"
             onClick={handleZoomReset}
-            className="px-1.5 py-0.5 text-[10px] font-mono font-bold text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
+            className="px-1.5 py-0.5 text-[10px] font-mono font-bold text-black hover:bg-[#EDF2F9] rounded transition cursor-pointer"
             title="Klik untuk Reset Ukuran Teks Acara (100%)"
           >
             {zoomLevel}%
@@ -2031,7 +2023,7 @@ export default function MemberView({
             type="button"
             onClick={handleZoomIn}
             disabled={zoomLevel >= 160}
-            className="p-1.5 text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center"
+            className="p-1.5 text-black hover:bg-[#EDF2F9] rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center"
             title="Perbesar Ukuran Teks Acara (Zoom In)"
           >
             <ZoomIn className="w-3.5 h-3.5" />
@@ -2180,7 +2172,7 @@ export default function MemberView({
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-1.5">
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 pl-2.5">Menu Navigasi</p>
+                <p className="text-[10px] font-black uppercase text-black tracking-wider mb-2 pl-2.5">Menu Navigasi</p>
 
                 <button
                   type="button"
@@ -2188,7 +2180,7 @@ export default function MemberView({
                     setActiveMenuModal('jadwal');
                     setIsDrawerOpen(false);
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-black font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
                   <Clock className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Jadwal Ibadah</span>
@@ -2200,7 +2192,7 @@ export default function MemberView({
                     setIsDrawerOpen(false);
                     window.open(window.location.origin + window.location.pathname + '?view=tentang', '_blank');
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-black font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
                   <History className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Tentang HKBP</span>
@@ -2212,7 +2204,7 @@ export default function MemberView({
                     setActiveMenuModal('parhalado');
                     setIsDrawerOpen(false);
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-black font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
                   <Users className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Daftar Parhalado</span>
@@ -2224,7 +2216,7 @@ export default function MemberView({
                     setActiveMenuModal('alamat');
                     setIsDrawerOpen(false);
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-black font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
                   <MapPin className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Alamat & Lokasi</span>
@@ -2236,7 +2228,7 @@ export default function MemberView({
                     setActiveMenuModal('developer');
                     setIsDrawerOpen(false);
                   }}
-                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-slate-700 hover:text-[#0F2447] font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
+                  className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-black font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
                   <Phone className="w-4.5 h-4.5 text-[#0F2447] shrink-0" />
                   <span>Hubungi Developer</span>
@@ -2244,7 +2236,7 @@ export default function MemberView({
               </div>
 
               <div className="p-4 border-t border-slate-100 text-center bg-slate-50">
-                <p className="text-[10px] text-slate-400 font-mono">HKBP Hinalang Silalahi App © 2026</p>
+                <p className="text-[10px] text-black font-mono">HKBP Hinalang Silalahi App © 2026</p>
               </div>
             </motion.div>
           </>
@@ -2297,10 +2289,10 @@ export default function MemberView({
               </div>
 
               {/* Modal Body Scroll Container */}
-              <div className="p-6 overflow-y-auto space-y-4 text-xs md:text-sm text-slate-700 leading-relaxed font-medium">
+              <div className="p-6 overflow-y-auto space-y-4 text-xs md:text-sm text-black leading-relaxed font-medium">
                 {activeMenuModal === 'jadwal' && (
                   <div className="space-y-4">
-                    <p className="text-slate-500 text-xs italic">
+                    <p className="text-black text-xs italic">
                       Berikut adalah waktu pelaksanaan ibadah minggu di HKBP Hinalang Silalahi:
                     </p>
 
@@ -2311,11 +2303,11 @@ export default function MemberView({
                             <Sparkles className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="font-black text-slate-900 text-xs md:text-sm leading-tight">Ibadah Sekolah Minggu</h4>
-                            <p className="text-[10px] text-slate-500 mt-0.5">Anak-anak & Balita</p>
+                            <h4 className="font-black text-black text-xs md:text-sm leading-tight">Ibadah Sekolah Minggu</h4>
+                            <p className="text-[10px] text-black mt-0.5">Anak-anak & Balita</p>
                           </div>
                         </div>
-                        <span className="px-3.5 py-1.5 bg-white text-[#0F2447] rounded-xl font-mono text-xs md:text-sm font-black border border-[#CBD7EA]">
+                        <span className="px-3.5 py-1.5 bg-white text-black rounded-xl font-mono text-xs md:text-sm font-black border border-[#CBD7EA]">
                           {jadwalIbadah.sekolahMinggu || '07.30 WIB'}
                         </span>
                       </div>
@@ -2326,11 +2318,11 @@ export default function MemberView({
                             <Users className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="font-black text-slate-900 text-xs md:text-sm leading-tight">Ibadah Shift 1</h4>
-                            <p className="text-[10px] text-slate-500 mt-0.5">Umum</p>
+                            <h4 className="font-black text-black text-xs md:text-sm leading-tight">Ibadah Shift 1</h4>
+                            <p className="text-[10px] text-black mt-0.5">Umum</p>
                           </div>
                         </div>
-                        <span className="px-3.5 py-1.5 bg-white text-[#0F2447] rounded-xl font-mono text-xs md:text-sm font-black border border-[#CBD7EA]">
+                        <span className="px-3.5 py-1.5 bg-white text-black rounded-xl font-mono text-xs md:text-sm font-black border border-[#CBD7EA]">
                           {jadwalIbadah.shift1 || '08.00 WIB'}
                         </span>
                       </div>
@@ -2341,11 +2333,11 @@ export default function MemberView({
                             <Building className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="font-black text-slate-900 text-xs md:text-sm leading-tight">Ibadah Shift 2</h4>
-                            <p className="text-[10px] text-slate-500 mt-0.5">Umum</p>
+                            <h4 className="font-black text-black text-xs md:text-sm leading-tight">Ibadah Shift 2</h4>
+                            <p className="text-[10px] text-black mt-0.5">Umum</p>
                           </div>
                         </div>
-                        <span className="px-3.5 py-1.5 bg-white text-[#0F2447] rounded-xl font-mono text-xs md:text-sm font-black border border-[#CBD7EA]">
+                        <span className="px-3.5 py-1.5 bg-white text-black rounded-xl font-mono text-xs md:text-sm font-black border border-[#CBD7EA]">
                           {jadwalIbadah.shift2 || '10.00 WIB'}
                         </span>
                       </div>
@@ -2370,13 +2362,13 @@ export default function MemberView({
                             {(item.judulGambar || item.keteranganGambar) && (
                               <div className="bg-white border border-slate-150 rounded-xl p-3 space-y-1 shadow-xs">
                                 {item.judulGambar && (
-                                  <p className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                                  <p className="text-xs font-extrabold text-black flex items-center gap-1.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-[#0F2447] inline-block shrink-0"></span>
                                     <span>{item.judulGambar}</span>
                                   </p>
                                 )}
                                 {item.keteranganGambar && (
-                                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed pl-3">
+                                  <p className="text-[11px] text-black font-medium leading-relaxed pl-3">
                                     {item.keteranganGambar}
                                   </p>
                                 )}
@@ -2385,10 +2377,10 @@ export default function MemberView({
                           </div>
                         ) : null}
                         <div className="space-y-1">
-                          <h4 className="text-sm md:text-base font-extrabold text-slate-900 flex items-center justify-between">
+                          <h4 className="text-sm md:text-base font-extrabold text-black flex items-center justify-between">
                             <span>{item.judul}</span>
                             {item.tanggalUpdate && (
-                              <span className="text-[10px] font-medium text-slate-400 font-mono">
+                              <span className="text-[10px] font-medium text-black font-mono">
                                 Diperbarui: {item.tanggalUpdate}
                               </span>
                             )}
@@ -2397,7 +2389,7 @@ export default function MemberView({
                         </div>
                         <div className="space-y-2.5">
                           {item.isi.split('\n\n').map((paragraph, idx) => (
-                            <p key={idx} className="indent-6 text-slate-700 leading-relaxed text-xs md:text-sm font-medium">
+                            <p key={idx} className="indent-6 text-black leading-relaxed text-xs md:text-sm font-medium">
                               {paragraph}
                             </p>
                           ))}
@@ -2405,7 +2397,7 @@ export default function MemberView({
                       </div>
                     ))}
                     {tentangGerejaList.length === 0 && (
-                      <div className="text-center py-10 text-slate-400 text-xs italic">
+                      <div className="text-center py-10 text-black text-xs italic">
                         Belum ada konten informasi tentang gereja.
                       </div>
                     )}
@@ -2414,7 +2406,7 @@ export default function MemberView({
 
                 {activeMenuModal === 'parhalado' && (
                   <div className="space-y-4">
-                    <p className="text-slate-500 text-xs italic">
+                    <p className="text-black text-xs italic">
                       Berikut adalah daftar lengkap pelayan dan pengurus (Parhalado) yang aktif melayani di HKBP Hinalang Silalahi saat ini:
                     </p>
 
@@ -2446,10 +2438,10 @@ export default function MemberView({
                                 {initials.toUpperCase()}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-black text-slate-900 text-xs leading-tight truncate" title={member.nama}>
+                                <h4 className="font-black text-black text-xs leading-tight truncate" title={member.nama}>
                                   {member.nama}
                                 </h4>
-                                <span className="text-[9px] text-slate-500 font-extrabold uppercase tracking-wide block mt-0.5 leading-none">
+                                <span className="text-[9px] text-black font-extrabold uppercase tracking-wide block mt-0.5 leading-none">
                                   {member.jabatan}
                                 </span>
                               </div>
@@ -2457,7 +2449,7 @@ export default function MemberView({
                             
                             {member.noTelp && (
                               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                                <div className="flex items-center space-x-1.5 text-slate-500 font-semibold font-mono">
+                                <div className="flex items-center space-x-1.5 text-black font-semibold font-mono">
                                   <Phone className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
                                   <span>{member.noTelp}</span>
                                 </div>
@@ -2499,13 +2491,13 @@ export default function MemberView({
                           </div>
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-black text-slate-900 text-sm tracking-tight">HKBP Hinalang Silalahi</h4>
-                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-white text-[#0F2447] border border-[#CBD7EA] inline-flex items-center gap-1 shadow-2xs">
+                              <h4 className="font-black text-black text-sm tracking-tight">HKBP Hinalang Silalahi</h4>
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-white text-black border border-[#CBD7EA] inline-flex items-center gap-1 shadow-2xs">
                                 <CheckCircle2 className="w-3 h-3 text-[#0F2447]" />
                                 Lokasi Akurat
                               </span>
                             </div>
-                            <p className="text-[10px] text-[#0F2447] font-extrabold uppercase tracking-wide mt-0.5">
+                            <p className="text-[10px] text-black font-extrabold uppercase tracking-wide mt-0.5">
                               HKBP Resort Hinalang Silalahi • Distrik XI Toba Hasundutan
                             </p>
                           </div>
@@ -2514,17 +2506,17 @@ export default function MemberView({
 
                       <div className="bg-white rounded-xl p-3.5 border border-[#CBD7EA] space-y-2 text-xs shadow-2xs">
                         <div className="flex items-start space-x-2">
-                          <span className="font-extrabold text-slate-800 shrink-0">Alamat:</span>
-                          <span className="text-slate-700 font-semibold leading-relaxed">
+                          <span className="font-extrabold text-black shrink-0">Alamat:</span>
+                          <span className="text-black font-semibold leading-relaxed">
                             Desa Hinalang Bagasan, Kecamatan Balige, Kabupaten Toba, Sumatera Utara 22312, Indonesia.
                           </span>
                         </div>
                         <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-slate-100 text-[11px]">
-                          <span className="text-slate-500 font-medium">
-                            Titik Koordinat: <strong className="font-mono text-slate-900 font-bold">2.3346565, 99.0417933</strong>
+                          <span className="text-black font-medium">
+                            Titik Koordinat: <strong className="font-mono text-black font-bold">2.3346565, 99.0417933</strong>
                           </span>
-                          <span className="text-slate-500 font-medium">
-                            Plus Code: <strong className="font-mono text-[#0F2447] font-bold">897R+VP Hinalang Bagasan</strong>
+                          <span className="text-black font-medium">
+                            Plus Code: <strong className="font-mono text-black font-bold">897R+VP Hinalang Bagasan</strong>
                           </span>
                         </div>
                       </div>
@@ -2558,9 +2550,9 @@ export default function MemberView({
                         href="https://www.google.com/maps/dir/?api=1&destination=2.3346565,99.0417933"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-white hover:bg-[#EDF2F9] text-[#0F2447] border border-[#0F2447] font-extrabold rounded-xl text-xs transition cursor-pointer shadow-sm"
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-white hover:bg-[#EDF2F9] text-black border border-[#0F2447] font-extrabold rounded-xl text-xs transition cursor-pointer shadow-sm"
                       >
-                        <Navigation className="w-4 h-4 shrink-0" />
+                        <Navigation className="w-4 h-4 shrink-0 text-[#0F2447]" />
                         <span>Petunjuk Arah</span>
                       </a>
                     </div>
@@ -2575,12 +2567,12 @@ export default function MemberView({
                           setCopiedLocation(true);
                           setTimeout(() => setCopiedLocation(false), 2500);
                         }}
-                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-[#EDF2F9] text-[11px] font-bold text-[#0F2447] transition cursor-pointer shadow-2xs"
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 hover:bg-[#EDF2F9] text-[11px] font-bold text-black transition cursor-pointer shadow-2xs"
                       >
                         {copiedLocation ? (
                           <>
                             <Check className="w-3.5 h-3.5 text-[#0F2447]" />
-                            <span className="text-[#0F2447] font-extrabold">Alamat & Koordinat Tersalin!</span>
+                            <span className="text-black font-extrabold">Alamat & Koordinat Tersalin!</span>
                           </>
                         ) : (
                           <>
@@ -2620,8 +2612,8 @@ export default function MemberView({
                     </div>
 
                     <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                      <h4 className="font-black text-xs text-slate-900 mb-2">Hubungi Pengembang</h4>
-                      <p className="text-[11px] text-slate-600 leading-relaxed mb-4">
+                      <h4 className="font-black text-xs text-black mb-2">Hubungi Pengembang</h4>
+                      <p className="text-[11px] text-black leading-relaxed mb-4">
                         Kami sangat mengharapkan masukan Anda demi kelancaran ibadah digital kita. Klik tombol kontak di bawah ini untuk terhubung langsung:
                       </p>
                       
@@ -2635,7 +2627,7 @@ export default function MemberView({
                           <div className="w-10 h-10 rounded-full bg-[#0F2447] text-white flex items-center justify-center shrink-0 shadow-sm transition">
                             <MessageCircle className="w-5.5 h-5.5" />
                           </div>
-                          <span className="text-[10px] text-[#0F2447] font-extrabold uppercase tracking-wide mt-2 block">WhatsApp</span>
+                          <span className="text-[10px] text-black font-extrabold uppercase tracking-wide mt-2 block">WhatsApp</span>
                         </a>
 
                         <a
@@ -2647,7 +2639,7 @@ export default function MemberView({
                           <div className="w-10 h-10 rounded-full bg-[#0F2447] text-white flex items-center justify-center shrink-0 shadow-sm transition">
                             <Instagram className="w-5.5 h-5.5" />
                           </div>
-                          <span className="text-[10px] text-[#0F2447] font-extrabold uppercase tracking-wide mt-2 block">Instagram</span>
+                          <span className="text-[10px] text-black font-extrabold uppercase tracking-wide mt-2 block">Instagram</span>
                         </a>
 
                         <a
@@ -2657,7 +2649,7 @@ export default function MemberView({
                           <div className="w-10 h-10 rounded-full bg-[#0F2447] text-white flex items-center justify-center shrink-0 shadow-sm transition">
                             <Mail className="w-5.5 h-5.5" />
                           </div>
-                          <span className="text-[10px] text-[#0F2447] font-extrabold uppercase tracking-wide mt-2 block">E-Mail</span>
+                          <span className="text-[10px] text-black font-extrabold uppercase tracking-wide mt-2 block">E-Mail</span>
                         </a>
                       </div>
                     </div>

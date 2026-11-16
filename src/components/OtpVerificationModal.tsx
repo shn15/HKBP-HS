@@ -65,9 +65,9 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
             <Mail className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-base font-extrabold text-[#0F2447] tracking-tight">Verifikasi Email Akun</h3>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Konfirmasi alamat email untuk akun <span className="font-bold text-slate-800">{username}</span>
+            <h3 className="text-base font-extrabold text-black tracking-tight">Verifikasi Email Akun</h3>
+            <p className="text-xs text-black font-medium mt-0.5">
+              Konfirmasi alamat email untuk akun <span className="font-bold text-black">{username}</span>
             </p>
           </div>
         </div>
@@ -75,14 +75,14 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
         {/* Recipient and Sender Info Box */}
         <div className="bg-[#F4F6FA] rounded-xl p-3.5 border border-slate-200 text-xs space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-slate-500 font-semibold">Tujuan Email:</span>
-            <span className="font-bold text-slate-900 font-mono bg-white px-2.5 py-0.5 rounded-lg border border-slate-200 truncate">
+            <span className="text-black font-semibold">Tujuan Email:</span>
+            <span className="font-bold text-black font-mono bg-white px-2.5 py-0.5 rounded-lg border border-slate-200 truncate">
               {email}
             </span>
           </div>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-slate-500 font-semibold">Pengirim (SMTP):</span>
-            <span className="font-bold text-[#0F2447] font-mono bg-white px-2.5 py-0.5 rounded-lg border border-[#CBD7EA] truncate">
+            <span className="text-black font-semibold">Pengirim (SMTP):</span>
+            <span className="font-bold text-black font-mono bg-white px-2.5 py-0.5 rounded-lg border border-[#CBD7EA] truncate">
               {senderEmail}
             </span>
           </div>
@@ -90,7 +90,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
 
         {/* Delivery Status Indicator */}
         {otpDeliveryStatus === 'sending' && (
-          <div className="flex items-center space-x-2 text-xs font-semibold text-[#0F2447] bg-[#EDF2F9] p-3 rounded-xl border border-[#CBD7EA]">
+          <div className="flex items-center space-x-2 text-xs font-semibold text-black bg-[#EDF2F9] p-3 rounded-xl border border-[#CBD7EA]">
             <RefreshCw className="w-4 h-4 animate-spin text-[#0F2447]" />
             <span>Sedang memverifikasi email &amp; mengirim kode ke email Anda...</span>
           </div>
@@ -98,13 +98,13 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
 
         {/* Error Status (Email tidak aktif / tidak ditemukan / SMTP belum dikonfigurasi / dibatalkan) */}
         {(otpDeliveryStatus === 'error' || otpDeliveryStatus === 'smtp_not_configured') && (
-          <div className="flex items-start space-x-3 text-xs font-semibold text-slate-800 bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-300">
+          <div className="flex items-start space-x-3 text-xs font-semibold text-black bg-[#F4F6FA] p-3.5 rounded-xl border border-slate-300">
             <AlertTriangle className="w-5 h-5 text-[#0F2447] shrink-0 mt-0.5" />
             <div className="leading-relaxed">
-              <p className="font-bold text-[#0F2447]">
+              <p className="font-bold text-black">
                 {otpDeliveryStatus === 'smtp_not_configured' ? 'Konfigurasi Server Email Belum Lengkap' : 'Pengiriman Kode Dibatalkan'}
               </p>
-              <p className="text-[11px] text-slate-600 font-normal mt-0.5">
+              <p className="text-[11px] text-black font-normal mt-0.5">
                 {otpErrorMessage ||
                   (otpDeliveryStatus === 'smtp_not_configured'
                     ? 'SMTP_USER / SMTP_PASS belum dikonfigurasi pada Environment Variables server.'
@@ -116,11 +116,11 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
 
         {/* Status Pengiriman: Kode sudah dikirim silahkan cek email anda */}
         {otpDeliveryStatus === 'success' && (
-          <div className="flex items-start space-x-3 text-xs font-semibold text-[#0F2447] bg-[#EDF2F9] p-3.5 rounded-xl border border-[#CBD7EA]">
+          <div className="flex items-start space-x-3 text-xs font-semibold text-black bg-[#EDF2F9] p-3.5 rounded-xl border border-[#CBD7EA]">
             <CheckCircle2 className="w-5 h-5 text-[#0F2447] shrink-0 mt-0.5" />
             <div className="leading-relaxed">
-              <p className="font-bold text-[#0F2447]">Kode sudah di kirim silahkan cek email anda</p>
-              <p className="text-[11px] text-slate-600 font-normal mt-0.5">
+              <p className="font-bold text-black">Kode sudah di kirim silahkan cek email anda</p>
+              <p className="text-[11px] text-black font-normal mt-0.5">
                 Periksa kotak masuk (Inbox) atau folder Spam pada email <span className="font-semibold underline">{email}</span>.
               </p>
             </div>
@@ -129,7 +129,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
 
         {/* 6 Digit Input Field */}
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-slate-700" htmlFor="otp_code_input">
+          <label className="block text-xs font-bold text-black" htmlFor="otp_code_input">
             Masukkan 6-Digit Kode Verifikasi:
           </label>
           <input
@@ -139,10 +139,10 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
             value={userTypedCode}
             onChange={(e) => setUserTypedCode(e.target.value.replace(/\D/g, ''))}
             placeholder=""
-            className="w-full text-center text-2xl font-mono font-bold tracking-widest py-2.5 px-4 bg-[#F4F6FA] border border-slate-300 focus:border-[#0F2447] focus:bg-white rounded-xl outline-none transition text-[#0F2447]"
+            className="w-full text-center text-2xl font-mono font-bold tracking-widest py-2.5 px-4 bg-[#F4F6FA] border border-slate-300 focus:border-[#0F2447] focus:bg-white rounded-xl outline-none transition text-black"
             autoFocus
           />
-          <p className="text-[11px] text-slate-400 text-center">
+          <p className="text-[11px] text-black text-center">
             Periksa folder Inbox atau Spam email Anda.
           </p>
         </div>
@@ -156,7 +156,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
             className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition cursor-pointer ${
               userTypedCode.trim().length === 6 && otpDeliveryStatus !== 'error' && otpDeliveryStatus !== 'sending'
                 ? 'bg-[#0F2447] hover:bg-[#173361] text-white shadow-xs'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                : 'bg-slate-200 text-slate-600 cursor-not-allowed'
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
@@ -170,8 +170,8 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
               disabled={resendCooldown > 0 || otpDeliveryStatus === 'sending'}
               className={`font-semibold transition cursor-pointer flex items-center space-x-1 ${
                 resendCooldown > 0 || otpDeliveryStatus === 'sending'
-                  ? 'text-slate-400 cursor-not-allowed'
-                  : 'text-[#0F2447] hover:underline'
+                  ? 'text-slate-500 cursor-not-allowed'
+                  : 'text-black hover:underline'
               }`}
             >
               <Send className="w-3.5 h-3.5" />
@@ -183,7 +183,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="text-slate-500 hover:text-[#0F2447] font-semibold cursor-pointer"
+              className="text-black hover:underline font-semibold cursor-pointer"
             >
               Batal
             </button>

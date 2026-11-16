@@ -2605,7 +2605,7 @@ export default function AdminView({
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA] text-slate-800 flex flex-col md:flex-row font-sans overflow-x-hidden relative">
+    <div className="min-h-screen bg-[#F4F6FA] text-black flex flex-col md:flex-row font-sans overflow-x-hidden relative">
       {/* SIDEBAR NAVIGATION */}
       <aside className="w-full md:w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 p-5 relative z-10 shadow-sm">
         <div className="space-y-6">
@@ -2622,7 +2622,7 @@ export default function AdminView({
               <h2 className="text-sm font-black tracking-tight text-[#0F2447] leading-none truncate">
                 {loggedAdmin?.username || 'Admin'}
               </h2>
-              <span className="text-[10px] text-slate-500 font-medium block mt-1 leading-tight truncate">
+              <span className="text-[10px] text-black font-medium block mt-1 leading-tight truncate">
                 {loggedAdmin?.namaGereja || 'HKBP Hinalang Silalahi'}
               </span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA] mt-1.5 leading-none">
@@ -2639,7 +2639,7 @@ export default function AdminView({
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'dashboard'
                   ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                  : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
               }`}
             >
               <Activity className="w-4 h-4 shrink-0" />
@@ -2654,7 +2654,7 @@ export default function AdminView({
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'liturgi'
                   ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                  : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
               }`}
             >
               <FileText className="w-4 h-4 shrink-0" />
@@ -2668,7 +2668,7 @@ export default function AdminView({
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'petugas'
                   ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                  : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
               }`}
             >
               <Users className="w-4 h-4 shrink-0" />
@@ -2683,7 +2683,7 @@ export default function AdminView({
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'warta'
                   ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                  : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
               }`}
             >
               <Mail className="w-4 h-4 shrink-0" />
@@ -2698,7 +2698,7 @@ export default function AdminView({
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'keuangan'
                   ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                  : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
               }`}
             >
               <DollarSign className="w-4 h-4 shrink-0" />
@@ -2713,7 +2713,7 @@ export default function AdminView({
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'jemaat'
                   ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                  : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
               }`}
             >
               <div className="flex items-center space-x-3">
@@ -2734,7 +2734,7 @@ export default function AdminView({
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold tracking-wide uppercase transition-all text-left cursor-pointer border ${
                 activeSubTab === 'arsip_pdf'
                   ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                  : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                  : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
               }`}
             >
               <Archive className="w-4 h-4 shrink-0" />
@@ -2745,14 +2745,14 @@ export default function AdminView({
 
         {/* EDITABLE CHURCH PROFILE ITEMS */}
         <div className="pt-4 border-t border-slate-200 space-y-1">
-          <p className="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider pl-4 mb-2">Profil & Info Gereja</p>
+          <p className="text-[9px] font-extrabold uppercase text-black tracking-wider pl-4 mb-2">Profil & Info Gereja</p>
           
           <button
             onClick={() => setActiveSubTab('jadwal')}
             className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all text-left cursor-pointer border ${
               activeSubTab === 'jadwal'
                 ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
             }`}
           >
             <Calendar className="w-4 h-4 shrink-0" />
@@ -2764,7 +2764,7 @@ export default function AdminView({
             className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all text-left cursor-pointer border ${
               activeSubTab === 'sejarah'
                 ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
             }`}
           >
             <BookOpen className="w-4 h-4 shrink-0" />
@@ -2776,7 +2776,7 @@ export default function AdminView({
             className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all text-left cursor-pointer border ${
               activeSubTab === 'parhalado'
                 ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
             }`}
           >
             <Users className="w-4 h-4 shrink-0" />
@@ -2788,7 +2788,7 @@ export default function AdminView({
             className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all text-left cursor-pointer border ${
               activeSubTab === 'database_akun'
                 ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-sm'
-                : 'border-transparent text-slate-600 hover:text-[#0F2447] hover:bg-[#EDF2F9]'
+                : 'border-transparent text-black hover:text-black hover:bg-[#EDF2F9]'
             }`}
           >
             <Database className="w-4 h-4 shrink-0" />
@@ -2839,7 +2839,7 @@ export default function AdminView({
               {activeSubTab === 'database_akun' && 'Sistem Manajemen & Database Akun Pengguna'}
               {activeSubTab === 'buku_nyanyian' && 'Database Buku Nyanyian & Kidung HKBP'}
             </h1>
-            <p className="text-xs text-slate-500 mt-1.5 font-medium">
+            <p className="text-xs text-black mt-1.5 font-medium">
               {activeSubTab === 'dashboard' && 'Pantau grafik perkembangan dan statistik tingkat kehadiran jemaat dalam kebaktian Minggu dan Partangiangan Sektor selama 4 minggu terakhir.'}
               {activeSubTab === 'petugas' && 'Kelola pembagian petugas liturgi, operator, song leader, dan pelayan jemaat untuk kebaktian Minggu dan Partangiangan.'}
               {activeSubTab === 'liturgi' && 'Merubah data liturgi dan tata ibadah yang tampil di layar aplikasi mobile jemaat gereja secara riil-time.'}
@@ -2871,13 +2871,13 @@ export default function AdminView({
               {/* CARD 1: SUNDAY ATTENDANCE */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Kebaktian Minggu Terbaru</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-black">Kebaktian Minggu Terbaru</span>
                   <h3 className="text-2xl font-black text-[#0F2447] mt-1 flex items-baseline gap-2">
-                    {kpis.latestSunday} <span className="text-xs font-semibold text-slate-500">Jemaat</span>
+                    {kpis.latestSunday} <span className="text-xs font-semibold text-black">Jemaat</span>
                   </h3>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500 font-medium">Rata-rata: {kpis.avgSunday}</span>
+                  <span className="text-[10px] text-black font-medium">Rata-rata: {kpis.avgSunday}</span>
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]">
                     {kpis.sundayGrowth >= 0 ? '+' : ''}{kpis.sundayGrowth.toFixed(1)}%
                   </span>
@@ -2887,13 +2887,13 @@ export default function AdminView({
               {/* CARD 2: PARTANGIANGAN ATTENDANCE */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Partangiangan Sektor Terbaru</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-black">Partangiangan Sektor Terbaru</span>
                   <h3 className="text-2xl font-black text-[#0F2447] mt-1 flex items-baseline gap-2">
-                    {kpis.latestPartangiangan} <span className="text-xs font-semibold text-slate-500">Jemaat</span>
+                    {kpis.latestPartangiangan} <span className="text-xs font-semibold text-black">Jemaat</span>
                   </h3>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500 font-medium">Rata-rata: {kpis.avgPartangiangan}</span>
+                  <span className="text-[10px] text-black font-medium">Rata-rata: {kpis.avgPartangiangan}</span>
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA]">
                     {kpis.partangianganGrowth >= 0 ? '+' : ''}{kpis.partangianganGrowth.toFixed(1)}%
                   </span>
@@ -2903,13 +2903,13 @@ export default function AdminView({
               {/* CARD 3: COMBINED AVERAGE */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Rata-rata Kebaktian Minggu</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-black">Rata-rata Kebaktian Minggu</span>
                   <h3 className="text-2xl font-black text-[#0F2447] mt-1">
-                    {kpis.avgSunday} <span className="text-xs font-semibold text-slate-500">Jemaat / Minggu</span>
+                    {kpis.avgSunday} <span className="text-xs font-semibold text-black">Jemaat / Minggu</span>
                   </h3>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500 font-medium">Periode: 4 Minggu Terakhir</span>
+                  <span className="text-[10px] text-black font-medium">Periode: 4 Minggu Terakhir</span>
                   <span className="text-[10px] text-[#0F2447] font-extrabold bg-[#EDF2F9] px-1.5 py-0.5 rounded-md border border-[#CBD7EA]">Aktif</span>
                 </div>
               </div>
@@ -2917,13 +2917,13 @@ export default function AdminView({
               {/* CARD 4: COMBINED AVERAGE PARTANGIANGAN */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                 <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Rata-rata Partangiangan Sektor</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-black">Rata-rata Partangiangan Sektor</span>
                   <h3 className="text-2xl font-black text-[#0F2447] mt-1">
-                    {kpis.avgPartangiangan} <span className="text-xs font-semibold text-slate-500">Jemaat / Minggu</span>
+                    {kpis.avgPartangiangan} <span className="text-xs font-semibold text-black">Jemaat / Minggu</span>
                   </h3>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500 font-medium">Periode: 4 Minggu Terakhir</span>
+                  <span className="text-[10px] text-black font-medium">Periode: 4 Minggu Terakhir</span>
                   <span className="text-[10px] text-[#0F2447] font-extrabold bg-[#EDF2F9] px-1.5 py-0.5 rounded-md border border-[#CBD7EA]">Sektor I-VI</span>
                 </div>
               </div>
@@ -2937,7 +2937,7 @@ export default function AdminView({
                     <span className="w-2.5 h-2.5 bg-[#0F2447] rounded-full"></span>
                     <span>Tren Tingkat Kehadiran Jemaat</span>
                   </h2>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-black mt-0.5">
                     Grafik interaktif membandingkan kehadiran kebaktian Minggu dan Partangiangan Sektor.
                   </p>
                 </div>
@@ -2946,19 +2946,19 @@ export default function AdminView({
                 <div className="flex items-center space-x-1 bg-[#E8EEF6] border border-[#D4DFEE] p-1 rounded-xl self-start sm:self-auto">
                   <button
                     onClick={() => setChartTab('total')}
-                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'total' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'}`}
+                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'total' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-black hover:text-black'}`}
                   >
                     Ikhtisar Tren
                   </button>
                   <button
                     onClick={() => setChartTab('minggu')}
-                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'minggu' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'}`}
+                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'minggu' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-black hover:text-black'}`}
                   >
                     Detail Minggu
                   </button>
                   <button
                     onClick={() => setChartTab('partangiangan')}
-                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'partangiangan' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'}`}
+                    className={`px-3 py-1.5 text-[11px] font-black rounded-lg transition-all cursor-pointer ${chartTab === 'partangiangan' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-black hover:text-black'}`}
                   >
                     Detail Partangiangan
                   </button>
@@ -2981,11 +2981,11 @@ export default function AdminView({
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="weekLabel" stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
-                      <YAxis stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
+                      <XAxis dataKey="weekLabel" stroke="#000000" fontSize={11} fontWeight={600} tickLine={false} />
+                      <YAxis stroke="#000000" fontSize={11} fontWeight={600} tickLine={false} />
                       <Tooltip
                         contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #CBD7EA', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
-                        labelStyle={{ fontWeight: 'bold', color: '#0F2447', fontSize: '12px' }}
+                        labelStyle={{ fontWeight: 'bold', color: '#000000', fontSize: '12px' }}
                         itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
                       />
                       <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
@@ -2995,11 +2995,11 @@ export default function AdminView({
                   ) : chartTab === 'minggu' ? (
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="weekLabel" stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
-                      <YAxis stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
+                      <XAxis dataKey="weekLabel" stroke="#000000" fontSize={11} fontWeight={600} tickLine={false} />
+                      <YAxis stroke="#000000" fontSize={11} fontWeight={600} tickLine={false} />
                       <Tooltip
                         contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #CBD7EA', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
-                        labelStyle={{ fontWeight: 'bold', color: '#0F2447', fontSize: '12px' }}
+                        labelStyle={{ fontWeight: 'bold', color: '#000000', fontSize: '12px' }}
                         itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
                       />
                       <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
@@ -3010,11 +3010,11 @@ export default function AdminView({
                   ) : (
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="weekLabel" stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
-                      <YAxis stroke="#64748B" fontSize={11} fontWeight={600} tickLine={false} />
+                      <XAxis dataKey="weekLabel" stroke="#000000" fontSize={11} fontWeight={600} tickLine={false} />
+                      <YAxis stroke="#000000" fontSize={11} fontWeight={600} tickLine={false} />
                       <Tooltip
                         contentStyle={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #CBD7EA', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}
-                        labelStyle={{ fontWeight: 'bold', color: '#0F2447', fontSize: '12px' }}
+                        labelStyle={{ fontWeight: 'bold', color: '#000000', fontSize: '12px' }}
                         itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
                       />
                       <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
@@ -3037,7 +3037,7 @@ export default function AdminView({
                     <span className="w-2.5 h-2.5 bg-[#0F2447] rounded-full"></span>
                     <span>Atur & Input Data Tren Kehadiran (Lembar Kerja 4 Minggu)</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-black mt-0.5">
                     Modifikasi data kehadiran setiap minggu secara langsung untuk merubah grafik tren di atas.
                   </p>
                 </div>
@@ -3078,14 +3078,14 @@ export default function AdminView({
                               type="text"
                               value={trend.weekLabel}
                               onChange={(e) => handleTrendCellChange(idx, 'weekLabel', e.target.value)}
-                              className="w-full bg-transparent font-black text-slate-800 text-[11px] focus:bg-white border-0 focus:border border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] rounded px-1.5 py-0.5 outline-none"
+                              className="w-full bg-transparent font-black text-black text-[11px] focus:bg-white border-0 focus:border border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] rounded px-1.5 py-0.5 outline-none"
                               placeholder="Minggu Ke-X"
                             />
                             <input
                               type="text"
                               value={trend.tanggalRange}
                               onChange={(e) => handleTrendCellChange(idx, 'tanggalRange', e.target.value)}
-                              className="w-full bg-transparent text-[9px] text-slate-500 focus:bg-white border-0 focus:border border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] rounded px-1.5 py-0.5 outline-none font-medium mt-0.5"
+                              className="w-full bg-transparent text-[9px] text-black focus:bg-white border-0 focus:border border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] rounded px-1.5 py-0.5 outline-none font-medium mt-0.5"
                               placeholder="Tgl: Contoh 14 Juni 2026"
                             />
                             {isLatestWeek && (
@@ -3101,7 +3101,7 @@ export default function AdminView({
                               type="number"
                               value={trend.mingguAma || 0}
                               onChange={(e) => handleTrendCellChange(idx, 'mingguAma', e.target.value)}
-                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] outline-none"
+                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-black focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] outline-none"
                             />
                           </td>
                           <td className="px-1.5 py-2 text-center bg-slate-50/30">
@@ -3109,7 +3109,7 @@ export default function AdminView({
                               type="number"
                               value={trend.mingguIna || 0}
                               onChange={(e) => handleTrendCellChange(idx, 'mingguIna', e.target.value)}
-                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] outline-none"
+                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-black focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] outline-none"
                             />
                           </td>
                           <td className="px-1.5 py-2 text-center bg-slate-50/30">
@@ -3117,7 +3117,7 @@ export default function AdminView({
                               type="number"
                               value={trend.mingguSm || 0}
                               onChange={(e) => handleTrendCellChange(idx, 'mingguSm', e.target.value)}
-                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-slate-800 focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] outline-none"
+                              className="w-16 bg-white border border-slate-200/80 rounded px-2 py-1 text-center text-xs font-bold text-black focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447] outline-none"
                             />
                           </td>
 
@@ -3219,7 +3219,7 @@ export default function AdminView({
                   }
                 }}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
-                  liturgiEditMode === 'minggu' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'
+                  liturgiEditMode === 'minggu' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-black hover:text-black'
                 }`}
               >
                 Ibadah Minggu
@@ -3230,7 +3230,7 @@ export default function AdminView({
                   setEditingLiturgyId(null);
                 }}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
-                  liturgiEditMode === 'partangiangan' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'
+                  liturgiEditMode === 'partangiangan' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-black hover:text-black'
                 }`}
               >
                 Ibadah Partangiangan
@@ -3243,7 +3243,7 @@ export default function AdminView({
                 <div className="border-b border-slate-200 pb-3.5 flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-black text-[#0F2447] uppercase tracking-tight">Pengaturan Kebaktian Minggu Jemaat</h3>
-                    <p className="text-[10px] text-slate-500 mt-1">Satu panel utama untuk mengunggah PDF dan menyusun langkah acara liturgi manual secara real-time.</p>
+                    <p className="text-[10px] text-black mt-1">Satu panel utama untuk mengunggah PDF dan menyusun langkah acara liturgi manual secara real-time.</p>
                   </div>
                   <span className="text-[9px] bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider">
                     Satu Pengaturan Utama
@@ -3252,39 +3252,39 @@ export default function AdminView({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nama Ibadah Minggu</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Nama Ibadah Minggu</label>
                     <input
                       type="text"
                       value={litTitle}
                       onChange={(e) => setLitTitle(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                       placeholder="Contoh: Ibadah Minggu V Dung Trinitatis"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Tanggal Ibadah</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Tanggal Ibadah</label>
                     <input
                       type="date"
                       value={litDate}
                       onChange={(e) => setLitDate(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Topik Minggu / Tema</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Topik Minggu / Tema</label>
                     <input
                       type="text"
                       value={litTopik}
                       onChange={(e) => setLitTopik(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                       placeholder="Contoh: Menjadi Terang dan Garam bagi Dunia"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Epistel</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Epistel</label>
                     <div className="flex items-center space-x-2">
                       <input
                         type="text"
@@ -3304,7 +3304,7 @@ export default function AdminView({
                             }
                           }
                         }}
-                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                         placeholder="Contoh: Mateus 5 : 13 - 16 atau Yohanes 3:16"
                       />
                       <button
@@ -3331,13 +3331,13 @@ export default function AdminView({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Khotbah / Jamita</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Khotbah / Jamita</label>
                     <div className="flex items-center space-x-2">
                       <input
                         type="text"
                         value={litBacaan}
                         onChange={(e) => setLitBacaan(e.target.value)}
-                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                         placeholder="Contoh: Johanes 3 : 16 atau 1 Musa 1:1-3"
                       />
                       <button
@@ -3369,8 +3369,8 @@ export default function AdminView({
                 <div className="space-y-4 pt-4 border-t border-slate-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">Susunan Acara Minggu</h4>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Ketik judul acara/lagu/nats Alkitab di kolom, teks/lirik akan terisi otomatis!</p>
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-black">Susunan Acara Minggu</h4>
+                      <p className="text-[10px] text-black mt-0.5">Ketik judul acara/lagu/nats Alkitab di kolom, teks/lirik akan terisi otomatis!</p>
                     </div>
                   </div>
 
@@ -3380,10 +3380,10 @@ export default function AdminView({
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                              <span className="w-5 h-5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                              <span className="w-5 h-5 rounded-md bg-slate-200 text-black text-[10px] font-bold flex items-center justify-center shrink-0">
                                 {index + 1}
                               </span>
-                              <label className="text-[11px] text-slate-700 font-bold">Acara</label>
+                              <label className="text-[11px] text-black font-bold">Acara</label>
                               
                               <button
                                 type="button"
@@ -3430,7 +3430,7 @@ export default function AdminView({
                             <button
                               type="button"
                               onClick={() => deleteStepRow(index)}
-                              className="p-1 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
+                              className="p-1 text-black hover:text-black hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                               title="Hapus Baris Acara Ini"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -3447,14 +3447,14 @@ export default function AdminView({
                                 handleAutoDetectAndFillStep(index, (e.target as HTMLInputElement).value);
                               }
                             }}
-                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-[#0F2447]"
+                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-black font-medium outline-none focus:border-[#0F2447]"
                             placeholder="Ketik lagu/nats (contoh: 'BE No. 10:1-2', 'Yohanes 3:16', '1 Musa 1:1-3', 'Psalmen 23:1-6')..."
                           />
                         </div>
 
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <label className="block text-[10px] text-slate-500 font-semibold">Isi Acara</label>
+                            <label className="block text-[10px] text-black font-semibold">Isi Acara</label>
                           </div>
                           <textarea
                             rows={Math.max(2, (step.isi || '').split('\n').length)}
@@ -3471,7 +3471,7 @@ export default function AdminView({
                                 el.style.height = `${el.scrollHeight}px`;
                               }
                             }}
-                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono outline-none focus:border-[#0F2447] leading-relaxed overflow-hidden resize-none"
+                            className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-black font-medium font-mono outline-none focus:border-[#0F2447] leading-relaxed overflow-hidden resize-none"
                             placeholder="Isi lirik lagu atau ayat Alkitab (Bahasa Indonesia & Batak Toba) akan otomatis terisi saat memasukkan judul di atas..."
                           />
                         </div>
@@ -3550,9 +3550,9 @@ export default function AdminView({
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-slate-500 font-mono font-medium">{lit.tanggal}</span>
+                            <span className="text-[10px] text-black font-mono font-medium">{lit.tanggal}</span>
                           </div>
-                          <h4 className="text-sm font-bold text-slate-900 leading-tight">{lit.judul}</h4>
+                          <h4 className="text-sm font-bold text-black leading-tight">{lit.judul}</h4>
                         </div>
 
                         <div className="space-y-2 mt-5 pt-4 border-t border-slate-200">
@@ -3592,7 +3592,7 @@ export default function AdminView({
                       className="border-2 border-dashed border-slate-300 rounded-xl p-5 flex flex-col items-center justify-center text-center hover:border-[#0F2447] hover:bg-[#EDF2F9]/50 transition cursor-pointer group"
                     >
                       <Plus className="w-8 h-8 text-slate-400 group-hover:text-[#0F2447] shrink-0 mb-2 transition" />
-                      <span className="text-xs font-bold text-slate-500 group-hover:text-[#0F2447] transition uppercase">
+                      <span className="text-xs font-bold text-black group-hover:text-black transition uppercase">
                         Tambah Partangiangan Baru
                       </span>
                     </button>
@@ -3607,7 +3607,7 @@ export default function AdminView({
                     </h3>
                     <button
                       onClick={() => setEditingLiturgyId(null)}
-                      className="p-2 hover:bg-[#EDF2F9] text-slate-500 hover:text-[#0F2447] rounded-md transition cursor-pointer"
+                      className="p-2 hover:bg-[#EDF2F9] text-black hover:text-black rounded-md transition cursor-pointer"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -3615,34 +3615,34 @@ export default function AdminView({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nama Ibadah Partangiangan</label>
+                      <label className="block text-xs font-semibold text-black mb-1.5">Nama Ibadah Partangiangan</label>
                       <input
                         type="text"
                         value={litTitle}
                         onChange={(e) => setLitTitle(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                         placeholder="Contoh: Partangiangan Sektor I"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">Tanggal Ibadah</label>
+                      <label className="block text-xs font-semibold text-black mb-1.5">Tanggal Ibadah</label>
                       <input
                         type="date"
                         value={litDate}
                         onChange={(e) => setLitDate(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">Epistel</label>
+                      <label className="block text-xs font-semibold text-black mb-1.5">Epistel</label>
                       <div className="flex items-center space-x-2">
                         <input
                           type="text"
                           value={litRef}
                           onChange={(e) => setLitRef(e.target.value)}
-                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
+                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                           placeholder="Contoh: Mateus 5 : 13 - 16"
                         />
                         <button
@@ -3669,13 +3669,13 @@ export default function AdminView({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">Khotbah</label>
+                      <label className="block text-xs font-semibold text-black mb-1.5">Khotbah</label>
                       <div className="flex items-center space-x-2">
                         <input
                           type="text"
                           value={litBacaan}
                           onChange={(e) => setLitBacaan(e.target.value)}
-                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] transition-all font-semibold"
+                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                           placeholder="Contoh: Johanes 3 : 16"
                         />
                         <button
@@ -3707,7 +3707,7 @@ export default function AdminView({
                   {/* STEPS LIST EDITING */}
                   <div className="space-y-4 pt-4 border-t border-slate-200">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">Susunan Acara</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-black">Susunan Acara</h4>
                     </div>
 
                     <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2">
@@ -3716,10 +3716,10 @@ export default function AdminView({
                           <div>
                             <div className="flex items-center justify-between mb-1.5">
                               <div className="flex items-center space-x-2">
-                                <span className="w-5 h-5 rounded-md bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                                <span className="w-5 h-5 rounded-md bg-slate-200 text-black text-[10px] font-bold flex items-center justify-center shrink-0">
                                   {index + 1}
                                 </span>
-                                <label className="text-[11px] text-slate-700 font-bold">Acara</label>
+                                <label className="text-[11px] text-black font-bold">Acara</label>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -3765,7 +3765,7 @@ export default function AdminView({
                               <button
                                 type="button"
                                 onClick={() => deleteStepRow(index)}
-                                className="p-1 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
+                                className="p-1 text-black hover:text-black hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                 title="Hapus Baris Acara Ini"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -3782,14 +3782,14 @@ export default function AdminView({
                                   handleAutoFillSongLyrics(index, (e.target as HTMLInputElement).value, true);
                                 }
                               }}
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium outline-none focus:border-[#0F2447]"
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-black font-medium outline-none focus:border-[#0F2447]"
                               placeholder="Contoh: 01. Marende BE No. 93 : 1+3 atau 1,2+5..."
                             />
                           </div>
 
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className="block text-[10px] text-slate-500 font-semibold">Isi Acara</label>
+                              <label className="block text-[10px] text-black font-semibold">Isi Acara</label>
                             </div>
                             <textarea
                               rows={Math.max(2, (step.isi || '').split('\n').length)}
@@ -3806,7 +3806,7 @@ export default function AdminView({
                                   el.style.height = `${el.scrollHeight}px`;
                                 }
                               }}
-                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-medium font-mono outline-none focus:border-[#0F2447] leading-relaxed overflow-hidden resize-none"
+                              className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-black font-medium font-mono outline-none focus:border-[#0F2447] leading-relaxed overflow-hidden resize-none"
                               placeholder="Ketik isi liturgi, doa responsif, atau lirik ayat lagu di sini..."
                             />
                           </div>
@@ -3828,7 +3828,7 @@ export default function AdminView({
                     <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">
                       <button
                         onClick={() => setEditingLiturgyId(null)}
-                        className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-[#0F2447] rounded-lg transition cursor-pointer"
+                        className="px-4 py-2 bg-white border border-slate-200 text-xs font-bold text-black hover:bg-slate-50 hover:text-black rounded-lg transition cursor-pointer"
                       >
                         Batal
                       </button>
@@ -3859,7 +3859,7 @@ export default function AdminView({
                 className={`flex-1 py-2 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                   adminPetugasSubTab === 'minggu'
                     ? 'bg-[#0F2447] text-white shadow-sm'
-                    : 'text-slate-600 hover:text-[#0F2447]'
+                    : 'text-black hover:text-black'
                 }`}
               >
                 <Users className="w-4 h-4" />
@@ -3870,7 +3870,7 @@ export default function AdminView({
                 className={`flex-1 py-2 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center space-x-2 cursor-pointer ${
                   adminPetugasSubTab === 'partangiangan'
                     ? 'bg-[#0F2447] text-white shadow-sm'
-                    : 'text-slate-600 hover:text-[#0F2447]'
+                    : 'text-black hover:text-black'
                 }`}
               >
                 <Users className="w-4 h-4" />
@@ -3888,13 +3888,13 @@ export default function AdminView({
                       <span className="w-2 h-2 bg-[#0F2447] rounded-full"></span>
                       <span>Petugas Ibadah Minggu </span>
                     </h3>
-                    <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                    <p className="text-[11px] text-black mt-0.5 font-medium">
                        Ketik langsung nama petugas di sel tabel, lalu tekan simpan.
                     </p>
 
                     {/* EDIT DATE INPUT FOR PETUGAS MINGGU */}
                     <div className="mt-3 flex items-center space-x-2">
-                      <label className="text-[11px] font-bold text-slate-600 uppercase shrink-0">Tanggal Petugas Minggu:</label>
+                      <label className="text-[11px] font-bold text-black uppercase shrink-0">Tanggal Petugas Minggu:</label>
                       <input
                         type="text"
                         value={tempPetugasMingguDate}
@@ -3910,7 +3910,7 @@ export default function AdminView({
                             }
                           }
                         }}
-                        className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
+                        className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-black font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
                         placeholder="Contoh: Minggu, 14 Juni 2026"
                       />
                     </div>
@@ -3970,7 +3970,7 @@ export default function AdminView({
                               type="text"
                               value={row.tugas || ''}
                               onChange={(e) => handleCellChange(index, 'tugas', e.target.value)}
-                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-900 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
+                              className="w-full bg-transparent px-3 py-2 text-xs text-black font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
                               placeholder="Nama tugas/peran..."
                             />
                           </td>
@@ -3980,7 +3980,7 @@ export default function AdminView({
                               type="text"
                               value={row.shift1 || ''}
                               onChange={(e) => handleCellChange(index, 'shift1', e.target.value)}
-                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
+                              className="w-full bg-transparent px-3 py-2 text-xs text-black font-semibold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
                               placeholder="Ketik nama petugas..."
                             />
                           </td>
@@ -3990,7 +3990,7 @@ export default function AdminView({
                               type="text"
                               value={row.shift2 || ''}
                               onChange={(e) => handleCellChange(index, 'shift2', e.target.value)}
-                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
+                              className="w-full bg-transparent px-3 py-2 text-xs text-black font-semibold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
                               placeholder="Ketik nama petugas..."
                             />
                           </td>
@@ -4000,7 +4000,7 @@ export default function AdminView({
                               type="text"
                               value={row.sekolahMinggu || ''}
                               onChange={(e) => handleCellChange(index, 'sekolahMinggu', e.target.value)}
-                              className="w-full bg-transparent px-3 py-2 text-xs text-slate-800 font-semibold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
+                              className="w-full bg-transparent px-3 py-2 text-xs text-black font-semibold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg transition"
                               placeholder="Ketik nama petugas..."
                             />
                           </td>
@@ -4009,7 +4009,7 @@ export default function AdminView({
                             <button
                               type="button"
                               onClick={() => handleDeletePetugasMingguRow(index)}
-                              className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded-lg transition cursor-pointer"
+                              className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-black hover:text-black border border-slate-200 rounded-lg transition cursor-pointer"
                               title="Hapus Tugas"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -4033,13 +4033,13 @@ export default function AdminView({
                         <span className="w-2 h-2 bg-[#0F2447] rounded-full"></span>
                         <span>Torop Naro Mandohoti Partangiangan di Minggu Naung Salpu</span>
                       </h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                      <p className="text-[11px] text-black mt-0.5 font-medium">
                         Kelola data kehadiran partangiangan per sektor (Lunggu). Baris total "Torop Naro" akan dihitung otomatis.
                       </p>
 
                       {/* EDIT DATE INPUT FOR TABEL 1 */}
                       <div className="mt-3 flex items-center space-x-2">
-                        <label className="text-[11px] font-bold text-slate-600 uppercase shrink-0">Hari/Tanggal:</label>
+                        <label className="text-[11px] font-bold text-black uppercase shrink-0">Hari/Tanggal:</label>
                         <input
                           type="text"
                           value={tempPartangianganAttendanceDate}
@@ -4055,7 +4055,7 @@ export default function AdminView({
                               }
                             }
                           }}
-                          className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
+                          className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-black font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
                           placeholder="Contoh: Selasa 09 Juni & Rabu 10 Juni 2026"
                         />
                       </div>
@@ -4126,7 +4126,7 @@ export default function AdminView({
                                 <select
                                   value={row.hari}
                                   onChange={(e) => handleAttendanceCellChange(index, 'hari', e.target.value)}
-                                  className="bg-transparent px-2 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg cursor-pointer"
+                                  className="bg-transparent px-2 py-1.5 text-xs text-black font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg cursor-pointer"
                                 >
                                   <option value="Selasa">Selasa</option>
                                   <option value="Rabu">Rabu</option>
@@ -4138,7 +4138,7 @@ export default function AdminView({
                                   type="text"
                                   value={row.lunggu || ''}
                                   onChange={(e) => handleAttendanceCellChange(index, 'lunggu', e.target.value)}
-                                  className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
+                                  className="w-full bg-transparent px-2.5 py-1.5 text-xs text-black font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                   placeholder="Nama lunggu..."
                                 />
                               </td>
@@ -4149,7 +4149,7 @@ export default function AdminView({
                                   value={row.ama}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'ama', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-black font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 4. Ina */}
@@ -4159,7 +4159,7 @@ export default function AdminView({
                                   value={row.ina}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'ina', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-black font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 5. SM */}
@@ -4169,7 +4169,7 @@ export default function AdminView({
                                   value={row.sm}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'sm', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-black font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 6. ReNa */}
@@ -4179,7 +4179,7 @@ export default function AdminView({
                                   value={row.rena}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'rena', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-black font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 7. Parhalado */}
@@ -4189,7 +4189,7 @@ export default function AdminView({
                                   value={row.parhalado}
                                   min={0}
                                   onChange={(e) => handleAttendanceCellChange(index, 'parhalado', e.target.value)}
-                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-slate-800 font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
+                                  className="w-full bg-transparent px-2 py-1.5 text-xs text-black font-semibold text-center border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 />
                               </td>
                               {/* 8. Total Naro */}
@@ -4201,7 +4201,7 @@ export default function AdminView({
                                 <button
                                   type="button"
                                   onClick={() => handleDeletePartangianganAttendanceRow(index)}
-                                  className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded-lg transition cursor-pointer"
+                                  className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-black hover:text-black border border-slate-200 rounded-lg transition cursor-pointer"
                                   title="Hapus Baris Lunggu"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -4260,13 +4260,13 @@ export default function AdminView({
                         <span className="w-2 h-2 bg-[#0F2447] rounded-full"></span>
                         <span>Petugas Partangiangan</span>
                       </h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                      <p className="text-[11px] text-black mt-0.5 font-medium">
                         Daftar petugas ibadah partangiangan. Anda dapat menambah, menghapus, atau merubah peranan tugas.
                       </p>
 
                       {/* EDIT DATE INPUT FOR TABEL 2 */}
                       <div className="mt-3 flex items-center space-x-2">
-                        <label className="text-[11px] font-bold text-slate-600 uppercase shrink-0">Hari/Tanggal:</label>
+                        <label className="text-[11px] font-bold text-black uppercase shrink-0">Hari/Tanggal:</label>
                         <input
                           type="text"
                           value={tempPetugasPartangianganDate}
@@ -4282,7 +4282,7 @@ export default function AdminView({
                               }
                             }
                           }}
-                          className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-800 font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
+                          className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-black font-semibold focus:ring-2 focus:ring-[#0F2447]/20 focus:border-[#0F2447] outline-none max-w-xs"
                           placeholder="Contoh: Selasa 16 Juni & Rabu 17 Juni 2026"
                         />
                       </div>
@@ -4343,7 +4343,7 @@ export default function AdminView({
                               <select
                                 value={row.hari}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'hari', e.target.value as any)}
-                                className="bg-transparent px-2 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg cursor-pointer"
+                                className="bg-transparent px-2 py-1.5 text-xs text-black font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg cursor-pointer"
                               >
                                 <option value="Selasa">Selasa</option>
                                 <option value="Rabu">Rabu</option>
@@ -4355,7 +4355,7 @@ export default function AdminView({
                                 type="text"
                                 value={row.lunggu || ''}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'lunggu', e.target.value)}
-                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
+                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-black font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 placeholder="Nama lunggu..."
                               />
                             </td>
@@ -4365,7 +4365,7 @@ export default function AdminView({
                                 type="text"
                                 value={row.keluarga || ''}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'keluarga', e.target.value)}
-                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-800 font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
+                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-black font-bold border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 placeholder="Keluarga..."
                               />
                             </td>
@@ -4375,7 +4375,7 @@ export default function AdminView({
                                 type="text"
                                 value={row.alamat || ''}
                                 onChange={(e) => handlePetugasPartangianganCellChange(index, 'alamat', e.target.value)}
-                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-slate-600 font-medium border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
+                                className="w-full bg-transparent px-2.5 py-1.5 text-xs text-black font-medium border-none outline-none focus:bg-[#EDF2F9] focus:ring-1 focus:ring-[#0F2447]/30 rounded-lg"
                                 placeholder="Alamat rumah..."
                               />
                             </td>
@@ -4413,7 +4413,7 @@ export default function AdminView({
                             <td className="p-2 text-center">
                               <button
                                 onClick={() => handleRemovePetugasPartangianganRow(index)}
-                                className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] rounded-lg border border-slate-200 transition cursor-pointer"
+                                className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-black hover:text-black rounded-lg border border-slate-200 transition cursor-pointer"
                                 title="Hapus baris ini"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -4423,7 +4423,7 @@ export default function AdminView({
                         ))}
                         {tempPetugasPartangiangan.length === 0 && (
                           <tr>
-                            <td colSpan={8} className="px-6 py-8 text-center text-xs text-slate-400 italic">
+                            <td colSpan={8} className="px-6 py-8 text-center text-xs text-black italic">
                               Belum ada petugas ditambahkan. Silakan tambah peranan petugas di atas.
                             </td>
                           </tr>
@@ -4440,7 +4440,7 @@ export default function AdminView({
                       <Shield className="w-4 h-4 text-[#0F2447]" />
                       <span>Opsi Status & Tampilan Ibadah Partangiangan di Portal Utama</span>
                     </h3>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-black mt-1">
                       Pilih opsi di bawah ini jika ibadah partangiangan dialihkan atau diliburkan. Pilihan akan langsung mengubah pesan di halaman utama jemaat.
                     </p>
                   </div>
@@ -4452,7 +4452,7 @@ export default function AdminView({
                       className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
                         partangianganMode === 'normal'
                           ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] shadow-xs'
-                          : 'bg-slate-50/60 border-slate-200 text-slate-700 hover:bg-slate-100'
+                          : 'bg-slate-50/60 border-slate-200 text-black hover:bg-slate-100'
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -4468,7 +4468,7 @@ export default function AdminView({
                         </div>
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#0F2447] text-white uppercase">Standar</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 leading-snug">
+                      <p className="text-[11px] text-black leading-snug">
                         Menampilkan tabel jadwal dan daftar nama petugas pelayanan partangiangan seperti biasa di portal utama.
                       </p>
                     </label>
@@ -4479,7 +4479,7 @@ export default function AdminView({
                       className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
                         partangianganMode === 'keluarga'
                           ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] shadow-xs'
-                          : 'bg-slate-50/60 border-slate-200 text-slate-700 hover:bg-slate-100'
+                          : 'bg-slate-50/60 border-slate-200 text-black hover:bg-slate-100'
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -4495,7 +4495,7 @@ export default function AdminView({
                         </div>
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#E8EEF6] text-[#0F2447] border border-[#CBD7EA] uppercase">Opsi 1</span>
                       </div>
-                      <p className="text-[11px] text-slate-600 leading-snug bg-white/90 p-2.5 rounded-xl border border-[#CBD7EA] font-medium">
+                      <p className="text-[11px] text-black leading-snug bg-white/90 p-2.5 rounded-xl border border-[#CBD7EA] font-medium">
                         "tidak ada petugas ibadah partangiangan dikarenakan ibadah keluarga akan dilakukan di rumah masing masing"
                       </p>
                     </label>
@@ -4506,7 +4506,7 @@ export default function AdminView({
                       className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
                         partangianganMode === 'selesai'
                           ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] shadow-xs'
-                          : 'bg-slate-50/60 border-slate-200 text-slate-700 hover:bg-slate-100'
+                          : 'bg-slate-50/60 border-slate-200 text-black hover:bg-slate-100'
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -4522,7 +4522,7 @@ export default function AdminView({
                         </div>
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#E8EEF6] text-[#0F2447] border border-[#CBD7EA] uppercase">Opsi 2</span>
                       </div>
-                      <p className="text-[11px] text-slate-600 leading-snug bg-white/90 p-2.5 rounded-xl border border-[#CBD7EA] font-medium">
+                      <p className="text-[11px] text-black leading-snug bg-white/90 p-2.5 rounded-xl border border-[#CBD7EA] font-medium">
                         "tidak ada ibadah partangiangan karena ibadah partangiangann untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
                       </p>
                     </label>
@@ -4691,11 +4691,11 @@ export default function AdminView({
                       <div>
                         <div className="flex items-center space-x-2 text-[10px] mb-1">
                           <span className="font-bold uppercase bg-[#EDF2F9] border border-[#CBD7EA] px-2 py-0.5 rounded text-[#0F2447]">{w.kategori}</span>
-                          <span className="text-slate-500">{w.tanggal}</span>
+                          <span className="text-black">{w.tanggal}</span>
                           {w.prioritas && <span className="bg-[#0F2447] text-white font-bold px-2 py-0.5 rounded">Penting</span>}
                         </div>
-                        <h4 className="text-sm font-bold text-slate-900 leading-snug">{w.judul}</h4>
-                        <p className="text-xs text-slate-600 mt-1 line-clamp-2 max-w-2xl">{w.isi}</p>
+                        <h4 className="text-sm font-bold text-black leading-snug">{w.judul}</h4>
+                        <p className="text-xs text-black mt-1 line-clamp-2 max-w-2xl">{w.isi}</p>
                       </div>
 
                       <div className="flex items-center space-x-2 shrink-0 self-end md:self-center">
@@ -4707,7 +4707,7 @@ export default function AdminView({
                         </button>
                         <button
                           onClick={() => handleDeleteWarta(w.id)}
-                          className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded-lg transition cursor-pointer"
+                          className="p-1.5 bg-slate-100 hover:bg-[#EDF2F9] text-black hover:text-black border border-slate-200 rounded-lg transition cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -4725,22 +4725,22 @@ export default function AdminView({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Judul / Hal Pengumuman</label>
+                    <label className="block text-xs font-semibold text-black mb-1">Judul / Hal Pengumuman</label>
                     <input
                       type="text"
                       value={wartaTitle}
                       onChange={(e) => setWartaTitle(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15 transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15 transition-all"
                       placeholder="Contoh: Berita Pernikahan / Rencana Kegiatan Sermon"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Kategori Warta</label>
+                    <label className="block text-xs font-semibold text-black mb-1">Kategori Warta</label>
                     <select
                       value={wartaKategori}
                       onChange={(e: any) => setWartaKategori(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15"
                     >
                       <option value="umum">Umum (Pemberitahuan Utama)</option>
                       <option value="pelayanan">Pelayanan Jemaat (Ibadah & Kursus)</option>
@@ -4761,18 +4761,18 @@ export default function AdminView({
                         onChange={(e) => setWartaPrioritas(e.target.checked)}
                         className="rounded bg-white border-slate-300 text-[#0F2447] focus:ring-[#0F2447] w-4 h-4"
                       />
-                      <span className="text-slate-700 font-bold">Tandai sebagai Informasi Penting (Prioritas Atas)</span>
+                      <span className="text-black font-bold">Tandai sebagai Informasi Penting (Prioritas Atas)</span>
                     </label>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Isi Berita Lengkap</label>
+                  <label className="block text-xs font-semibold text-black mb-1">Isi Berita Lengkap</label>
                   <textarea
                     rows={6}
                     value={wartaIsi}
                     onChange={(e) => setWartaIsi(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15 transition-all leading-relaxed font-sans"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15 transition-all leading-relaxed font-sans"
                     placeholder="Ketik isi berita warta jemaat sejelas rincinya..."
                   />
                 </div>
@@ -4814,17 +4814,17 @@ export default function AdminView({
                 </div>
                 <div className="grid grid-cols-2 gap-4 divide-x divide-slate-100">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Pemasukan</span>
+                    <span className="text-[10px] text-black uppercase font-semibold block">Total Pemasukan</span>
                     <div className="flex items-center space-x-1 mt-1">
                       <ArrowUpRight className="w-4 h-4 text-[#0F2447] shrink-0" />
                       <h4 className="text-base font-extrabold text-[#0F2447] truncate">{formatRupiah(totalPemasukan)}</h4>
                     </div>
                   </div>
                   <div className="pl-4">
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Pengeluaran</span>
+                    <span className="text-[10px] text-black uppercase font-semibold block">Total Pengeluaran</span>
                     <div className="flex items-center space-x-1 mt-1">
                       <ArrowDownRight className="w-4 h-4 text-slate-500 shrink-0" />
-                      <h4 className="text-base font-extrabold text-slate-700 truncate">{formatRupiah(totalPengeluaran)}</h4>
+                      <h4 className="text-base font-extrabold text-black truncate">{formatRupiah(totalPengeluaran)}</h4>
                     </div>
                   </div>
                 </div>
@@ -4840,15 +4840,15 @@ export default function AdminView({
                 </div>
                 <div className="grid grid-cols-2 gap-3 divide-x divide-[#CBD7EA] mb-2">
                   <div>
-                    <span className="text-[9px] text-slate-500 uppercase font-bold block">Kas Huria (Umum)</span>
+                    <span className="text-[9px] text-black uppercase font-bold block">Kas Huria (Umum)</span>
                     <h4 className="text-sm font-extrabold text-[#0F2447] mt-0.5 truncate">{formatRupiah(saldoKasHuria)}</h4>
                   </div>
                   <div className="pl-3">
-                    <span className="text-[9px] text-slate-500 uppercase font-bold block">Kas Pembangunan</span>
+                    <span className="text-[9px] text-black uppercase font-bold block">Kas Pembangunan</span>
                     <h4 className="text-sm font-extrabold text-[#173361] mt-0.5 truncate">{formatRupiah(saldoKasPembangunan)}</h4>
                   </div>
                 </div>
-                <div className="border-t border-dashed border-[#CBD7EA] pt-2 flex items-center justify-between text-[10px] font-bold text-slate-600">
+                <div className="border-t border-dashed border-[#CBD7EA] pt-2 flex items-center justify-between text-[10px] font-bold text-black">
                   <span>Gabungan Saldo Kas:</span>
                   <span className="text-xs font-extrabold text-[#0F2447]">{formatRupiah(saldoKasHuria + saldoKasPembangunan)}</span>
                 </div>
@@ -4857,12 +4857,12 @@ export default function AdminView({
               {/* 3. SALDO DIAKONIA SOSIAL */}
               <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-semibold flex items-center space-x-1">
+                  <span className="text-[10px] text-black uppercase font-semibold flex items-center space-x-1">
                     <Heart className="w-3.5 h-3.5 text-[#0F2447]" />
                     <span>Saldo Diakonia Sosial</span>
                   </span>
                   <h4 className="text-lg font-extrabold text-[#0F2447] mt-1">{formatRupiah(saldoDiakoniaSosial)}</h4>
-                  <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Membantu sesama dan pelayanan sosial jemaat</span>
+                  <span className="text-[9px] text-black font-medium block mt-0.5">Membantu sesama dan pelayanan sosial jemaat</span>
                 </div>
                 <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-xl shrink-0 border border-[#CBD7EA]">
                   <Heart className="w-5 h-5" />
@@ -4874,12 +4874,12 @@ export default function AdminView({
                 {!isEditingCustomBalance ? (
                   <div className="flex items-center justify-between w-full">
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase font-semibold flex items-center space-x-1">
+                      <span className="text-[10px] text-black uppercase font-semibold flex items-center space-x-1">
                         <Coins className="w-3.5 h-3.5 text-[#0F2447]" />
                         <span className="truncate max-w-[150px] block" title={customBalanceTitle}>{customBalanceTitle}</span>
                       </span>
                       <h4 className="text-lg font-extrabold text-[#0F2447] mt-1">{formatRupiah(activeCustomBalanceValue)}</h4>
-                      <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Saldo kustom (menggabungkan basis & transaksi)</span>
+                      <span className="text-[9px] text-black font-medium block mt-0.5">Saldo kustom (menggabungkan basis & transaksi)</span>
                     </div>
                     <div className="flex flex-col items-end space-y-2">
                       <div className="p-2.5 bg-[#EDF2F9] text-[#0F2447] rounded-xl shrink-0 border border-[#CBD7EA]">
@@ -4904,27 +4904,27 @@ export default function AdminView({
                         <Coins className="w-3.5 h-3.5 text-[#0F2447]" />
                         <span>Sesuaikan Saldo Kustom</span>
                       </span>
-                      <span className="text-[9px] text-slate-400">Atur Judul & Nilai Saldo</span>
+                      <span className="text-[9px] text-black">Atur Judul & Nilai Saldo</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] text-slate-500 font-bold block mb-1">JUDUL SALDO KUSTOM</label>
+                        <label className="text-[9px] text-black font-bold block mb-1">JUDUL SALDO KUSTOM</label>
                         <input
                           type="text"
                           value={tempCustomTitle}
                           onChange={(e) => setTempCustomTitle(e.target.value)}
                           placeholder="Contoh: Kas Remaja & Naposo"
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-700 outline-none focus:border-[#0F2447] font-bold"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-black outline-none focus:border-[#0F2447] font-bold"
                         />
                       </div>
                       <div>
-                        <label className="text-[9px] text-slate-500 font-bold block mb-1">NILAI SALDO (IDR)</label>
+                        <label className="text-[9px] text-black font-bold block mb-1">NILAI SALDO (IDR)</label>
                         <input
                           type="number"
                           value={tempCustomValue}
                           onChange={(e) => setTempCustomValue(Number(e.target.value))}
                           placeholder="Contoh: 2500000"
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-slate-700 outline-none focus:border-[#0F2447] font-bold"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs text-black outline-none focus:border-[#0F2447] font-bold"
                         />
                       </div>
                     </div>
@@ -4932,7 +4932,7 @@ export default function AdminView({
                       <button
                         type="button"
                         onClick={() => setIsEditingCustomBalance(false)}
-                        className="text-[10px] font-semibold text-slate-600 hover:text-[#0F2447] bg-white border border-slate-300 px-3 py-1 rounded-lg transition cursor-pointer"
+                        className="text-[10px] font-semibold text-black hover:text-black bg-white border border-slate-300 px-3 py-1 rounded-lg transition cursor-pointer"
                       >
                         Batal
                       </button>
@@ -4961,7 +4961,7 @@ export default function AdminView({
               <div className="space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Buku Register Buku Kas Transaksi</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-black">Buku Register Buku Kas Transaksi</h4>
                   </div>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     {/* Search Input */}
@@ -4972,12 +4972,12 @@ export default function AdminView({
                         placeholder="Cari transaksi (kategori, keterangan)..."
                         value={searchKeuangan}
                         onChange={(e) => setSearchKeuangan(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-700 outline-none focus:border-[#0F2447] font-semibold shadow-sm"
+                        className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold shadow-sm"
                       />
                       {searchKeuangan && (
                         <button
                           onClick={() => setSearchKeuangan('')}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-black cursor-pointer"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -5031,7 +5031,7 @@ export default function AdminView({
                           if (filtered.length === 0) {
                             return (
                               <tr>
-                                <td colSpan={7} className="p-8 text-center text-slate-400 text-xs font-medium bg-slate-50">
+                                <td colSpan={7} className="p-8 text-center text-black text-xs font-medium bg-slate-50">
                                   Tidak ada transaksi yang cocok dengan pencarian "{searchKeuangan}"
                                 </td>
                               </tr>
@@ -5040,19 +5040,19 @@ export default function AdminView({
 
                           return filtered.map((t) => (
                             <tr key={t.id} className="hover:bg-slate-50">
-                              <td className="p-3 text-slate-500 font-mono">{t.tanggal}</td>
+                              <td className="p-3 text-black font-mono">{t.tanggal}</td>
                               <td className="p-3">
                                 <span
                                   className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded tracking-wider border ${
                                     t.tipe === 'pemasukan' 
                                       ? 'bg-[#0F2447] text-white border-[#0F2447]' 
-                                      : 'bg-slate-100 text-slate-700 border-slate-300'
+                                      : 'bg-slate-100 text-black border-slate-300'
                                   }`}
                                 >
                                   {t.tipe}
                                 </span>
                               </td>
-                              <td className="p-3 text-slate-800 font-bold">{t.kategori}</td>
+                              <td className="p-3 text-black font-bold">{t.kategori}</td>
                               <td className="p-3 whitespace-nowrap">
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                                   getTipeKasDisplayClass(getTipeKasOfTransaction(t))
@@ -5060,16 +5060,16 @@ export default function AdminView({
                                   {getTipeKasLabel(getTipeKasOfTransaction(t), customBalanceTitle)}
                                 </span>
                               </td>
-                              <td className="p-3 text-slate-600 min-w-[150px] max-w-xs break-words whitespace-normal" title={t.keterangan}>{t.keterangan}</td>
+                              <td className="p-3 text-black min-w-[150px] max-w-xs break-words whitespace-normal" title={t.keterangan}>{t.keterangan}</td>
                               <td
                                 className={`p-3 text-right font-bold font-mono ${
-                                  t.tipe === 'pemasukan' ? 'text-[#0F2447]' : 'text-slate-600'
+                                  t.tipe === 'pemasukan' ? 'text-[#0F2447]' : 'text-black'
                                 }`}
                               >
                                 <div className="flex flex-col items-end">
                                   <span>{t.tipe === 'pemasukan' ? '+' : '-'} {formatRupiah(t.jumlah)}</span>
                                   {t.tipe === 'pemasukan' && t.sentralisasiPersen ? (
-                                    <span className="text-[10px] text-slate-500 font-medium font-sans">
+                                    <span className="text-[10px] text-black font-medium font-sans">
                                       (sentral {t.sentralisasiPersen}% = {formatRupiah(t.jumlah * t.sentralisasiPersen / 100)})
                                     </span>
                                   ) : null}
@@ -5079,14 +5079,14 @@ export default function AdminView({
                                 <div className="flex items-center justify-center space-x-1">
                                   <button
                                     onClick={() => startEditTransaksi(t)}
-                                    className="p-1 text-slate-500 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
+                                    className="p-1 text-black hover:text-black hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                     title="Ubah Transaksi"
                                   >
                                     <Edit2 className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteTransaksi(t.id)}
-                                    className="p-1 text-slate-500 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
+                                    className="p-1 text-black hover:text-black hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                     title="Hapus Transaksi"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -5110,13 +5110,13 @@ export default function AdminView({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Tipe Transaksi</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Tipe Transaksi</label>
                     <div className="flex items-center space-x-2 bg-[#E8EEF6] p-1 rounded-lg border border-[#D4DFEE]">
                       <button
                         type="button"
                         onClick={() => setTxTipe('pemasukan')}
                         className={`flex-1 py-1.5 rounded-md text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
-                          txTipe === 'pemasukan' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'
+                          txTipe === 'pemasukan' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-black hover:text-black'
                         }`}
                       >
                         Pemasukan Cash
@@ -5125,7 +5125,7 @@ export default function AdminView({
                         type="button"
                         onClick={() => setTxTipe('pengeluaran')}
                         className={`flex-1 py-1.5 rounded-md text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
-                          txTipe === 'pengeluaran' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-slate-600 hover:text-[#0F2447]'
+                          txTipe === 'pengeluaran' ? 'bg-[#0F2447] text-white shadow-sm' : 'text-black hover:text-black'
                         }`}
                       >
                         Pengeluaran Cash
@@ -5134,22 +5134,22 @@ export default function AdminView({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Kategori Transaksi Keuangan</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Kategori Transaksi Keuangan</label>
                     <input
                       type="text"
                       value={txKategori}
                       onChange={(e) => setTxKategori(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold transition-all"
                       placeholder="Contoh: Pelean IA, Pelean IB, Pelean II, Listrik Gereja, Diakonia"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Alokasi Kas (Tujuan / Sumber Dana)</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Alokasi Kas (Tujuan / Sumber Dana)</label>
                     <select
                       value={txTipeKas}
                       onChange={(e) => setTxTipeKas(e.target.value as any)}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-bold transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-bold transition-all"
                     >
                       <option value="Kas Huria">Kas Huria (Umum)</option>
                       <option value="Kas Pembangunan">Kas Pembangunan</option>
@@ -5159,12 +5159,12 @@ export default function AdminView({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Jumlah Transaksi (Rupiah)</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Jumlah Transaksi (Rupiah)</label>
                     <input
                       type="number"
                       value={txJumlah === 0 ? '' : txJumlah}
                       onChange={(e) => setTxJumlah(Number(e.target.value))}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold font-mono transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold font-mono transition-all"
                       placeholder="Masukkan nilai Rupiah (contoh: 2500000)"
                     />
                   </div>
@@ -5172,7 +5172,7 @@ export default function AdminView({
                   {txTipe === 'pemasukan' && (
                     <div className="bg-[#F4F6FA] p-3 rounded-lg border border-slate-200">
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="block text-xs font-bold text-slate-700">Potongan Sentralisasi (%)</label>
+                        <label className="block text-xs font-bold text-black">Potongan Sentralisasi (%)</label>
                         <span className="text-[9px] px-1.5 py-0.5 bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA] rounded font-bold font-mono">Sentralisasi HKBP</span>
                       </div>
                       <div className="flex space-x-2">
@@ -5185,7 +5185,7 @@ export default function AdminView({
                             const val = Math.min(100, Math.max(0, Number(e.target.value)));
                             setTxSentralisasiPersen(val);
                           }}
-                          className="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-bold font-mono transition-all"
+                          className="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs text-black outline-none focus:border-[#0F2447] font-bold font-mono transition-all"
                           placeholder="Potongan (cth: 55)"
                         />
                         <div className="flex space-x-1 shrink-0">
@@ -5197,7 +5197,7 @@ export default function AdminView({
                               className={`px-2 py-1.5 rounded text-[10px] font-bold border transition cursor-pointer ${
                                 txSentralisasiPersen === pct
                                   ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-xs'
-                                  : 'bg-white border-slate-300 text-slate-600 hover:bg-[#EDF2F9]'
+                                  : 'bg-white border-slate-300 text-black hover:bg-[#EDF2F9]'
                               }`}
                             >
                               {pct}%
@@ -5207,7 +5207,7 @@ export default function AdminView({
                       </div>
                       {txSentralisasiPersen > 0 && txJumlah > 0 && (
                         <div className="mt-2 space-y-1 pt-1.5 border-t border-dashed border-slate-300">
-                          <div className="text-[10px] text-slate-600 font-bold flex justify-between">
+                          <div className="text-[10px] text-black font-bold flex justify-between">
                             <span>Dikirim ke Pusat ({txSentralisasiPersen}%):</span>
                             <span className="font-mono">-{formatRupiah(txJumlah * txSentralisasiPersen / 100)}</span>
                           </div>
@@ -5221,23 +5221,23 @@ export default function AdminView({
                   )}
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Tanggal Transaksi</label>
+                    <label className="block text-xs font-semibold text-black mb-1.5">Tanggal Transaksi</label>
                     <input
                       type="date"
                       value={txTanggal}
                       onChange={(e) => setTxTanggal(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
+                      className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Keterangan Transaksi</label>
+                  <label className="block text-xs font-semibold text-black mb-1.5">Keterangan Transaksi</label>
                   <input
                     type="text"
                     value={txKeterangan}
                     onChange={(e) => setTxKeterangan(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold transition-all"
                     placeholder="Contoh: Persembahan Minggu ke-4 Sektor VII"
                   />
                 </div>
@@ -5275,10 +5275,10 @@ export default function AdminView({
                   <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold uppercase text-[#0F2447] tracking-wider">Jumlah Jemaat Aktif</p>
-                      <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                        {jemaatList.length} <span className="text-xs text-slate-500 font-bold">Jiwa</span>
+                      <h3 className="text-2xl font-extrabold text-black tracking-tight">
+                        {jemaatList.length} <span className="text-xs text-black font-bold">Jiwa</span>
                       </h3>
-                      <p className="text-[9px] text-slate-500 font-semibold">Warga terdaftar di database</p>
+                      <p className="text-[9px] text-black font-semibold">Warga terdaftar di database</p>
                     </div>
                     <div className="p-3 bg-[#EDF2F9] text-[#0F2447] rounded-2xl border border-[#CBD7EA]">
                       <Users className="w-5 h-5 shrink-0" />
@@ -5297,9 +5297,9 @@ export default function AdminView({
                             const d = new Date(j.tanggalLahir);
                             return !isNaN(d.getTime()) && d.getMonth() === thisMonth;
                           }).length;
-                        })()} <span className="text-xs text-slate-600 font-bold">Warga</span>
+                        })()} <span className="text-xs text-black font-bold">Warga</span>
                       </h3>
-                      <p className="text-[9px] text-slate-600 font-semibold">Bulan {new Date().toLocaleDateString('id-ID', { month: 'long' })}</p>
+                      <p className="text-[9px] text-black font-semibold">Bulan {new Date().toLocaleDateString('id-ID', { month: 'long' })}</p>
                     </div>
                     <div className="p-3 bg-white text-[#0F2447] rounded-2xl border border-[#CBD7EA]">
                       <Heart className="w-5 h-5 shrink-0" />
@@ -5309,7 +5309,7 @@ export default function AdminView({
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Database Ulang Tahun Jemaat (Warga Gereja)</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-black">Database Ulang Tahun Jemaat (Warga Gereja)</h4>
                   </div>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     {/* Search Input */}
@@ -5320,12 +5320,12 @@ export default function AdminView({
                         placeholder="Cari jemaat (nama, sektor)..."
                         value={searchJemaat}
                         onChange={(e) => setSearchJemaat(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-700 outline-none focus:border-[#0F2447] font-semibold shadow-sm"
+                        className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold shadow-sm"
                       />
                       {searchJemaat && (
                         <button
                           onClick={() => setSearchJemaat('')}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-black cursor-pointer"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -5351,7 +5351,7 @@ export default function AdminView({
                     {jemaatList.length > 0 && (
                       <button
                         onClick={handleDeleteAllJemaat}
-                        className="px-4 py-2 bg-white text-slate-700 hover:bg-[#EDF2F9] hover:text-[#0F2447] border border-slate-300 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-xs"
+                        className="px-4 py-2 bg-white text-black hover:bg-[#EDF2F9] hover:text-black border border-slate-300 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1.5 transition cursor-pointer shadow-xs"
                       >
                         <Trash2 className="w-4 h-4" />
                         <span>Hapus Semua Data</span>
@@ -5393,7 +5393,7 @@ export default function AdminView({
                           if (filtered.length === 0) {
                             return (
                               <tr>
-                                <td colSpan={jemaatColumns.length + 1} className="p-8 text-center text-slate-400 text-xs font-medium bg-slate-50">
+                                <td colSpan={jemaatColumns.length + 1} className="p-8 text-center text-black text-xs font-medium bg-slate-50">
                                   Tidak ada data jemaat yang cocok dengan pencarian "{searchJemaat}"
                                 </td>
                               </tr>
@@ -5403,9 +5403,9 @@ export default function AdminView({
                           return filtered.map((j) => (
                             <tr key={j.id} className="hover:bg-slate-550/5">
                               {jemaatColumns.map((col) => (
-                                <td key={col.key} className="p-3 text-slate-700 font-medium">
+                                <td key={col.key} className="p-3 text-black font-medium">
                                   {col.key === 'nama' ? (
-                                    <span className="font-bold text-slate-900">{j[col.key]}</span>
+                                    <span className="font-bold text-black">{j[col.key]}</span>
                                   ) : col.key === 'tanggalLahir' || col.key === 'noHP' ? (
                                     <span className="font-mono text-xs">{j[col.key] || '-'}</span>
                                   ) : (
@@ -5417,14 +5417,14 @@ export default function AdminView({
                                 <div className="flex items-center justify-center space-x-1">
                                   <button
                                     onClick={() => startEditJemaat(j)}
-                                    className="p-1 text-slate-500 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
+                                    className="p-1 text-black hover:text-black hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                     title="Ubah Jemaat"
                                   >
                                     <Edit2 className="w-3.5 h-3.5" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteJemaat(j.id)}
-                                    className="p-1 text-slate-500 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
+                                    className="p-1 text-black hover:text-black hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                                     title="Hapus Jemaat"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -5446,7 +5446,7 @@ export default function AdminView({
                   {editingJemaatId === 'new' ? 'Daftarkan Biodata Jemaat Baru' : 'Ubah Biodata Jemaat'}
                 </h3>
 
-                <p className="text-[11px] text-slate-500 font-medium">
+                <p className="text-[11px] text-black font-medium">
                   Formulir di bawah ini otomatis menyesuaikan dengan judul kolom tabel database jemaat Anda saat ini.
                 </p>
 
@@ -5455,12 +5455,12 @@ export default function AdminView({
                     if (col.key === 'nama') {
                       return (
                         <div key={col.key}>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">{col.label}</label>
+                          <label className="block text-xs font-semibold text-black mb-1.5">{col.label}</label>
                           <input
                             type="text"
                             value={jmNama}
                             onChange={(e) => setJmNama(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold transition-all"
                             placeholder="Contoh: Sahat Siregar"
                           />
                         </div>
@@ -5470,12 +5470,12 @@ export default function AdminView({
                     if (col.key === 'tanggalLahir') {
                       return (
                         <div key={col.key}>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">{col.label}</label>
+                          <label className="block text-xs font-semibold text-black mb-1.5">{col.label}</label>
                           <input
                             type="date"
                             value={jmTglLahir}
                             onChange={(e) => setJmTglLahir(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold transition-all"
                           />
                         </div>
                       );
@@ -5484,13 +5484,13 @@ export default function AdminView({
                     if (col.key === 'sektor') {
                       return (
                         <div key={col.key}>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">{col.label}</label>
+                          <label className="block text-xs font-semibold text-black mb-1.5">{col.label}</label>
                           <input
                             type="text"
                             list="sektor-suggestions"
                             value={jmSektor}
                             onChange={(e) => setJmSektor(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold transition-all"
                             placeholder="Pilih atau ketik sektor/wijk"
                           />
                           <datalist id="sektor-suggestions">
@@ -5509,12 +5509,12 @@ export default function AdminView({
                     if (col.key === 'noHP') {
                       return (
                         <div key={col.key}>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">{col.label}</label>
+                          <label className="block text-xs font-semibold text-black mb-1.5">{col.label}</label>
                           <input
                             type="text"
                             value={jmNoHP}
                             onChange={(e) => setJmNoHP(e.target.value)}
-                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold font-mono transition-all"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold font-mono transition-all"
                             placeholder="Contoh: 081234567890"
                           />
                         </div>
@@ -5525,7 +5525,7 @@ export default function AdminView({
                     return (
                       <div key={col.key} className="bg-[#F4F6FA] p-3 rounded-xl border border-slate-200">
                         <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-xs font-semibold text-slate-700">{col.label}</label>
+                          <label className="block text-xs font-semibold text-black">{col.label}</label>
                           <button
                             type="button"
                             onClick={() => {
@@ -5547,7 +5547,7 @@ export default function AdminView({
                               [col.key]: e.target.value
                             });
                           }}
-                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-black outline-none focus:border-[#0F2447] font-semibold transition-all"
                           placeholder={`Isi nilai untuk kolom ${col.label}`}
                         />
                       </div>
@@ -5559,12 +5559,12 @@ export default function AdminView({
                 <div className="pt-4 mt-4 bg-[#F4F6FA] p-4 rounded-xl border border-dashed border-[#CBD7EA]">
                   <div className="flex flex-col sm:flex-row items-end gap-3">
                     <div className="flex-1">
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Tambah Kolom Informasi Baru</label>
+                      <label className="block text-[10px] font-bold text-black uppercase tracking-wider mb-1.5">Tambah Kolom Informasi Baru</label>
                       <input
                         type="text"
                         placeholder="Nama Kolom Baru (contoh: Pekerjaan, Alamat, Status)"
                         id="new-column-name-input"
-                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold transition-all"
+                        className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold transition-all"
                       />
                     </div>
                     <button
@@ -5654,14 +5654,14 @@ export default function AdminView({
                     <div className="bg-[#F4F6FA] border border-slate-200 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1">
                         <h4 className="text-xs font-bold text-[#0F2447] uppercase tracking-wide">Format Kolom yang Didukung</h4>
-                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                        <p className="text-[11px] text-black font-medium leading-relaxed">
                           Sistem mendeteksi kolom secara otomatis. Pastikan file Excel Anda memiliki kolom header berikut:
                         </p>
                         <div className="flex flex-wrap gap-1.5 pt-1.5">
-                          <span className="text-[10px] font-bold bg-white text-slate-700 px-2 py-0.5 border border-slate-200 rounded-md">Nama Lengkap</span>
-                          <span className="text-[10px] font-bold bg-white text-slate-700 px-2 py-0.5 border border-slate-200 rounded-md">Sektor / Wijk</span>
-                          <span className="text-[10px] font-bold bg-white text-slate-700 px-2 py-0.5 border border-slate-200 rounded-md">Tanggal Lahir (YYYY-MM-DD)</span>
-                          <span className="text-[10px] font-bold bg-white text-slate-700 px-2 py-0.5 border border-slate-200 rounded-md">No HP / WhatsApp (Opsional)</span>
+                          <span className="text-[10px] font-bold bg-white text-black px-2 py-0.5 border border-slate-200 rounded-md">Nama Lengkap</span>
+                          <span className="text-[10px] font-bold bg-white text-black px-2 py-0.5 border border-slate-200 rounded-md">Sektor / Wijk</span>
+                          <span className="text-[10px] font-bold bg-white text-black px-2 py-0.5 border border-slate-200 rounded-md">Tanggal Lahir (YYYY-MM-DD)</span>
+                          <span className="text-[10px] font-bold bg-white text-black px-2 py-0.5 border border-slate-200 rounded-md">No HP / WhatsApp (Opsional)</span>
                         </div>
                       </div>
 
@@ -5677,7 +5677,7 @@ export default function AdminView({
 
                     {/* Drag Drop or Upload File Picker */}
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-700 block">Pilih Berkas Excel (.xlsx, .xls)</label>
+                      <label className="text-xs font-bold text-black block">Pilih Berkas Excel (.xlsx, .xls)</label>
                       <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-[#F4F6FA] hover:bg-[#EDF2F9] hover:border-[#0F2447] transition relative">
                         <input
                           type="file"
@@ -5689,7 +5689,7 @@ export default function AdminView({
                         <p className="text-xs font-bold text-[#0F2447]">
                           {excelFileName ? `Terpilih: ${excelFileName}` : 'Klik atau Seret Berkas Excel Ke Sini'}
                         </p>
-                        <p className="text-[10px] text-slate-500 font-semibold mt-1">Mendukung berkas Microsoft Excel .xlsx atau .xls</p>
+                        <p className="text-[10px] text-black font-semibold mt-1">Mendukung berkas Microsoft Excel .xlsx atau .xls</p>
                       </div>
                     </div>
 
@@ -5716,7 +5716,7 @@ export default function AdminView({
                               type="button"
                               onClick={() => setJemaatImportMode('append')}
                               className={`px-3 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                                jemaatImportMode === 'append' ? 'bg-[#0F2447] text-white shadow-xs' : 'text-slate-600 hover:text-[#0F2447]'
+                                jemaatImportMode === 'append' ? 'bg-[#0F2447] text-white shadow-xs' : 'text-black hover:text-black'
                               }`}
                             >
                               Gabungkan (Append)
@@ -5725,7 +5725,7 @@ export default function AdminView({
                               type="button"
                               onClick={() => setJemaatImportMode('overwrite')}
                               className={`px-3 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                                jemaatImportMode === 'overwrite' ? 'bg-[#0F2447] text-white shadow-xs' : 'text-slate-600 hover:text-[#0F2447]'
+                                jemaatImportMode === 'overwrite' ? 'bg-[#0F2447] text-white shadow-xs' : 'text-black hover:text-black'
                               }`}
                             >
                               Gantikan Semua (Overwrite)
@@ -5746,15 +5746,15 @@ export default function AdminView({
                             <tbody className="divide-y divide-slate-150 bg-white">
                               {parsedJemaatList.slice(0, 5).map((row, idx) => (
                                 <tr key={idx} className="hover:bg-slate-50">
-                                  <td className="p-2 font-semibold text-slate-800">{row.nama}</td>
-                                  <td className="p-2 font-semibold text-slate-600">{row.sektor}</td>
-                                  <td className="p-2 font-mono text-slate-500 text-[11px]">{row.tanggalLahir}</td>
-                                  <td className="p-2 font-mono text-slate-500 text-[11px]">{row.noHP || '-'}</td>
+                                  <td className="p-2 font-semibold text-black">{row.nama}</td>
+                                  <td className="p-2 font-semibold text-black">{row.sektor}</td>
+                                  <td className="p-2 font-mono text-black text-[11px]">{row.tanggalLahir}</td>
+                                  <td className="p-2 font-mono text-black text-[11px]">{row.noHP || '-'}</td>
                                 </tr>
                               ))}
                               {parsedJemaatList.length > 5 && (
                                 <tr>
-                                  <td colSpan={4} className="p-2 text-center text-[10px] text-slate-400 font-bold bg-slate-50 uppercase tracking-wider">
+                                  <td colSpan={4} className="p-2 text-center text-[10px] text-black font-bold bg-slate-50 uppercase tracking-wider">
                                     + {parsedJemaatList.length - 5} baris lainnya disembunyikan di preview
                                   </td>
                                 </tr>
@@ -5812,7 +5812,7 @@ export default function AdminView({
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Acara Minggu Aktif</span>
+                  <span className="text-[10px] text-black uppercase tracking-wider block font-semibold">Acara Minggu Aktif</span>
                   <span className="text-sm font-extrabold text-[#0F2447]">
                     {liturgiMinggu?.[0]?.pdfUrl ? '✓ Terunggah (PDF)' : '✗ Belum Ada PDF'}
                   </span>
@@ -5824,7 +5824,7 @@ export default function AdminView({
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Acara Partangiangan (PDF)</span>
+                  <span className="text-[10px] text-black uppercase tracking-wider block font-semibold">Acara Partangiangan (PDF)</span>
                   <span className="text-sm font-extrabold text-[#0F2447]">
                     {liturgiPartangiangan?.filter(l => l.pdfUrl).length || 0} Acara
                   </span>
@@ -5836,7 +5836,7 @@ export default function AdminView({
                   <Archive className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-600 uppercase tracking-wider block font-semibold">Arsip Berkas Permanen</span>
+                  <span className="text-[10px] text-black uppercase tracking-wider block font-semibold">Arsip Berkas Permanen</span>
                   <span className="text-sm font-extrabold text-[#0F2447]">
                     {arsipPdfs.length} Berkas
                   </span>
@@ -5848,7 +5848,7 @@ export default function AdminView({
             <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm">
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#0F2447]">1. Berkas PDF Acara Ibadah Jemaat Aktif</h3>
-                <p className="text-[10px] text-slate-500 mt-0.5">Daftar file PDF tata ibadah yang sedang aktif dan dapat diakses langsung oleh jemaat di aplikasi mobile.</p>
+                <p className="text-[10px] text-black mt-0.5">Daftar file PDF tata ibadah yang sedang aktif dan dapat diakses langsung oleh jemaat di aplikasi mobile.</p>
               </div>
 
               <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -5866,21 +5866,21 @@ export default function AdminView({
                     {/* Sunday */}
                     {liturgiMinggu?.map((lit) => (
                       <tr key={`minggu-${lit.id}`} className="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
-                        <td className="p-3 font-bold text-slate-900 flex items-center space-x-2">
+                        <td className="p-3 font-bold text-black flex items-center space-x-2">
                           <span className="w-2 h-2 rounded-full bg-[#0F2447] shrink-0"></span>
                           <span>{lit.judul} (Minggu)</span>
                         </td>
-                        <td className="p-3 text-slate-500 font-mono">{lit.tanggal}</td>
-                        <td className="p-3 text-slate-700 font-medium">
+                        <td className="p-3 text-black font-mono">{lit.tanggal}</td>
+                        <td className="p-3 text-black font-medium">
                           {lit.isPdfMode ? (
-                            <span className="text-slate-700 italic font-medium">{lit.uploadedPdfName || (lit.pdfUrl ? 'Tata_Ibadah_Minggu.pdf' : '-')}</span>
+                            <span className="text-black italic font-medium">{lit.uploadedPdfName || (lit.pdfUrl ? 'Tata_Ibadah_Minggu.pdf' : '-')}</span>
                           ) : (
                             <span className="text-[#0F2447] font-bold text-[10px] bg-[#EDF2F9] border border-[#CBD7EA] px-2 py-0.5 rounded-full">
                               Teks Manual ({lit.teksLiturgi?.length || 0} Langkah)
                             </span>
                           )}
                         </td>
-                        <td className="p-3 text-slate-500 font-mono">
+                        <td className="p-3 text-black font-mono">
                           {lit.isPdfMode ? (lit.uploadedPdfSize || (lit.pdfUrl ? '1.5 MB' : '-')) : '-'}
                         </td>
                         <td className="p-3 text-center">
@@ -5908,7 +5908,7 @@ export default function AdminView({
                             )}
                             <button
                               onClick={() => handleDeleteLiturgy(lit.id, 'minggu')}
-                              className="p-1 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded transition cursor-pointer shrink-0"
+                              className="p-1 bg-slate-100 hover:bg-[#EDF2F9] text-black hover:text-black border border-slate-200 rounded transition cursor-pointer shrink-0"
                               title="Hapus Acara"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -5921,21 +5921,21 @@ export default function AdminView({
                     {/* Partangiangan with PDFs or Manual text */}
                     {liturgiPartangiangan?.map((lit) => (
                       <tr key={`partangiangan-${lit.id}`} className="hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
-                        <td className="p-3 font-bold text-slate-900 flex items-center space-x-2">
+                        <td className="p-3 font-bold text-black flex items-center space-x-2">
                           <span className="w-2 h-2 rounded-full bg-[#4C6B9E] shrink-0"></span>
                           <span>{lit.judul} (Partangiangan)</span>
                         </td>
-                        <td className="p-3 text-slate-500 font-mono">{lit.tanggal}</td>
-                        <td className="p-3 text-slate-700 font-medium">
+                        <td className="p-3 text-black font-mono">{lit.tanggal}</td>
+                        <td className="p-3 text-black font-medium">
                           {lit.isPdfMode ? (
-                            <span className="text-slate-700 italic font-medium">{lit.uploadedPdfName || (lit.pdfUrl ? 'Tata_Ibadah_Partangiangan.pdf' : '-')}</span>
+                            <span className="text-black italic font-medium">{lit.uploadedPdfName || (lit.pdfUrl ? 'Tata_Ibadah_Partangiangan.pdf' : '-')}</span>
                           ) : (
                             <span className="text-[#0F2447] font-bold text-[10px] bg-[#EDF2F9] border border-[#CBD7EA] px-2 py-0.5 rounded-full">
                               Teks Manual ({lit.teksLiturgi?.length || 0} Langkah)
                             </span>
                           )}
                         </td>
-                        <td className="p-3 text-slate-500 font-mono">
+                        <td className="p-3 text-black font-mono">
                           {lit.isPdfMode ? (lit.uploadedPdfSize || (lit.pdfUrl ? '1.2 MB' : '-')) : '-'}
                         </td>
                         <td className="p-3 text-center">
@@ -5963,7 +5963,7 @@ export default function AdminView({
                             )}
                             <button
                               onClick={() => handleDeleteLiturgy(lit.id, 'partangiangan')}
-                              className="p-1 bg-slate-100 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-200 rounded transition cursor-pointer shrink-0"
+                              className="p-1 bg-slate-100 hover:bg-[#EDF2F9] text-black hover:text-black border border-slate-200 rounded transition cursor-pointer shrink-0"
                               title="Hapus Acara"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -5982,7 +5982,7 @@ export default function AdminView({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[#0F2447]">2. Perpustakaan & Arsip Berkas Digital Jemaat</h3>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Media penyimpanan berkas PDF per-minggu untuk Acara Ibadah, Jadwal Petugas, Warta Jemaat (Tingting), dan Laporan Keuangan.</p>
+                  <p className="text-[10px] text-black mt-0.5">Media penyimpanan berkas PDF per-minggu untuk Acara Ibadah, Jadwal Petugas, Warta Jemaat (Tingting), dan Laporan Keuangan.</p>
                 </div>
                 {!isAddingArsip && (
                   <button
@@ -6006,38 +6006,38 @@ export default function AdminView({
                 <div className="bg-[#F4F6FA] p-5 rounded-xl border border-slate-200 space-y-4 animate-fadeIn font-sans">
                   <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2">
                     <span className="text-xs font-bold uppercase text-[#0F2447]">Arsipkan Berkas Baru (Per Minggu)</span>
-                    <button onClick={() => setIsAddingArsip(false)} className="text-slate-500 hover:text-[#0F2447] cursor-pointer">
+                    <button onClick={() => setIsAddingArsip(false)} className="text-black hover:text-black cursor-pointer">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 uppercase mb-1">Judul Dokumen / Nama Berkas</label>
+                      <label className="block text-[10px] font-bold text-black uppercase mb-1">Judul Dokumen / Nama Berkas</label>
                       <input
                         type="text"
                         value={newArsipJudul}
                         onChange={(e) => setNewArsipJudul(e.target.value)}
                         placeholder="Contoh: AD/ART Huria HKBP atau Laporan Kas Minggu Ini"
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold shadow-sm"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold shadow-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 uppercase mb-1">Keterangan Singkat</label>
+                      <label className="block text-[10px] font-bold text-black uppercase mb-1">Keterangan Singkat</label>
                       <input
                         type="text"
                         value={newArsipKet}
                         onChange={(e) => setNewArsipKet(e.target.value)}
                         placeholder="Contoh: Berkas warta tingting jemaat periode minggu ini"
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold shadow-sm"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold shadow-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 uppercase mb-1">Kategori Arsip</label>
+                      <label className="block text-[10px] font-bold text-black uppercase mb-1">Kategori Arsip</label>
                       <select
                         value={newArsipKategori}
                         onChange={(e) => setNewArsipKategori(e.target.value as any)}
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold shadow-sm cursor-pointer"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold shadow-sm cursor-pointer"
                       >
                         <option value="acara">Acara Ibadah (Liturgy)</option>
                         <option value="petugas">Jadwal Petugas (Duty List)</option>
@@ -6046,12 +6046,12 @@ export default function AdminView({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-700 uppercase mb-1">Pilih Periode Hari Minggu</label>
+                      <label className="block text-[10px] font-bold text-black uppercase mb-1">Pilih Periode Hari Minggu</label>
                       <input
                         type="date"
                         value={newArsipTanggalMinggu}
                         onChange={(e) => setNewArsipTanggalMinggu(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-semibold shadow-sm cursor-pointer"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-semibold shadow-sm cursor-pointer"
                       />
                     </div>
                   </div>
@@ -6063,8 +6063,8 @@ export default function AdminView({
                         <div className="flex items-center space-x-2">
                           <FileText className="w-5 h-5 text-[#0F2447]" />
                           <div>
-                            <p className="text-xs font-bold text-slate-900 truncate max-w-[200px]">{newArsipFileName}</p>
-                            <p className="text-[10px] text-slate-500 font-semibold">{newArsipFileSize}</p>
+                            <p className="text-xs font-bold text-black truncate max-w-[200px]">{newArsipFileName}</p>
+                            <p className="text-[10px] text-black font-semibold">{newArsipFileSize}</p>
                           </div>
                         </div>
                         <button
@@ -6074,14 +6074,14 @@ export default function AdminView({
                             setNewArsipFileSize('');
                             setNewArsipPdfUrl('');
                           }}
-                          className="p-1 text-slate-500 hover:text-[#0F2447] rounded hover:bg-white cursor-pointer"
+                          className="p-1 text-black hover:text-black rounded hover:bg-white cursor-pointer"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center p-3">
-                        <span className="text-xs font-bold text-slate-500 mb-2">Unggah Dokumen Berkas (.pdf)</span>
+                        <span className="text-xs font-bold text-black mb-2">Unggah Dokumen Berkas (.pdf)</span>
                         <button
                           type="button"
                           onClick={() => document.getElementById('new-arsip-upload')?.click()}
@@ -6159,7 +6159,7 @@ export default function AdminView({
               {/* Category Filters and Search Bar */}
               <div className="bg-[#F4F6FA] border border-slate-200 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans mb-2">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-500 mr-1 uppercase">Filter Kategori:</span>
+                  <span className="text-xs font-bold text-black mr-1 uppercase">Filter Kategori:</span>
                   {[
                     { id: 'all', label: 'Semua' },
                     { id: 'acara', label: 'Acara Ibadah' },
@@ -6173,7 +6173,7 @@ export default function AdminView({
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                         archiveCategoryFilter === cat.id
                           ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-xs'
-                          : 'bg-white border-slate-300 text-slate-600 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                          : 'bg-white border-slate-300 text-black hover:bg-[#EDF2F9] hover:text-black'
                       }`}
                     >
                       {cat.label}
@@ -6188,7 +6188,7 @@ export default function AdminView({
                     value={archiveSearchQuery}
                     onChange={(e) => setArchiveSearchQuery(e.target.value)}
                     placeholder="Cari judul, keterangan, nama file..."
-                    className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 font-semibold outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15 shadow-sm"
+                    className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-black font-semibold outline-none focus:border-[#0F2447] focus:ring-2 focus:ring-[#0F2447]/15 shadow-sm"
                   />
                 </div>
               </div>
@@ -6222,9 +6222,9 @@ export default function AdminView({
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="bg-[#F4F6FA] border border-slate-200 rounded-2xl p-8 text-center text-slate-500 font-sans">
+                      <div className="bg-[#F4F6FA] border border-slate-200 rounded-2xl p-8 text-center text-black font-sans">
                         <Archive className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                        <p className="text-xs font-bold text-slate-600">Tidak ada dokumen yang cocok dengan filter pencarian Anda.</p>
+                        <p className="text-xs font-bold text-black">Tidak ada dokumen yang cocok dengan filter pencarian Anda.</p>
                       </div>
                     );
                   }
@@ -6278,11 +6278,11 @@ export default function AdminView({
                               <div key={doc.id} className="bg-[#F4F6FA]/70 border border-slate-200 p-4 rounded-xl hover:shadow-sm hover:border-[#CBD7EA] transition flex flex-col justify-between space-y-4 font-sans">
                                 <div className="space-y-1.5">
                                   <div className="flex items-start justify-between">
-                                    <div className="flex items-center space-x-2 text-slate-500">
+                                    <div className="flex items-center space-x-2 text-black">
                                       <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${catStyle}`}>
                                         {catLabel}
                                       </span>
-                                      <span className="text-[9px] font-mono text-slate-500 font-semibold">{doc.tanggalUpload}</span>
+                                      <span className="text-[9px] font-mono text-black font-semibold">{doc.tanggalUpload}</span>
                                     </div>
                                     {isPdf ? (
                                       <span className="text-[9px] bg-[#0F2447] text-white font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
@@ -6294,19 +6294,19 @@ export default function AdminView({
                                       </span>
                                     )}
                                   </div>
-                                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight leading-normal">{doc.judul}</h4>
-                                  <p className="text-[11px] text-slate-600 leading-relaxed font-sans">{doc.keterangan}</p>
+                                  <h4 className="text-xs font-bold text-black uppercase tracking-tight leading-normal">{doc.judul}</h4>
+                                  <p className="text-[11px] text-black leading-relaxed font-sans">{doc.keterangan}</p>
                                   
                                   <div className="bg-white p-2 rounded border border-slate-200 flex items-center space-x-2 text-[10px]">
                                     <FileText className="w-3.5 h-3.5 text-[#0F2447]" />
                                     {isPdf ? (
                                       <>
-                                        <span className="text-slate-700 truncate max-w-[150px] font-mono">{doc.fileName || 'berkas_arsip.pdf'}</span>
-                                        <span className="text-slate-300">•</span>
-                                        <span className="text-slate-500 font-mono">{doc.fileSize || '1.0 MB'}</span>
+                                        <span className="text-black truncate max-w-[150px] font-mono">{doc.fileName || 'berkas_arsip.pdf'}</span>
+                                        <span className="text-black">•</span>
+                                        <span className="text-black font-mono">{doc.fileSize || '1.0 MB'}</span>
                                       </>
                                     ) : (
-                                      <span className="text-slate-700 font-medium">
+                                      <span className="text-black font-medium">
                                         {doc.kategori === 'warta' 
                                           ? `Arsip Teks Warta (${doc.penulis || 'Huria'})`
                                           : doc.kategori === 'petugas'
@@ -6332,7 +6332,7 @@ export default function AdminView({
                                         <span>Unduh Berkas</span>
                                       </a>
                                     ) : (
-                                      <span className="text-[10px] text-slate-400 italic">Katalog Berkas</span>
+                                      <span className="text-[10px] text-black italic">Katalog Berkas</span>
                                     )
                                   ) : (
                                     <button
@@ -6382,7 +6382,7 @@ export default function AdminView({
                                           }
                                         );
                                       }}
-                                      className="p-1.5 bg-white hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-300 rounded transition cursor-pointer"
+                                      className="p-1.5 bg-white hover:bg-[#EDF2F9] text-black hover:text-black border border-slate-300 rounded transition cursor-pointer"
                                       title="Hapus dari Arsip"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
@@ -6503,7 +6503,7 @@ export default function AdminView({
             {/* Stats Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">Total Lagu</span>
+                <span className="text-[10px] text-black uppercase tracking-wider block font-bold">Total Lagu</span>
                 <span className="text-xl font-extrabold text-[#0F2447]">{bukuNyanyianDb.length} Lagu</span>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
@@ -6536,7 +6536,7 @@ export default function AdminView({
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer shrink-0 border ${
                       songCatalogFilter === kat
                         ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
-                        : 'bg-[#F4F6FA] text-slate-600 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                        : 'bg-[#F4F6FA] text-black border-slate-200 hover:bg-[#EDF2F9] hover:text-black'
                     }`}
                   >
                     {kat === 'ALL' ? 'Semua Buku' : kat === 'BE' ? 'Buku Ende (BE)' : kat === 'BN' ? 'Buku Nyanyian (BN)' : 'Kidung Jemaat (KJ)'}
@@ -6551,7 +6551,7 @@ export default function AdminView({
                   value={songCatalogSearch}
                   onChange={(e) => setSongCatalogSearch(e.target.value)}
                   placeholder="Cari nomor lagu (10), judul, atau lirik..."
-                  className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-800 outline-none focus:bg-white focus:border-[#0F2447] font-medium"
+                  className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-black outline-none focus:bg-white focus:border-[#0F2447] font-medium"
                 />
               </div>
             </div>
@@ -6584,16 +6584,16 @@ export default function AdminView({
                           <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-lg border bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]">
                             {song.kategori} No. {song.nomor}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-medium">
+                          <span className="text-[10px] text-black font-medium">
                             {song.ayatList.length} Ayat
                           </span>
                         </div>
 
-                        <h4 className="text-sm font-bold text-slate-900 leading-snug">
+                        <h4 className="text-sm font-bold text-black leading-snug">
                           {song.judul}
                         </h4>
 
-                        <p className="text-[11px] text-slate-500 mt-2 line-clamp-2 italic">
+                        <p className="text-[11px] text-black mt-2 line-clamp-2 italic">
                           &quot;{song.ayatList[0]?.teks.replace(/\n/g, ' ')}&quot;
                         </p>
                       </div>
@@ -6607,7 +6607,7 @@ export default function AdminView({
                         </button>
                         <button
                           onClick={() => handleDeleteSongFromDb(song.id)}
-                          className="p-1 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded transition cursor-pointer"
+                          className="p-1 text-black hover:text-black hover:bg-[#EDF2F9] rounded transition cursor-pointer"
                           title="Hapus Lagu dari DB"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -6618,7 +6618,7 @@ export default function AdminView({
                         <div className="mt-3 pt-3 border-t border-slate-100 space-y-3">
                           {/* Ayat Tester */}
                           <div className="bg-[#F4F6FA] p-2.5 rounded-xl border border-slate-200">
-                            <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                            <label className="block text-[10px] font-bold text-black uppercase mb-1">
                               Simulasi Pengambilan Ayat:
                             </label>
                             <input
@@ -6626,20 +6626,20 @@ export default function AdminView({
                               value={testRange}
                               onChange={(e) => setTestSongVerseRange({ ...testSongVerseRange, [song.id]: e.target.value })}
                               placeholder="Contoh: 1-2 atau 1 & 3"
-                              className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 font-mono font-bold focus:border-[#0F2447] outline-none"
+                              className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs text-black font-mono font-bold focus:border-[#0F2447] outline-none"
                             />
-                            <div className="mt-2 p-2 bg-white rounded border border-slate-200 text-[11px] font-mono whitespace-pre-line text-slate-700 max-h-40 overflow-y-auto">
+                            <div className="mt-2 p-2 bg-white rounded border border-slate-200 text-[11px] font-mono whitespace-pre-line text-black max-h-40 overflow-y-auto">
                               {formattedPreview.lyrics || 'Tidak ada ayat cocok.'}
                             </div>
                           </div>
 
                           {/* All verses list */}
                           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase block">Semua Bait / Ayat:</span>
+                            <span className="text-[10px] font-bold text-black uppercase block">Semua Bait / Ayat:</span>
                             {song.ayatList.map(v => (
                               <div key={v.ayat} className="p-2 bg-[#F4F6FA] rounded-lg border border-slate-200 text-[11px]">
                                 <span className="font-bold text-[#0F2447] block mb-0.5">Ayat {v.ayat}:</span>
-                                <p className="text-slate-700 whitespace-pre-line font-mono">{v.teks}</p>
+                                <p className="text-black whitespace-pre-line font-mono">{v.teks}</p>
                               </div>
                             ))}
                           </div>
@@ -6671,7 +6671,7 @@ export default function AdminView({
                           <Music className="w-3.5 h-3.5 text-[#0F2447]" />
                           <span>Ditemukan di Katalog Resmi HKBP (hkbp.or.id/buku-ende)</span>
                         </h4>
-                        <p className="text-[11px] text-slate-600 mt-0.5">
+                        <p className="text-[11px] text-black mt-0.5">
                           Lagu resmi berikut tersedia di portal HKBP dan lirik aslinya dapat diunduh sekali klik:
                         </p>
                       </div>
@@ -6683,7 +6683,7 @@ export default function AdminView({
                             <span className="text-[10px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-2 py-0.5 rounded">
                               BE {item.nomorLagu}
                             </span>
-                            <h5 className="text-xs font-bold text-slate-900 mt-1 line-clamp-1">{item.judul}</h5>
+                            <h5 className="text-xs font-bold text-black mt-1 line-clamp-1">{item.judul}</h5>
                           </div>
                           <button
                             type="button"
@@ -6725,9 +6725,9 @@ export default function AdminView({
             
             <div className="space-y-4 max-w-xl">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 block">Kebaktian Sekolah Minggu</label>
+                <label className="text-xs font-bold text-black block">Kebaktian Sekolah Minggu</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-slate-400">
+                  <span className="absolute left-3 top-2.5 text-black">
                     <Clock className="w-4 h-4" />
                   </span>
                   <input
@@ -6735,15 +6735,15 @@ export default function AdminView({
                     value={editSekolahMinggu}
                     onChange={(e) => setEditSekolahMinggu(e.target.value)}
                     placeholder="Contoh: 07.30 WIB"
-                    className="w-full pl-9 pr-4 py-2 bg-[#F4F6FA] border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2 bg-[#F4F6FA] border border-slate-300 rounded-xl text-xs font-bold text-black focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all outline-none"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 block">Kebaktian Shift 1 (Umum / Pagi)</label>
+                <label className="text-xs font-bold text-black block">Kebaktian Shift 1 (Umum / Pagi)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-slate-400">
+                  <span className="absolute left-3 top-2.5 text-black">
                     <Clock className="w-4 h-4" />
                   </span>
                   <input
@@ -6751,15 +6751,15 @@ export default function AdminView({
                     value={editShift1}
                     onChange={(e) => setEditShift1(e.target.value)}
                     placeholder="Contoh: 08.00 WIB"
-                    className="w-full pl-9 pr-4 py-2 bg-[#F4F6FA] border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2 bg-[#F4F6FA] border border-slate-300 rounded-xl text-xs font-bold text-black focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all outline-none"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 block">Kebaktian Shift 2 (Umum / Siang)</label>
+                <label className="text-xs font-bold text-black block">Kebaktian Shift 2 (Umum / Siang)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-slate-400">
+                  <span className="absolute left-3 top-2.5 text-black">
                     <Clock className="w-4 h-4" />
                   </span>
                   <input
@@ -6767,7 +6767,7 @@ export default function AdminView({
                     value={editShift2}
                     onChange={(e) => setEditShift2(e.target.value)}
                     placeholder="Contoh: 10.00 WIB"
-                    className="w-full pl-9 pr-4 py-2 bg-[#F4F6FA] border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all outline-none"
+                    className="w-full pl-9 pr-4 py-2 bg-[#F4F6FA] border border-slate-300 rounded-xl text-xs font-bold text-black focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all outline-none"
                   />
                 </div>
               </div>
@@ -6831,34 +6831,34 @@ export default function AdminView({
                 <div className="grid grid-cols-1 gap-4">
                   {/* Judul */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Judul Konten/Informasi</label>
+                    <label className="text-xs font-bold text-black">Judul Konten/Informasi</label>
                     <input
                       type="text"
                       value={tentangFormJudul}
                       onChange={(e) => setTentangFormJudul(e.target.value)}
                       placeholder="Contoh: Sejarah Singkat Gereja, Visi & Misi, Renovasi Altar..."
-                      className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none"
+                      className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-black focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none"
                     />
                   </div>
  
                   {/* Isi */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Isi Konten/Informasi</label>
+                    <label className="text-xs font-bold text-black">Isi Konten/Informasi</label>
                     <textarea
                       rows={8}
                       value={tentangFormIsi}
                       onChange={(e) => setTentangFormIsi(e.target.value)}
                       placeholder="Ketik deskripsi atau narasi lengkap di sini..."
-                      className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 leading-relaxed focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none resize-y"
+                      className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-black leading-relaxed focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none resize-y"
                     />
-                    <p className="text-[10px] text-slate-400 italic">
+                    <p className="text-[10px] text-black italic">
                       * Petunjuk: Pisahkan paragraf dengan menekan tombol Enter dua kali agar terformat rapi.
                     </p>
                   </div>
  
                   {/* Upload Gambar */}
                   <div className="space-y-3.5 border-t border-slate-200 pt-3">
-                    <label className="text-xs font-bold text-slate-700 block">Gambar Dokumentasi (Opsional)</label>
+                    <label className="text-xs font-bold text-black block">Gambar Dokumentasi (Opsional)</label>
                     
                     {tentangFormGambar ? (
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
@@ -6877,7 +6877,7 @@ export default function AdminView({
                               setTentangFormJudulGambar('');
                               setTentangFormKeteranganGambar('');
                             }}
-                            className="w-full px-2.5 py-1.5 bg-slate-100 text-slate-700 hover:bg-[#EDF2F9] hover:text-[#0F2447] border border-slate-300 rounded-lg text-[10px] font-semibold transition flex items-center justify-center space-x-1 cursor-pointer"
+                            className="w-full px-2.5 py-1.5 bg-slate-100 text-black hover:bg-[#EDF2F9] hover:text-black border border-slate-300 rounded-lg text-[10px] font-semibold transition flex items-center justify-center space-x-1 cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>Hapus Gambar</span>
@@ -6886,24 +6886,24 @@ export default function AdminView({
 
                         <div className="md:col-span-2 space-y-3">
                           <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-600 block">Judul Gambar / Caption Singkat</label>
+                            <label className="text-[11px] font-bold text-black block">Judul Gambar / Caption Singkat</label>
                             <input
                               type="text"
                               value={tentangFormJudulGambar}
                               onChange={(e) => setTentangFormJudulGambar(e.target.value)}
                               placeholder="Contoh: Gedung Depan Gereja, Penyerahan Bantuan..."
-                              className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none"
+                              className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-black focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none"
                             />
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-slate-600 block">Keterangan / Deskripsi Gambar</label>
+                            <label className="text-[11px] font-bold text-black block">Keterangan / Deskripsi Gambar</label>
                             <textarea
                               rows={3}
                               value={tentangFormKeteranganGambar}
                               onChange={(e) => setTentangFormKeteranganGambar(e.target.value)}
                               placeholder="Contoh: Diambil pada acara ulang tahun gereja ke-50..."
-                              className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-slate-800 leading-relaxed focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none resize-none"
+                              className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-black leading-relaxed focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none resize-none"
                             />
                           </div>
                         </div>
@@ -6918,7 +6918,7 @@ export default function AdminView({
                         />
                         <Upload className="w-5 h-5 text-[#0F2447] mx-auto mb-1.5" />
                         <p className="text-xs font-bold text-[#0F2447]">Klik atau seret gambar ke sini</p>
-                        <p className="text-[9px] text-slate-400">PNG, JPG, atau JPEG up to 2MB</p>
+                        <p className="text-[9px] text-black">PNG, JPG, atau JPEG up to 2MB</p>
                       </div>
                     )}
                   </div>
@@ -7010,12 +7010,12 @@ export default function AdminView({
                         </div>
                       )}
                       <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-slate-900">{item.judul}</h4>
-                        <p className="text-[10px] text-slate-500 font-medium line-clamp-2 leading-relaxed">
+                        <h4 className="text-xs font-bold text-black">{item.judul}</h4>
+                        <p className="text-[10px] text-black font-medium line-clamp-2 leading-relaxed">
                           {item.isi}
                         </p>
                         {item.tanggalUpdate && (
-                          <span className="inline-block text-[9px] font-medium text-slate-400 font-mono">
+                          <span className="inline-block text-[9px] font-medium text-black font-mono">
                             Update: {item.tanggalUpdate}
                           </span>
                         )}
@@ -7052,7 +7052,7 @@ export default function AdminView({
                             }
                           );
                         }}
-                        className="p-2 bg-slate-100 text-slate-600 hover:bg-[#EDF2F9] hover:text-[#0F2447] border border-slate-200 rounded-lg transition cursor-pointer"
+                        className="p-2 bg-slate-100 text-black hover:bg-[#EDF2F9] hover:text-black border border-slate-200 rounded-lg transition cursor-pointer"
                         title="Hapus Konten"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -7062,7 +7062,7 @@ export default function AdminView({
                 ))}
  
                 {tentangGerejaList.length === 0 && (
-                  <div className="text-center py-12 text-slate-400 text-xs italic">
+                  <div className="text-center py-12 text-black text-xs italic">
                     Belum ada konten informasi. Klik "Tambah Informasi Baru" di atas untuk menambahkan profil gereja, visi misi, sejarah, dll.
                   </div>
                 )}
@@ -7108,35 +7108,35 @@ export default function AdminView({
                 
                 <div className="grid grid-cols-1 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-700 block">Nama Lengkap (Serta Gelar)</label>
+                    <label className="text-[11px] font-bold text-black block">Nama Lengkap (Serta Gelar)</label>
                     <input
                       type="text"
                       value={parhaladoFormNama}
                       onChange={(e) => setParhaladoFormNama(e.target.value)}
                       placeholder="Contoh: St. K. Pasaribu"
-                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-black outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-700 block">Jabatan / Sektor Pelayanan</label>
+                    <label className="text-[11px] font-bold text-black block">Jabatan / Sektor Pelayanan</label>
                     <input
                       type="text"
                       value={parhaladoFormJabatan}
                       onChange={(e) => setParhaladoFormJabatan(e.target.value)}
                       placeholder="Contoh: Sekretaris Jemaat / Sintua Sektor II"
-                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-black outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-700 block">Nomor Telepon / WhatsApp</label>
+                    <label className="text-[11px] font-bold text-black block">Nomor Telepon / WhatsApp</label>
                     <input
                       type="text"
                       value={parhaladoFormNoTelp}
                       onChange={(e) => setParhaladoFormNoTelp(e.target.value)}
                       placeholder="Contoh: 08123456789"
-                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
+                      className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-black outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                     />
                   </div>
                 </div>
@@ -7214,9 +7214,9 @@ export default function AdminView({
                   {parhaladoList.length > 0 ? (
                     parhaladoList.map((member) => (
                       <tr key={member.id} className="hover:bg-slate-50/50 transition">
-                        <td className="p-3.5 font-bold text-slate-900">{member.nama}</td>
-                        <td className="p-3.5 font-semibold text-slate-600">{member.jabatan}</td>
-                        <td className="p-3.5 font-semibold text-slate-500 font-mono">{member.noTelp || '-'}</td>
+                        <td className="p-3.5 font-bold text-black">{member.nama}</td>
+                        <td className="p-3.5 font-semibold text-black">{member.jabatan}</td>
+                        <td className="p-3.5 font-semibold text-black font-mono">{member.noTelp || '-'}</td>
                         <td className="p-3.5 text-right">
                           <div className="flex items-center justify-end space-x-1.5">
                             <button
@@ -7246,7 +7246,7 @@ export default function AdminView({
                                   }
                                 );
                               }}
-                              className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] rounded transition cursor-pointer"
+                              className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black rounded transition cursor-pointer"
                               title="Hapus"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -7257,7 +7257,7 @@ export default function AdminView({
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="p-6 text-slate-400 text-center italic">Tidak ada data pelayan parhalado.</td>
+                      <td colSpan={4} className="p-6 text-black text-center italic">Tidak ada data pelayan parhalado.</td>
                     </tr>
                   )}
                 </tbody>
@@ -7274,7 +7274,7 @@ export default function AdminView({
             {/* MANAGE DATABASE OF ACCOUNTS */}
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-3">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+                <h3 className="text-sm font-bold text-black uppercase tracking-wider flex items-center space-x-2">
                   <Database className="w-4 h-4 text-[#0F2447]" />
                   <span>Daftar Akun Pengguna</span>
                 </h3>
@@ -7308,43 +7308,43 @@ export default function AdminView({
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-700 block">Username</label>
+                      <label className="text-[11px] font-bold text-black block">Username</label>
                       <input
                         type="text"
                         value={accountFormUsername}
                         onChange={(e) => setAccountFormUsername(e.target.value)}
                         placeholder="Masukkan username"
                         disabled={editingAccountIdx !== null}
-                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] disabled:opacity-50 disabled:bg-slate-100 transition-all"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-black outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] disabled:opacity-50 disabled:bg-slate-100 transition-all"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-700 block">Alamat Email</label>
+                      <label className="text-[11px] font-bold text-black block">Alamat Email</label>
                       <input
                         type="email"
                         value={accountFormEmail}
                         onChange={(e) => setAccountFormEmail(e.target.value)}
                         placeholder="administrator@hkbp.or.id"
                         disabled={editingAccountIdx !== null}
-                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] disabled:opacity-50 disabled:bg-slate-100 transition-all"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-black outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] disabled:opacity-50 disabled:bg-slate-100 transition-all"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-700 block">Password Keamanan</label>
+                      <label className="text-[11px] font-bold text-black block">Password Keamanan</label>
                       <div className="relative">
                         <input
                           type={showFormPassword ? "text" : "password"}
                           value={accountFormPassword}
                           onChange={(e) => setAccountFormPassword(e.target.value)}
                           placeholder="••••••••"
-                          className="w-full pl-3.5 pr-10 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
+                          className="w-full pl-3.5 pr-10 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-black outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                         />
                         <button
                           type="button"
                           onClick={() => setShowFormPassword(!showFormPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0F2447] cursor-pointer p-0.5 flex items-center justify-center rounded-md hover:bg-[#EDF2F9] transition"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-black cursor-pointer p-0.5 flex items-center justify-center rounded-md hover:bg-[#EDF2F9] transition"
                           title={showFormPassword ? "Sembunyikan Password" : "Tampilkan Password"}
                         >
                           {showFormPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -7353,19 +7353,19 @@ export default function AdminView({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-700 block">Nama Gereja</label>
+                      <label className="text-[11px] font-bold text-black block">Nama Gereja</label>
                       <input
                         type="text"
                         value={accountFormNamaGereja}
                         onChange={(e) => setAccountFormNamaGereja(e.target.value)}
                         placeholder="Contoh: HKBP Hinalang Silalahi"
-                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-black outline-none focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-700 block">Status / Level Akses</label>
+                    <label className="text-[11px] font-bold text-black block">Status / Level Akses</label>
                     <div className="grid grid-cols-2 gap-2 max-w-xs">
                       <button
                         type="button"
@@ -7373,7 +7373,7 @@ export default function AdminView({
                         className={`py-2 rounded-xl border text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
                           accountFormStatus === 'ruas'
                             ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-xs'
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                            : 'bg-white border-slate-200 text-black hover:bg-[#EDF2F9] hover:text-black'
                         }`}
                       >
                         <User className="w-3.5 h-3.5" />
@@ -7386,7 +7386,7 @@ export default function AdminView({
                         className={`py-2 rounded-xl border text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
                           accountFormStatus === 'parhalado'
                             ? 'bg-[#0F2447] border-[#0F2447] text-white shadow-xs'
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                            : 'bg-white border-slate-200 text-black hover:bg-[#EDF2F9] hover:text-black'
                         }`}
                       >
                         <Shield className="w-3.5 h-3.5" />
@@ -7412,7 +7412,7 @@ export default function AdminView({
                         setEditingAccountIdx(null);
                         setShowFormPassword(false);
                       }}
-                      className="px-4 py-2 bg-white hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] border border-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
+                      className="px-4 py-2 bg-white hover:bg-[#EDF2F9] text-black hover:text-black border border-slate-300 rounded-xl text-xs font-semibold transition cursor-pointer"
                     >
                       Batal
                     </button>
@@ -7438,9 +7438,9 @@ export default function AdminView({
                     {accountsList.length > 0 ? (
                       accountsList.map((acc, index) => (
                         <tr key={acc.username + '_' + index} className={`transition ${acc.isActive === false ? 'bg-slate-50/70 opacity-75' : 'hover:bg-slate-50/50'}`}>
-                          <td className="p-3.5 font-black text-slate-900">{acc.username}</td>
-                          <td className="p-3.5 font-bold text-slate-600">{acc.email}</td>
-                          <td className="p-3.5 font-medium text-slate-500 font-mono">
+                          <td className="p-3.5 font-black text-black">{acc.username}</td>
+                          <td className="p-3.5 font-bold text-black">{acc.email}</td>
+                          <td className="p-3.5 font-medium text-black font-mono">
                             {acc.password ? (
                               <div className="flex items-center space-x-2">
                                 <span className={showPasswordMap[acc.username] ? "" : "tracking-widest text-[10px]"}>
@@ -7449,17 +7449,17 @@ export default function AdminView({
                                 <button
                                   type="button"
                                   onClick={() => setShowPasswordMap(prev => ({ ...prev, [acc.username]: !prev[acc.username] }))}
-                                  className="text-slate-400 hover:text-slate-600 transition p-0.5 cursor-pointer flex items-center justify-center rounded hover:bg-slate-100"
+                                  className="text-black hover:text-black transition p-0.5 cursor-pointer flex items-center justify-center rounded hover:bg-slate-100"
                                   title={showPasswordMap[acc.username] ? "Sembunyikan Password" : "Tampilkan Password"}
                                 >
                                   {showPasswordMap[acc.username] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-slate-300 italic">No password</span>
+                              <span className="text-black italic">No password</span>
                             )}
                           </td>
-                          <td className="p-3.5 font-bold text-slate-600">{acc.namaGereja || 'HKBP Hinalang Silalahi'}</td>
+                          <td className="p-3.5 font-bold text-black">{acc.namaGereja || 'HKBP Hinalang Silalahi'}</td>
                           <td className="p-3.5 font-bold">
                             <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider border ${
                               acc.status === 'parhalado' 
@@ -7472,7 +7472,7 @@ export default function AdminView({
                           <td className="p-3.5 font-bold">
                             <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider border ${
                               acc.isActive === false
-                                ? 'bg-slate-100 border-slate-300 text-slate-500'
+                                ? 'bg-slate-100 border-slate-300 text-black'
                                 : 'bg-[#EDF2F9] border-[#CBD7EA] text-[#0F2447]'
                             }`}>
                               {acc.isActive === false ? 'Nonaktif' : 'Aktif'}
@@ -7491,7 +7491,7 @@ export default function AdminView({
                                   setAccountFormStatus(acc.status || 'ruas');
                                   setIsAddingAccount(false);
                                 }}
-                                className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] rounded-lg transition cursor-pointer"
+                                className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black rounded-lg transition cursor-pointer"
                                 title="Sunting"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
@@ -7504,8 +7504,8 @@ export default function AdminView({
                                   disabled={acc.username === 'admin'}
                                   className={`p-1.5 rounded-lg transition cursor-pointer ${
                                     acc.username === 'admin' 
-                                      ? 'bg-slate-100 border border-slate-200 text-slate-300 cursor-not-allowed'
-                                      : 'bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447]'
+                                      ? 'bg-slate-100 border border-slate-200 text-black cursor-not-allowed'
+                                      : 'bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black'
                                   }`}
                                   title={acc.username === 'admin' ? 'Admin utama tidak bisa dinonaktifkan' : 'Nonaktifkan Akun'}
                                 >
@@ -7524,7 +7524,7 @@ export default function AdminView({
                                   <button
                                     type="button"
                                     onClick={() => handlePermanentDeleteAccount(index)}
-                                    className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-slate-600 hover:text-[#0F2447] rounded-lg transition cursor-pointer"
+                                    className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black rounded-lg transition cursor-pointer"
                                     title="Hapus Permanen Dari Database"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -7537,7 +7537,7 @@ export default function AdminView({
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={7} className="p-6 text-slate-400 text-center italic">Tidak ada database akun terdaftar.</td>
+                        <td colSpan={7} className="p-6 text-black text-center italic">Tidak ada database akun terdaftar.</td>
                       </tr>
                     )}
                   </tbody>
@@ -7558,15 +7558,15 @@ export default function AdminView({
               <div className="p-2.5 bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl">
                 <AlertCircle className="w-6 h-6 text-[#0F2447]" />
               </div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">{confirmDialog.title}</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-black">{confirmDialog.title}</h3>
             </div>
-            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            <p className="text-xs text-black font-medium leading-relaxed">
               {confirmDialog.message}
             </p>
             <div className="flex items-center justify-end space-x-2 pt-2">
               <button
                 onClick={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2 bg-white hover:bg-[#EDF2F9] border border-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-4 py-2 bg-white hover:bg-[#EDF2F9] border border-slate-300 text-black rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 Batal
               </button>
@@ -7620,16 +7620,16 @@ export default function AdminView({
                       ? 'Arsip Transaksi Kas'
                       : 'Arsip Tata Ibadah'}
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono">
+                  <span className="text-[10px] text-black font-mono">
                     {previewManualLit.tanggalMinggu || previewManualLit.tanggalUpload || previewManualLit.tanggal}
                   </span>
                 </div>
                 <h3 className="text-sm font-bold text-slate-950 mt-1.5 leading-tight">{previewManualLit.judul}</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{previewManualLit.keterangan}</p>
+                <p className="text-[11px] text-black mt-0.5 leading-relaxed">{previewManualLit.keterangan}</p>
               </div>
               <button
                 onClick={() => setPreviewManualLit(null)}
-                className="p-2 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
+                className="p-2 text-black hover:text-black hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
                 title="Tutup"
               >
                 <X className="w-5 h-5" />
@@ -7643,12 +7643,12 @@ export default function AdminView({
                 <div className="p-3 bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl space-y-1.5">
                   {previewManualLit.ayatReferensi && (
                     <div className="text-xs text-[#0F2447] font-bold">
-                      Epistel: <span className="font-medium text-slate-700">{previewManualLit.ayatReferensi}</span>
+                      Epistel: <span className="font-medium text-black">{previewManualLit.ayatReferensi}</span>
                     </div>
                   )}
                   {previewManualLit.ayatBacaan && (
                     <div className="text-xs text-[#0F2447] font-bold">
-                      Khotbah: <span className="font-medium text-slate-700">{previewManualLit.ayatBacaan}</span>
+                      Khotbah: <span className="font-medium text-black">{previewManualLit.ayatBacaan}</span>
                     </div>
                   )}
                 </div>
@@ -7662,7 +7662,7 @@ export default function AdminView({
                       <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
                         <h4 className="text-xs font-bold text-[#0F2447]">{step.label}</h4>
                       </div>
-                      <p className="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-sans">
+                      <p className="text-xs text-black whitespace-pre-line leading-relaxed font-sans">
                         {step.isi}
                       </p>
                     </div>
@@ -7674,7 +7674,7 @@ export default function AdminView({
               {previewManualLit.isiWarta && (
                 <div className="p-4 bg-[#F4F6FA] border border-slate-200 rounded-2xl space-y-2">
                   <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-black uppercase tracking-wider">
                       Penulis: {previewManualLit.penulis || 'Sekretaris Huria'}
                     </span>
                     {previewManualLit.kategoriWarta && (
@@ -7683,7 +7683,7 @@ export default function AdminView({
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-800 whitespace-pre-line leading-relaxed font-sans pt-1">
+                  <p className="text-xs text-black whitespace-pre-line leading-relaxed font-sans pt-1">
                     {previewManualLit.isiWarta}
                   </p>
                 </div>
@@ -7701,10 +7701,10 @@ export default function AdminView({
                         <th className="p-2.5">Sekolah Minggu</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-800">
+                    <tbody className="divide-y divide-slate-100 text-black">
                       {previewManualLit.petugasMingguData.map((row: any, rIdx: number) => (
                         <tr key={rIdx} className="hover:bg-[#F4F6FA]">
-                          <td className="p-2.5 font-bold text-slate-900">{row.tugas}</td>
+                          <td className="p-2.5 font-bold text-black">{row.tugas}</td>
                           <td className="p-2.5">{row.shift1 || '-'}</td>
                           <td className="p-2.5">{row.shift2 || '-'}</td>
                           <td className="p-2.5">{row.sekolahMinggu || '-'}</td>
@@ -7729,7 +7729,7 @@ export default function AdminView({
                         <th className="p-2">Ende</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-800 text-[11px]">
+                    <tbody className="divide-y divide-slate-100 text-black text-[11px]">
                       {previewManualLit.petugasPartangianganData.map((row: any, rIdx: number) => (
                         <tr key={rIdx} className="hover:bg-[#F4F6FA]">
                           <td className="p-2 font-bold">{row.hari}</td>
@@ -7760,7 +7760,7 @@ export default function AdminView({
                         <th className="p-2">Parhalado</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-800 text-[11px]">
+                    <tbody className="divide-y divide-slate-100 text-black text-[11px]">
                       {previewManualLit.attendanceData.map((row: any, rIdx: number) => (
                         <tr key={rIdx} className="hover:bg-[#F4F6FA]">
                           <td className="p-2 font-bold">{row.hari}</td>
@@ -7781,20 +7781,20 @@ export default function AdminView({
               {previewManualLit.transaksiData && (
                 <div className="p-4 bg-[#F4F6FA] border border-slate-200 rounded-2xl space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700">Tipe Transaksi:</span>
+                    <span className="text-xs font-bold text-black">Tipe Transaksi:</span>
                     <span className="text-xs font-bold uppercase px-2 py-0.5 rounded bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447]">
                       {previewManualLit.transaksiData.tipe}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700">Jumlah:</span>
+                    <span className="text-xs font-bold text-black">Jumlah:</span>
                     <span className="text-sm font-bold font-mono text-[#0F2447]">
                       Rp {Number(previewManualLit.transaksiData.jumlah || 0).toLocaleString('id-ID')}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700">Kategori Kas:</span>
-                    <span className="text-xs font-medium text-slate-800">
+                    <span className="text-xs font-bold text-black">Kategori Kas:</span>
+                    <span className="text-xs font-medium text-black">
                       {previewManualLit.transaksiData.kategori} ({previewManualLit.transaksiData.tipeKas || 'Kas Huria'})
                     </span>
                   </div>
@@ -7802,7 +7802,7 @@ export default function AdminView({
               )}
 
               {!previewManualLit.teksLiturgi && !previewManualLit.isiWarta && !previewManualLit.petugasMingguData && !previewManualLit.petugasPartangianganData && !previewManualLit.attendanceData && !previewManualLit.transaksiData && (
-                <p className="text-xs text-slate-600 leading-relaxed font-sans">{previewManualLit.keterangan}</p>
+                <p className="text-xs text-black leading-relaxed font-sans">{previewManualLit.keterangan}</p>
               )}
             </div>
             
@@ -7848,13 +7848,13 @@ export default function AdminView({
                   <Music className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">Input Nomor & Ayat Lagu</h3>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Membaca data lagu & lirik otomatis untuk Acara #{songPickerStepIndex + 1}</p>
+                  <h3 className="text-sm font-bold text-black">Input Nomor & Ayat Lagu</h3>
+                  <p className="text-[10px] text-black mt-0.5">Membaca data lagu & lirik otomatis untuk Acara #{songPickerStepIndex + 1}</p>
                 </div>
               </div>
               <button
                 onClick={() => setSongPickerStepIndex(null)}
-                className="p-1.5 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
+                className="p-1.5 text-black hover:text-black hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -7864,7 +7864,7 @@ export default function AdminView({
             <div className="p-5 overflow-y-auto space-y-4 flex-1">
               {/* Category Pills */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1.5">Pilih Buku Nyanyian:</label>
+                <label className="block text-[10px] font-bold text-black uppercase mb-1.5">Pilih Buku Nyanyian:</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(['BE', 'BN', 'KJ'] as const).map(k => (
                     <button
@@ -7874,7 +7874,7 @@ export default function AdminView({
                       className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer border text-center ${
                         songPickerKategori === k
                           ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
-                          : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                          : 'bg-white text-black border-slate-200 hover:bg-[#EDF2F9] hover:text-black'
                       }`}
                     >
                       {k === 'BE' ? 'BE (Buku Ende)' : k === 'BN' ? 'BN (Buku Nyanyian)' : 'KJ (Kidung Jemaat)'}
@@ -7886,7 +7886,7 @@ export default function AdminView({
               {/* Number and Verse inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                  <label className="block text-[10px] font-bold text-black uppercase mb-1">
                     Nomor Lagu:
                   </label>
                   <input
@@ -7896,11 +7896,11 @@ export default function AdminView({
                     value={songPickerNomor}
                     onChange={(e) => setSongPickerNomor(e.target.value)}
                     placeholder="Contoh: 10"
-                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
+                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447] font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
+                  <label className="block text-[10px] font-bold text-black uppercase mb-1">
                     Ayat / Bait:
                   </label>
                   <input
@@ -7908,14 +7908,14 @@ export default function AdminView({
                     value={songPickerAyat}
                     onChange={(e) => setSongPickerAyat(e.target.value)}
                     placeholder="Contoh: 1-3, 1+3, atau 1,2+5"
-                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
+                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447] font-mono"
                   />
                 </div>
               </div>
 
               {/* Quick Popular Numbers Pill suggestion */}
               <div>
-                <span className="text-[10px] text-slate-400 font-semibold block mb-1">Contoh Cepat Tersedia:</span>
+                <span className="text-[10px] text-black font-semibold block mb-1">Contoh Cepat Tersedia:</span>
                 <div className="flex flex-wrap gap-1.5">
                   {bukuNyanyianDb
                     .filter(s => s.kategori === songPickerKategori)
@@ -7931,7 +7931,7 @@ export default function AdminView({
                         className={`text-[10px] px-2 py-0.5 rounded-lg border cursor-pointer font-bold transition ${
                           songPickerNomor === String(s.nomor)
                             ? 'bg-[#0F2447] text-white border-[#0F2447]'
-                            : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                            : 'bg-slate-100 text-black border-slate-200 hover:bg-[#EDF2F9] hover:text-black'
                         }`}
                       >
                         No. {s.nomor}
@@ -7954,9 +7954,9 @@ export default function AdminView({
                           <span className="text-[9px] font-bold uppercase bg-[#EDF2F9] text-[#0F2447] px-2 py-0.5 rounded border border-[#CBD7EA]">
                             {match.song.kategori} No. {match.song.nomor}
                           </span>
-                          <h4 className="text-xs font-bold text-slate-900 mt-1">{match.title}</h4>
+                          <h4 className="text-xs font-bold text-black mt-1">{match.title}</h4>
                         </div>
-                        <span className="text-[10px] text-slate-500 font-semibold">
+                        <span className="text-[10px] text-black font-semibold">
                           Total {match.song.ayatList.length} Ayat
                         </span>
                       </div>
@@ -7967,7 +7967,7 @@ export default function AdminView({
                           type="button"
                           onClick={() => setSongPickerAyat('')}
                           className={`text-[9px] px-2 py-0.5 rounded border font-bold cursor-pointer ${
-                            !songPickerAyat.trim() ? 'bg-[#0F2447] text-white border-[#0F2447]' : 'bg-white text-slate-600 border-slate-200 hover:bg-[#EDF2F9]'
+                            !songPickerAyat.trim() ? 'bg-[#0F2447] text-white border-[#0F2447]' : 'bg-white text-black border-slate-200 hover:bg-[#EDF2F9]'
                           }`}
                         >
                           Semua Ayat
@@ -7980,7 +7980,7 @@ export default function AdminView({
                             className={`text-[9px] px-2 py-0.5 rounded border font-bold cursor-pointer ${
                               songPickerAyat.trim() === String(v.ayat)
                                 ? 'bg-[#0F2447] text-white border-[#0F2447]'
-                                : 'bg-white text-slate-600 border-slate-200 hover:bg-[#EDF2F9]'
+                                : 'bg-white text-black border-slate-200 hover:bg-[#EDF2F9]'
                             }`}
                           >
                             Ayat {v.ayat}
@@ -7988,7 +7988,7 @@ export default function AdminView({
                         ))}
                       </div>
 
-                      <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-[11px] text-slate-700 whitespace-pre-line font-mono max-h-36 overflow-y-auto leading-relaxed">
+                      <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-[11px] text-black whitespace-pre-line font-mono max-h-36 overflow-y-auto leading-relaxed">
                         {match.lyrics}
                       </div>
                     </div>
@@ -8000,7 +8000,7 @@ export default function AdminView({
                     <p className="text-xs font-bold text-[#0F2447]">
                       Lagu {songPickerKategori} No. {songPickerNomor || '?'} belum terdaftar di database lokal.
                     </p>
-                    <p className="text-[11px] text-slate-600">
+                    <p className="text-[11px] text-black">
                       Anda dapat melihat dan menyalin nomor dan lirik lagu dari website resmi lagu HKBP.
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
@@ -8076,7 +8076,7 @@ export default function AdminView({
                 <button
                   type="button"
                   onClick={() => setSongPickerStepIndex(null)}
-                  className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  className="px-4 py-2 bg-white border border-slate-300 text-black hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
                 >
                   Batal
                 </button>
@@ -8100,12 +8100,12 @@ export default function AdminView({
           <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden">
             <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-[#F4F6FA] shrink-0">
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Tambah Lagu ke Database</h3>
-                <p className="text-[10px] text-slate-500 mt-0.5">Tambah lagu atau sinkronkan langsung dari portal resmi https://hkbp.or.id/buku-ende</p>
+                <h3 className="text-sm font-bold text-black">Tambah Lagu ke Database</h3>
+                <p className="text-[10px] text-black mt-0.5">Tambah lagu atau sinkronkan langsung dari portal resmi https://hkbp.or.id/buku-ende</p>
               </div>
               <button
                 onClick={() => setIsAddSongModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
+                className="p-1.5 text-black hover:text-black hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -8114,11 +8114,11 @@ export default function AdminView({
             <div className="p-5 overflow-y-auto space-y-4 flex-1">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Kategori Buku:</label>
+                  <label className="block text-[10px] font-bold text-black uppercase mb-1">Kategori Buku:</label>
                   <select
                     value={newSongKategori}
                     onChange={(e) => setNewSongKategori(e.target.value as any)}
-                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2447]"
+                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447]"
                   >
                     <option value="BE">BE (Buku Ende)</option>
                     <option value="BN">BN (Buku Nyanyian)</option>
@@ -8126,7 +8126,7 @@ export default function AdminView({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Nomor Lagu:</label>
+                  <label className="block text-[10px] font-bold text-black uppercase mb-1">Nomor Lagu:</label>
                   <input
                     type="number"
                     min="1"
@@ -8134,33 +8134,33 @@ export default function AdminView({
                     value={newSongNomor}
                     onChange={(e) => setNewSongNomor(e.target.value)}
                     placeholder="Contoh: 10"
-                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
+                    className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447] font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Judul Lagu:</label>
+                <label className="block text-[10px] font-bold text-black uppercase mb-1">Judul Lagu:</label>
                 <input
                   type="text"
                   value={newSongJudul}
                   onChange={(e) => setNewSongJudul(e.target.value)}
                   placeholder="Contoh: Hupuji Ho Amang"
-                  className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447]"
+                  className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447]"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase">Lirik / Bait Lagu:</label>
-                  <span className="text-[10px] text-slate-400">Pisahkan tiap bait dengan baris kosong</span>
+                  <label className="block text-[10px] font-bold text-black uppercase">Lirik / Bait Lagu:</label>
+                  <span className="text-[10px] text-black">Pisahkan tiap bait dengan baris kosong</span>
                 </div>
                 <textarea
                   rows={6}
                   value={newSongRawLyrics}
                   onChange={(e) => setNewSongRawLyrics(e.target.value)}
                   placeholder={"1. Hupuji Ho Amang pardenggan basa i...\n\n2. Gok di Ho do dongan nang hagogoon i..."}
-                  className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#0F2447] font-mono"
+                  className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] font-mono"
                 />
               </div>
             </div>
@@ -8169,7 +8169,7 @@ export default function AdminView({
               <button
                 type="button"
                 onClick={() => setIsAddSongModalOpen(false)}
-                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-4 py-2 bg-white border border-slate-300 text-black hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 Batal
               </button>
@@ -8195,14 +8195,14 @@ export default function AdminView({
                   <Upload className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">Impor / Berikan Database Lagu</h3>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Unggah berkas JSON atau tempel format data buku nyanyian</p>
+                  <h3 className="text-sm font-bold text-black">Impor / Berikan Database Lagu</h3>
+                  <p className="text-[10px] text-black mt-0.5">Unggah berkas JSON atau tempel format data buku nyanyian</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsImportDbModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
+                className="p-1.5 text-black hover:text-black hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -8234,15 +8234,15 @@ export default function AdminView({
                   className="cursor-pointer flex flex-col items-center justify-center space-y-1.5"
                 >
                   <FolderOpen className="w-6 h-6 text-[#0F2447]" />
-                  <span className="text-xs font-bold text-slate-800">Klik untuk Unggah Berkas JSON</span>
-                  <span className="text-[10px] text-slate-400">Mendukung berkas data resmi dari https://hkbp.or.id/buku-ende atau format JSON</span>
+                  <span className="text-xs font-bold text-black">Klik untuk Unggah Berkas JSON</span>
+                  <span className="text-[10px] text-black">Mendukung berkas data resmi dari https://hkbp.or.id/buku-ende atau format JSON</span>
                 </label>
               </div>
 
               {/* Paste JSON Textarea */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-[10px] font-bold text-slate-700 uppercase">Atau Tempel (Paste) Teks JSON Database:</label>
+                  <label className="block text-[10px] font-bold text-black uppercase">Atau Tempel (Paste) Teks JSON Database:</label>
                   <button
                     type="button"
                     onClick={() => {
@@ -8259,7 +8259,7 @@ export default function AdminView({
                       ];
                       setImportDbJsonText(JSON.stringify(sample, null, 2));
                     }}
-                    className="text-[10px] text-[#0F2447] hover:text-[#173361] font-bold underline cursor-pointer"
+                    className="text-[10px] text-[#0F2447] hover:text-black font-bold underline cursor-pointer"
                   >
                     Muat Contoh Format
                   </button>
@@ -8269,7 +8269,7 @@ export default function AdminView({
                   value={importDbJsonText}
                   onChange={(e) => setImportDbJsonText(e.target.value)}
                   placeholder={`Contoh struktur JSON:\n[\n  {\n    "kategori": "BE",\n    "nomor": 10,\n    "judul": "Hupuji Ho Amang",\n    "ayatList": [\n      { "ayat": 1, "teks": "..." },\n      { "ayat": 2, "teks": "..." }\n    ]\n  }\n]`}
-                  className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-mono text-slate-800 outline-none focus:border-[#0F2447]"
+                  className="w-full bg-[#F4F6FA] border border-slate-200 rounded-xl px-3 py-2 text-[11px] font-mono text-black outline-none focus:border-[#0F2447]"
                 />
               </div>
 
@@ -8279,7 +8279,7 @@ export default function AdminView({
                 const parsed = normalizeSongImport(importDbJsonText);
                 return (
                   <div className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between ${
-                    parsed.length > 0 ? 'bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]' : 'bg-slate-100 text-slate-700 border-slate-300'
+                    parsed.length > 0 ? 'bg-[#EDF2F9] text-[#0F2447] border-[#CBD7EA]' : 'bg-slate-100 text-black border-slate-300'
                   }`}>
                     <div className="flex items-center space-x-2">
                       <Music className="w-4 h-4 shrink-0 text-[#0F2447]" />
@@ -8291,10 +8291,10 @@ export default function AdminView({
 
               {/* Import Mode Selection */}
               <div className="bg-[#F4F6FA] p-3.5 rounded-2xl border border-slate-200 space-y-2">
-                <span className="text-[10px] font-bold text-slate-600 uppercase block">Metode Penggabungan Database:</span>
+                <span className="text-[10px] font-bold text-black uppercase block">Metode Penggabungan Database:</span>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <label className={`p-2.5 rounded-xl border cursor-pointer flex items-start space-x-2 ${
-                    importDbMode === 'merge' ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] font-bold' : 'bg-white border-slate-200 text-slate-700'
+                    importDbMode === 'merge' ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] font-bold' : 'bg-white border-slate-200 text-black'
                   }`}>
                     <input
                       type="radio"
@@ -8306,12 +8306,12 @@ export default function AdminView({
                     />
                     <div>
                       <span className="block text-xs font-bold">Gabungkan (Merge)</span>
-                      <span className="block text-[10px] text-slate-500 font-normal">Menambahkan lagu baru tanpa menghapus lagu yang ada</span>
+                      <span className="block text-[10px] text-black font-normal">Menambahkan lagu baru tanpa menghapus lagu yang ada</span>
                     </div>
                   </label>
 
                   <label className={`p-2.5 rounded-xl border cursor-pointer flex items-start space-x-2 ${
-                    importDbMode === 'replace' ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] font-bold' : 'bg-white border-slate-200 text-slate-700'
+                    importDbMode === 'replace' ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] font-bold' : 'bg-white border-slate-200 text-black'
                   }`}>
                     <input
                       type="radio"
@@ -8323,7 +8323,7 @@ export default function AdminView({
                     />
                     <div>
                       <span className="block text-xs font-bold">Ganti Total (Replace)</span>
-                      <span className="block text-[10px] text-slate-500 font-normal">Mengganti seluruh lagu dengan data yang baru diimpor</span>
+                      <span className="block text-[10px] text-black font-normal">Mengganti seluruh lagu dengan data yang baru diimpor</span>
                     </div>
                   </label>
                 </div>
@@ -8334,7 +8334,7 @@ export default function AdminView({
               <button
                 type="button"
                 onClick={handleResetToDefaultDb}
-                className="text-[10px] font-bold text-slate-500 hover:text-[#0F2447] underline cursor-pointer"
+                className="text-[10px] font-bold text-black hover:text-black underline cursor-pointer"
               >
                 Reset ke Standar HKBP
               </button>
@@ -8342,7 +8342,7 @@ export default function AdminView({
                 <button
                   type="button"
                   onClick={() => setIsImportDbModalOpen(false)}
-                  className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  className="px-4 py-2 bg-white border border-slate-300 text-black hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
                 >
                   Batal
                 </button>
@@ -8369,17 +8369,17 @@ export default function AdminView({
                   <Activity className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-black">
                     Portal Resmi HKBP (hkbp.or.id/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende'})
                   </h3>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Sinkronisasi lagu otentik langsung dari basis data resmi HKBP</p>
+                  <p className="text-[10px] text-black mt-0.5">Sinkronisasi lagu otentik langsung dari basis data resmi HKBP</p>
                 </div>
               </div>
               <button
                 type="button"
                 disabled={isSyncingApi}
                 onClick={() => setIsSyncApiModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-[#0F2447] hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
+                className="p-1.5 text-black hover:text-black hover:bg-[#EDF2F9] rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -8388,7 +8388,7 @@ export default function AdminView({
             <div className="p-5 overflow-y-auto space-y-4 flex-1">
               {/* Book Category Switcher */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1.5">Pilih Buku Nyanyian:</label>
+                <label className="block text-[10px] font-bold text-black uppercase mb-1.5">Pilih Buku Nyanyian:</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
@@ -8401,7 +8401,7 @@ export default function AdminView({
                     className={`py-2 px-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer border text-center ${
                       syncBook === 'BE'
                         ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                        : 'bg-white text-black border-slate-200 hover:bg-[#EDF2F9] hover:text-black'
                     }`}
                   >
                     Buku Ende (867)
@@ -8417,7 +8417,7 @@ export default function AdminView({
                     className={`py-2 px-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer border text-center ${
                       syncBook === 'BN'
                         ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                        : 'bg-white text-black border-slate-200 hover:bg-[#EDF2F9] hover:text-black'
                     }`}
                   >
                     Buku Nyanyian (865)
@@ -8433,7 +8433,7 @@ export default function AdminView({
                     className={`py-2 px-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer border text-center ${
                       syncBook === 'KJ'
                         ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                        : 'bg-white text-black border-slate-200 hover:bg-[#EDF2F9] hover:text-black'
                     }`}
                   >
                     Kidung Jemaat (478)
@@ -8447,7 +8447,7 @@ export default function AdminView({
                   <Check className="w-4 h-4 text-[#0F2447]" />
                   <span>Sumber Resmi: https://hkbp.or.id/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende'}</span>
                 </div>
-                <p className="text-[11px] leading-relaxed text-slate-700">
+                <p className="text-[11px] leading-relaxed text-black">
                   Data diambil langsung dari API resmi HKBP (<code>api.hkbp.or.id/api/v1/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung-jemaat' : 'buku-ende'}/songs</code>) yang menopang portal resmi <strong>hkbp.or.id/{syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende'}</strong>. Seluruh lirik dan bait lagu dijamin 100% otentik, akurat, dan tidak diubah.
                 </p>
                 <div className="pt-1">
@@ -8459,12 +8459,12 @@ export default function AdminView({
 
               {/* Range input */}
               <div className="bg-[#F4F6FA] p-4 rounded-2xl border border-slate-200 space-y-3">
-                <label className="block text-[10px] font-bold text-slate-700 uppercase">
+                <label className="block text-[10px] font-bold text-black uppercase">
                   Tentukan Rentang Nomor Lagu {syncBook} (1 - {syncBook === 'BN' ? '865' : syncBook === 'KJ' ? '478' : '867'}):
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="text-[10px] text-slate-500 block mb-1">Dari Nomor:</span>
+                    <span className="text-[10px] text-black block mb-1">Dari Nomor:</span>
                     <input
                       type="number"
                       min="1"
@@ -8472,11 +8472,11 @@ export default function AdminView({
                       disabled={isSyncingApi}
                       value={syncStart}
                       onChange={(e) => setSyncStart(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447] font-mono"
                     />
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 block mb-1">Sampai Nomor:</span>
+                    <span className="text-[10px] text-black block mb-1">Sampai Nomor:</span>
                     <input
                       type="number"
                       min="1"
@@ -8484,14 +8484,14 @@ export default function AdminView({
                       disabled={isSyncingApi}
                       value={syncEnd}
                       onChange={(e) => setSyncEnd(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-[#0F2447] font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447] font-mono"
                     />
                   </div>
                 </div>
 
                 {/* Preset shortcuts */}
                 <div>
-                  <span className="text-[10px] text-slate-400 block mb-1.5 font-semibold">Pilihan Cepat {syncBook}:</span>
+                  <span className="text-[10px] text-black block mb-1.5 font-semibold">Pilihan Cepat {syncBook}:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       { label: `${syncBook} 1 - 25`, s: '1', e: '25' },
@@ -8508,7 +8508,7 @@ export default function AdminView({
                           setSyncStart(preset.s);
                           setSyncEnd(preset.e);
                         }}
-                        className="text-[10px] font-bold px-2 py-1 bg-white rounded-lg border border-slate-200 cursor-pointer transition hover:bg-[#EDF2F9] hover:text-[#0F2447] hover:border-[#CBD7EA]"
+                        className="text-[10px] font-bold px-2 py-1 bg-white rounded-lg border border-slate-200 cursor-pointer transition hover:bg-[#EDF2F9] hover:text-black hover:border-[#CBD7EA]"
                       >
                         {preset.label}
                       </button>
@@ -8531,7 +8531,7 @@ export default function AdminView({
                 type="button"
                 disabled={isSyncingApi}
                 onClick={() => setIsSyncApiModalOpen(false)}
-                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-4 py-2 bg-white border border-slate-300 text-black hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 Tutup
               </button>
@@ -8574,7 +8574,7 @@ export default function AdminView({
             <div className="p-6 overflow-y-auto space-y-4">
               {/* Language Mode Selector */}
               <div className="bg-[#F4F6FA] border border-slate-200 rounded-2xl p-3.5 space-y-2">
-                <label className="block text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+                <label className="block text-[11px] font-bold text-black uppercase tracking-wider">
                   Bahasa
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -8587,7 +8587,7 @@ export default function AdminView({
                     className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer border ${
                       pickerLangMode === 'indo'
                         ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-sm'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                        : 'bg-white text-black border-slate-200 hover:bg-[#EDF2F9] hover:text-black'
                     }`}
                   >
                     <span>Bahasa Indonesia</span>
@@ -8601,7 +8601,7 @@ export default function AdminView({
                     className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer border ${
                       pickerLangMode === 'batak'
                         ? 'bg-[#0F2447] text-white border-[#0F2447] shadow-sm'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-[#EDF2F9] hover:text-[#0F2447]'
+                        : 'bg-white text-black border-slate-200 hover:bg-[#EDF2F9] hover:text-black'
                     }`}
                   >
                     <span>Bahasa Batak</span>
@@ -8612,7 +8612,7 @@ export default function AdminView({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {/* Book Selection */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Pilih Kitab</label>
+                  <label className="block text-[11px] font-bold text-black uppercase mb-1">Pilih Kitab</label>
                   <select
                     value={pickerBookId}
                     onChange={(e) => {
@@ -8621,7 +8621,7 @@ export default function AdminView({
                       setPickerChapter(1);
                       handleUpdateScripturePickerPreview(newBId, 1, pickerVerseRange, pickerLangMode);
                     }}
-                    className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2447]"
+                    className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447]"
                   >
                     <optgroup label="Perjanjian Lama (Padan Na Robi)">
                       {ALKITAB_BOOKS_CATALOG.filter(b => b.testament === 'PL').map(b => (
@@ -8642,7 +8642,7 @@ export default function AdminView({
 
                 {/* Chapter Selection */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Pasal / Bindu</label>
+                  <label className="block text-[11px] font-bold text-black uppercase mb-1">Pasal / Bindu</label>
                   {(() => {
                     const bInfo = ALKITAB_BOOKS_CATALOG.find(b => b.id === pickerBookId) || ALKITAB_BOOKS_CATALOG[39];
                     return (
@@ -8653,7 +8653,7 @@ export default function AdminView({
                           setPickerChapter(chap);
                           handleUpdateScripturePickerPreview(pickerBookId, chap, pickerVerseRange, pickerLangMode);
                         }}
-                        className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2447]"
+                        className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447]"
                       >
                         {Array.from({ length: bInfo.totalChapters }, (_, i) => i + 1).map(c => (
                           <option key={c} value={c}>
@@ -8667,14 +8667,14 @@ export default function AdminView({
 
                 {/* Verse Range Selection */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Ayat (Contoh: 1-5 atau 16)</label>
+                  <label className="block text-[11px] font-bold text-black uppercase mb-1">Ayat (Contoh: 1-5 atau 16)</label>
                   <div className="flex items-center space-x-1.5">
                     <input
                       type="text"
                       value={pickerVerseRange}
                       onChange={(e) => setPickerVerseRange(e.target.value)}
                       placeholder="1-5"
-                      className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-[#0F2447]"
+                      className="w-full bg-[#F4F6FA] border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-black outline-none focus:border-[#0F2447]"
                     />
                     <button
                       type="button"
@@ -8690,7 +8690,7 @@ export default function AdminView({
               {/* Preview Box */}
               <div className="bg-[#F4F6FA] border border-slate-200 rounded-2xl p-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-black uppercase tracking-wider">
                     Pratinjau Nats ({pickerLangMode === 'indo' ? 'Bahasa Indonesia' : 'Bahasa Batak'}):
                   </span>
                   {isFetchingPickerPreview && (
@@ -8704,7 +8704,7 @@ export default function AdminView({
                   readOnly
                   rows={8}
                   value={pickerPreviewText}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-800 outline-none resize-none leading-relaxed"
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-mono text-black outline-none resize-none leading-relaxed"
                 />
               </div>
             </div>
@@ -8713,7 +8713,7 @@ export default function AdminView({
               <button
                 type="button"
                 onClick={() => setScripturePickerTarget(null)}
-                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="px-4 py-2 bg-white border border-slate-300 text-black hover:bg-[#EDF2F9] rounded-xl text-xs font-semibold transition cursor-pointer"
               >
                 Batal
               </button>

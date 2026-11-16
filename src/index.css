@@ -10,7 +10,7 @@
   body {
     font-family: var(--font-sans);
     background-color: #f4f6fa;
-    color: #0f172a;
+    color: #000000;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
