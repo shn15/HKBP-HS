@@ -22,6 +22,7 @@ const MAX_CHUNK_CHARS = 700000;
 
 const FIRESTORE_DOC_REST_URL = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/${KV_COLLECTION}/${LEGACY_DOC_ID}?key=${firebaseConfig.apiKey}`;
 const FIRESTORE_RUN_QUERY_URL = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents:runQuery?key=${firebaseConfig.apiKey}`;
+const FIRESTORE_CHUNK_BASE_URL = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/${CHUNK_COLLECTION}`;
 
 function safeParseJsonOrString(rawValue: string): any {
   try {
@@ -48,14 +49,9 @@ function parseFirestoreDoc(docJson: any): Record<string, any> {
 
 // Track active local writes so real-time snapshots don't overwrite optimistic local UI before server ack
 const pendingWriteUntil: Record<string, number> = {};
-const localClientTimestamps: Record<string, number> = {};
 
 // Cache assembled chunked docs by `${key}:${marker}` to avoid re-fetching unchanged large PDFs/images on unrelated updates
 const chunkedValueCache = new Map<string, { marker: string; value: any }>();
-
-export function getLocalClientTimestamp(key: string): number {
-  return localClientTimestamps[key] || 0;
-}
 
 export function isLocallyPendingWrite(key: string): boolean {
   const until = pendingWriteUntil[key] || 0;
@@ -225,9 +221,29 @@ export async function fetchDbFromServer(): Promise<Record<string, any> | null> {
           const docId = String(d.name || '').split('/').pop() || '';
           if (!docId || docId === LEGACY_DOC_ID || docId === 'test_doc') continue;
           const fields = d.fields || {};
-          const valueStr = fields.valueStr?.stringValue;
-          if (typeof valueStr === 'string' && !fields.isChunked?.booleanValue) {
-            merged[docId] = safeParseJsonOrString(valueStr);
+          const isChunked = Boolean(fields.isChunked?.booleanValue);
+          const chunkCount = Number(fields.chunkCount?.integerValue || 0);
+          if (isChunked && chunkCount > 0) {
+            try {
+              const parts = await Promise.all(
+                Array.from({ length: chunkCount }, (_, i) =>
+                  fetch(`${FIRESTORE_CHUNK_BASE_URL}/${encodeURIComponent(`${docId}__chunk_${i}`)}?key=${firebaseConfig.apiKey}&${cacheBuster}`, {
+                    cache: 'no-store',
+                  }).then((r) => (r.ok ? r.json() : null))
+                )
+              );
+              if (parts.every((p) => p?.fields?.chunk?.stringValue !== undefined)) {
+                const combined = parts.map((p) => String(p.fields.chunk.stringValue || '')).join('');
+                merged[docId] = safeParseJsonOrString(combined);
+              }
+            } catch {
+              // ignore individual chunk assembly error in fallback
+            }
+          } else {
+            const valueStr = fields.valueStr?.stringValue;
+            if (typeof valueStr === 'string') {
+              merged[docId] = safeParseJsonOrString(valueStr);
+            }
           }
         }
         if (Object.keys(merged).length > 0) {
@@ -292,7 +308,6 @@ export function subscribeToDb(onUpdate: (db: Record<string, any>) => void): () =
  */
 export async function saveDbKey(key: string, value: any): Promise<boolean> {
   const timestamp = Date.now();
-  localClientTimestamps[key] = timestamp;
   pendingWriteUntil[key] = timestamp + 8000;
 
   // Update localStorage immediately for responsive client state
@@ -360,13 +375,20 @@ export async function saveDbKey(key: string, value: any): Promise<boolean> {
     }
   }
 
-  // Also sync with Express backend when running locally/AI Studio (never blocks Firestore)
-  fetch('/api/db', {
-    method: 'POST',
-    cache: 'no-store',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key, value }),
-  }).catch(() => {});
+  if (!firestoreOk) {
+    // Fallback sync with backend `/api/db` only when Firestore SDK write failed (prevents double-write races)
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value }),
+      });
+      if (res.ok) return true;
+    } catch {
+      // ignore fallback network failure
+    }
+  }
 
   return firestoreOk;
 }

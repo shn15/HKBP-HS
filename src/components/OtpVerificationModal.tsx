@@ -12,6 +12,7 @@ interface OtpVerificationModalProps {
   setUserTypedCode: (code: string) => void;
   otpDeliveryStatus: 'idle' | 'sending' | 'success' | 'smtp_not_configured' | 'error';
   otpErrorMessage?: string;
+  otpValidationError?: string;
   onConfirm: () => void;
   onResend: () => void;
 }
@@ -27,6 +28,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
   setUserTypedCode,
   otpDeliveryStatus,
   otpErrorMessage,
+  otpValidationError,
   onConfirm,
   onResend
 }) => {
@@ -142,6 +144,12 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
             className="w-full text-center text-2xl font-mono font-bold tracking-widest py-2.5 px-4 bg-[#F4F6FA] border border-slate-300 focus:border-[#0F2447] focus:bg-white rounded-xl outline-none transition text-black"
             autoFocus
           />
+          {otpValidationError && (
+            <div className="flex items-center justify-center space-x-1.5 text-xs font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-3 py-2 rounded-xl">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              <span>{otpValidationError}</span>
+            </div>
+          )}
           <p className="text-[11px] text-black text-center">
             Periksa folder Inbox atau Spam email Anda.
           </p>

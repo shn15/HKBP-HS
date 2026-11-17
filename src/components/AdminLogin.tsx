@@ -33,6 +33,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
   const [pendingAccountToSave, setPendingAccountToSave] = useState<AdminCredentials | null>(null);
   const [otpDeliveryStatus, setOtpDeliveryStatus] = useState<'idle' | 'sending' | 'success' | 'smtp_not_configured' | 'error'>('idle');
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
+  const [otpValidationError, setOtpValidationError] = useState('');
 
   React.useEffect(() => {
     const syncAdmins = (db: Record<string, any> | null) => {
@@ -195,6 +196,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     setIsVerifying(true);
     setOtpDeliveryStatus('sending');
     setOtpErrorMessage('');
+    setOtpValidationError('');
 
     try {
       const res = await fetch('/api/send-otp', {
@@ -233,15 +235,16 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
 
   const handleConfirmVerificationCode = async () => {
     if (!userTypedCode.trim()) {
-      alert('Mohon masukkan kode verifikasi 6 digit!');
+      setOtpValidationError('Mohon masukkan kode verifikasi 6 digit!');
       return;
     }
     const isValid = userTypedCode.trim() === verificationCode.trim();
 
     if (!isValid) {
-      alert('Kode verifikasi yang Anda masukkan tidak cocok!');
+      setOtpValidationError('Kode verifikasi yang Anda masukkan tidak cocok!');
       return;
     }
+    setOtpValidationError('');
     if (!pendingAccountToSave) return;
 
     try {
@@ -278,6 +281,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
     setVerificationCode(newCode);
     setUserTypedCode('');
+    setOtpValidationError('');
     setOtpDeliveryStatus('sending');
     setOtpErrorMessage('');
     try {
@@ -588,15 +592,20 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           setIsVerifying(false);
           setPendingAccountToSave(null);
           setUserTypedCode('');
+          setOtpValidationError('');
         }}
         email={pendingAccountToSave?.email || regEmail}
         senderEmail="pirmasiahaan1234@gmail.com"
         username={pendingAccountToSave?.username || regUsername}
         verificationCode={verificationCode}
         userTypedCode={userTypedCode}
-        setUserTypedCode={setUserTypedCode}
+        setUserTypedCode={(val) => {
+          setUserTypedCode(val);
+          if (otpValidationError) setOtpValidationError('');
+        }}
         otpDeliveryStatus={otpDeliveryStatus}
         otpErrorMessage={otpErrorMessage}
+        otpValidationError={otpValidationError}
         onConfirm={handleConfirmVerificationCode}
         onResend={handleResendOtp}
       />

@@ -1,4 +1,4 @@
-import { Liturgi, Warta, Transaksi, Jemaat, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, TentangGerejaItem, WeeklyAttendanceTrend } from '../types';
+import { Liturgi, Warta, Transaksi, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, TentangGerejaItem, WeeklyAttendanceTrend } from '../types';
 
 // Helper to generate dates relative to June 12, 2026 (current context date)
 const getRelativeDate = (offsetDays: number): string => {
@@ -297,76 +297,11 @@ export const INITIAL_TRANSAKSI: Transaksi[] = [
   }
 ];
 
-export const INITIAL_JEMAAT: Jemaat[] = [
-  {
-    id: 'jm-1',
-    nama: 'Sahat Siregar',
-    tanggalLahir: '1985-06-12', // Exactly today! (2026-06-12)
-    sektor: 'Sektor III',
-    noHP: '08123456781'
-  },
-  {
-    id: 'jm-2',
-    nama: 'Rotua Situmorang',
-    tanggalLahir: '1992-06-14', // Sunday (in range)
-    sektor: 'Sektor I',
-    noHP: '08137328900'
-  },
-  {
-    id: 'jm-3',
-    nama: 'Grace Simanjuntak',
-    tanggalLahir: '2005-06-15', // Monday (in range)
-    sektor: 'Sektor V (Remaja/Seksi ND)',
-    noHP: '08192837465'
-  },
-  {
-    id: 'jm-4',
-    nama: 'Sintua M. Nainggolan',
-    tanggalLahir: '1963-06-11', // Yesterday (June 11, in range)
-    sektor: 'Sektor IV',
-    noHP: '08529090123'
-  },
-  {
-    id: 'jm-5',
-    nama: 'Elisabeth br. Pasaribu',
-    tanggalLahir: '1974-06-17', // Next Wednesday (in range)
-    sektor: 'Sektor II',
-    noHP: '08216752003'
-  },
-  {
-    id: 'jm-6',
-    nama: 'Boni Manurung',
-    tanggalLahir: '1989-06-08', // Birthday passed, outside 1 week range starting today (since June 12-18 are of interest)
-    sektor: 'Sektor VI',
-    noHP: '08987654321'
-  },
-  {
-    id: 'jm-7',
-    nama: 'Samuel Hutapea',
-    tanggalLahir: '2016-06-13', // Tomorrow! (June 13, in range)
-    sektor: 'Sektor III (Sekolah Minggu)',
-    noHP: '08112233445'
-  },
-  {
-    id: 'jm-8',
-    nama: 'Pesta br. Silaban',
-    tanggalLahir: '1960-06-18', // June 18 (in range)
-    sektor: 'Sektor VII',
-    noHP: '08223344556'
-  }
-];
-
 export const INITIAL_JADWAL_IBADAH = {
   sekolahMinggu: '07.30 WIB',
   shift1: '08.00 WIB',
   shift2: '10.00 WIB'
 };
-
-export const INITIAL_SEJARAH_GEREJA = `Huria Kristen Batak Protestan (HKBP) Hinalang Silalahi berdiri kokoh sebagai tonggak sejarah iman kristiani di wilayah Balige, Toba. Didirikan pertama kali pada tahun 1928, gereja ini bermula dari persekutuan doa kecil yang dipelopori oleh para pemuka masyarakat lokal bertekad luhur.
-
-Dengan seiring berjalannya waktu dan bertambahnya jiwa, pondok kayu sederhana tersebut bertransformasi menjadi bangunan gereja yang megah dan indah di bawah naungan Resort Hinalang Silalahi - Distrik XI Toba Hasundutan. Kini, gereja ini mendampingi ratusan kepala keluarga jemaat, melayani dengan penuh ketulusan, kasih, dan kesetiaan di bumi Toba.
-
-Visi HKBP Hinalang Silalahi senantiasa menjadi garam dan terang dunia (Gabe Sulum jala Sira di Portibi on), mendidik rohani generasi muda naposo, melestarikan nilai luhur adat budaya Batak yang selaras dengan Injil, serta membangun jemaat misioner yang tangguh dalam iman.`;
 
 export const INITIAL_TENTANG_GEREJA: TentangGerejaItem[] = [
   {
@@ -495,22 +430,3 @@ export const INITIAL_ATTENDANCE_TRENDS: WeeklyAttendanceTrend[] = [
     partangianganParhalado: 14
   }
 ];
-
-export const CHURCH_LOCATION_INFO = {
-  nama: 'HKBP Hinalang Silalahi Lutheran Church',
-  resort: 'Resort Hinalang Silalahi (Distrik XI Toba Hasundutan)',
-  desa: 'Hinalang Bagasan',
-  kecamatan: 'Balige',
-  kabupaten: 'Kabupaten Toba',
-  provinsi: 'Sumatera Utara',
-  kodePos: '22312',
-  negara: 'Indonesia',
-  alamatLengkap: 'Desa Hinalang Bagasan, Kecamatan Balige, Kabupaten Toba, Sumatera Utara 22312, Indonesia',
-  koordinat: {
-    lat: 2.3346565,
-    lng: 99.0417933
-  },
-  plusCode: '897R+VP Hinalang Bagasan',
-  mapsAppUrl: 'https://maps.app.goo.gl/MsdAzCJwb64EB8eP6',
-  directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=2.3346565,99.0417933'
-};

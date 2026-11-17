@@ -91,7 +91,8 @@ export async function fetchOfficialSongFromHkbp(nomor: number, kategori: 'BE' | 
   // 1. Cek endpoint server lokal terlebih dahulu
   try {
     const res = await fetch(`${serverPath}/${nomor}`);
-    if (res.ok) {
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
       const data = await res.json();
       if (data && data.song && Array.isArray(data.song.ayatList) && data.song.ayatList.length > 0) {
         return data.song;

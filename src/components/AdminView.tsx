@@ -11,6 +11,22 @@ function safeJsonParse<T>(raw: string | null, fallback: T): T {
     return fallback;
   }
 }
+
+function formatLocalYmd(date: Date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function parseLocalDate(dateStr: string): Date {
+  const trimmed = (dateStr || '').trim();
+  const match = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (match) {
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  }
+  return new Date(trimmed);
+}
 import {
   ResponsiveContainer,
   AreaChart,
@@ -194,6 +210,7 @@ export default function AdminView({
   const [pendingAccountToSave, setPendingAccountToSave] = useState<AdminCredentials | null>(null);
   const [otpDeliveryStatus, setOtpDeliveryStatus] = useState<'idle' | 'sending' | 'success' | 'smtp_not_configured' | 'error'>('idle');
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
+  const [otpValidationError, setOtpValidationError] = useState('');
 
   const saveRegisteredAdminsToServer = (data: AdminCredentials[]) => {
     saveDbKey('hkbp_registered_admins', data).catch(err => console.error('Failed to sync registered admins to server:', err));
@@ -267,7 +284,7 @@ export default function AdminView({
               tanggalUpload: '2026-06-15',
               fileName: 'tata_gereja_hkbp_2026.pdf',
               fileSize: '1.24 MB',
-              pdfUrl: 'data:application/pdf;base64,JVBERi0xLjQKJ...'
+              pdfUrl: ''
             },
             {
               id: 'arsip-2',
@@ -279,6 +296,9 @@ export default function AdminView({
               pdfUrl: ''
             }
           ];
+          arsipPdfsRef.current = defaultArsip;
+          setArsipPdfs(defaultArsip);
+          localStorage.setItem('hkbp_arsip_pdf', JSON.stringify(defaultArsip));
           saveDbKey('hkbp_arsip_pdf', defaultArsip).catch(e => console.error(e));
         }
       }
@@ -363,7 +383,7 @@ export default function AdminView({
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        alert('Ukuran berkas gambar terlalu besar! Maksimal ukuran adalah 2MB.');
+        showToast('Ukuran berkas gambar terlalu besar! Maksimal ukuran adalah 2MB.', true);
         return;
       }
       const reader = new FileReader();
@@ -494,6 +514,8 @@ export default function AdminView({
   
   // Save Feedback state
   const [savedSuccessMessage, setSavedSuccessMessage] = useState('');
+  const [toastIsError, setToastIsError] = useState(false);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ----------------------------------------------------
   // STATE & MEMO FOR WEEKLY ATTENDANCE TRENDS DASHBOARD
@@ -729,7 +751,7 @@ export default function AdminView({
       setTimeout(() => setSavedSuccessMessage(''), 3000);
     } catch (err) {
       console.error(err);
-      alert('Gagal mengekspor data keuangan ke Excel');
+      showToast('Gagal mengekspor data keuangan ke Excel.', true);
     }
   };
 
@@ -749,7 +771,7 @@ export default function AdminView({
         tanggalUpload: '2026-06-15',
         fileName: 'tata_gereja_hkbp_2026.pdf',
         fileSize: '1.24 MB',
-        pdfUrl: 'data:application/pdf;base64,JVBERi0xLjQKJ...' // brief placeholder representation
+        pdfUrl: ''
       },
       {
         id: 'arsip-2',
@@ -778,7 +800,7 @@ export default function AdminView({
     const day = d.getDay();
     const diff = d.getDate() + (day === 0 ? 0 : 7 - day);
     const sunday = new Date(d.setDate(diff));
-    return sunday.toISOString().split('T')[0];
+    return formatLocalYmd(sunday);
   });
   const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
   const [archiveCategoryFilter, setArchiveCategoryFilter] = useState<string>('all');
@@ -849,7 +871,7 @@ export default function AdminView({
     }
 
     const fullItem = {
-      tanggalUpload: new Date().toISOString().split('T')[0],
+      tanggalUpload: formatLocalYmd(),
       isPdfMode: item.isPdfMode ?? false,
       ...item
     };
@@ -880,7 +902,7 @@ export default function AdminView({
           id: archId,
           judul: lit.judul,
           keterangan: `Tata Ibadah Minggu (${lit.isPdfMode ? 'Berkas PDF' : 'Teks Manual'}) untuk ${lit.tanggal}`,
-          tanggalUpload: new Date().toISOString().split('T')[0],
+          tanggalUpload: formatLocalYmd(),
           tanggalMinggu: lit.tanggal,
           fileName: lit.isPdfMode ? (lit.uploadedPdfName || 'tata_ibadah.pdf') : undefined,
           fileSize: lit.isPdfMode ? (lit.uploadedPdfSize || '1.5 MB') : undefined,
@@ -904,7 +926,7 @@ export default function AdminView({
           id: archId,
           judul: lit.judul,
           keterangan: `Tata Ibadah Partangiangan (${lit.isPdfMode ? 'Berkas PDF' : 'Teks Manual'}) untuk ${lit.tanggal}`,
-          tanggalUpload: new Date().toISOString().split('T')[0],
+          tanggalUpload: formatLocalYmd(),
           tanggalMinggu: lit.tanggal,
           fileName: lit.isPdfMode ? (lit.uploadedPdfName || 'tata_ibadah.pdf') : undefined,
           fileSize: lit.isPdfMode ? (lit.uploadedPdfSize || '1.5 MB') : undefined,
@@ -928,8 +950,8 @@ export default function AdminView({
           id: archId,
           judul: `Warta: ${w.judul}`,
           keterangan: w.isi ? (w.isi.length > 160 ? w.isi.slice(0, 160) + '...' : w.isi) : 'Warta Jemaat Resmi HKBP Hinalang Silalahi',
-          tanggalUpload: new Date().toISOString().split('T')[0],
-          tanggalMinggu: w.tanggal || new Date().toISOString().split('T')[0],
+          tanggalUpload: formatLocalYmd(),
+          tanggalMinggu: w.tanggal || formatLocalYmd(),
           kategori: 'warta',
           isPdfMode: false,
           isiWarta: w.isi,
@@ -1228,8 +1250,8 @@ export default function AdminView({
       id: `arsip-petugas-minggu-${tempPetugasMingguDate.replace(/\s+/g, '_')}`,
       judul: `Jadwal Pelayan Ibadah Minggu - ${tempPetugasMingguDate}`,
       keterangan: `Daftar pelayan ibadah minggu (Shift 1, Shift 2, Sekolah Minggu) tanggal ${tempPetugasMingguDate}`,
-      tanggalUpload: new Date().toISOString().split('T')[0],
-      tanggalMinggu: new Date().toISOString().split('T')[0],
+      tanggalUpload: formatLocalYmd(),
+      tanggalMinggu: formatLocalYmd(),
       kategori: 'petugas',
       isPdfMode: false,
       petugasMingguData: tempPetugasMinggu,
@@ -1280,8 +1302,8 @@ export default function AdminView({
       id: `arsip-kehadiran-partangiangan-${tempPartangianganAttendanceDate.replace(/\s+/g, '_')}`,
       judul: `Statistik Kehadiran Partangiangan - ${tempPartangianganAttendanceDate}`,
       keterangan: `Rekapitulasi kehadiran jemaat (Ama, Ina, SM, Rena, Parhalado) partangiangan lingkungan ${tempPartangianganAttendanceDate}`,
-      tanggalUpload: new Date().toISOString().split('T')[0],
-      tanggalMinggu: new Date().toISOString().split('T')[0],
+      tanggalUpload: formatLocalYmd(),
+      tanggalMinggu: formatLocalYmd(),
       kategori: 'petugas',
       isPdfMode: false,
       attendanceData: tempPartangianganAttendance,
@@ -1316,8 +1338,8 @@ export default function AdminView({
       id: `arsip-petugas-partangiangan-${tempPetugasPartangianganDate.replace(/\s+/g, '_')}`,
       judul: `Jadwal Petugas Partangiangan - ${tempPetugasPartangianganDate}`,
       keterangan: `Daftar pelayan & tuan rumah ibadah partangiangan lingkungan untuk ${tempPetugasPartangianganDate}`,
-      tanggalUpload: new Date().toISOString().split('T')[0],
-      tanggalMinggu: new Date().toISOString().split('T')[0],
+      tanggalUpload: formatLocalYmd(),
+      tanggalMinggu: formatLocalYmd(),
       kategori: 'petugas',
       isPdfMode: false,
       petugasPartangianganData: tempPetugasPartangiangan,
@@ -1440,11 +1462,16 @@ export default function AdminView({
   // ----------------------------------------------------
   // HELPER TO SHOW RE-USABLE TOASTS
   // ----------------------------------------------------
-  const showToast = (message: string) => {
+  const showToast = (message: string, isError = false) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    setToastIsError(isError);
     setSavedSuccessMessage(message);
-    setTimeout(() => {
+    toastTimerRef.current = setTimeout(() => {
       setSavedSuccessMessage('');
-    }, 3000);
+      setToastIsError(false);
+    }, isError ? 4500 : 3000);
   };
 
   // Convert number to Rupiah
@@ -1474,7 +1501,7 @@ export default function AdminView({
     setEditingLiturgyId('new');
     setLitType(tipe);
     setLitTitle(tipe === 'minggu' ? 'Ibadah Minggu Baru (HKBP)' : 'Ibadah Partangiangan Baru');
-    setLitDate(new Date().toISOString().split('T')[0]);
+    setLitDate(formatLocalYmd());
     setLitTopik('');
     setLitRef('');
     setLitBacaan('');
@@ -1532,7 +1559,7 @@ export default function AdminView({
       id: `arsip-liturgi-${newLiturgy.id}`,
       judul: newLiturgy.judul,
       keterangan: descText,
-      tanggalUpload: new Date().toISOString().split('T')[0],
+      tanggalUpload: formatLocalYmd(),
       tanggalMinggu: newLiturgy.tanggal,
       fileName: newLiturgy.isPdfMode ? (newLiturgy.uploadedPdfName || 'tata_ibadah.pdf') : undefined,
       fileSize: newLiturgy.isPdfMode ? (newLiturgy.uploadedPdfSize || '1.5 MB') : undefined,
@@ -1621,22 +1648,30 @@ export default function AdminView({
     }
 
     if (result.found && result.lyrics) {
-      const updated = [...litSteps];
-      const currentStep = updated[index];
-      const currentIsi = currentStep?.isi || '';
+      let applied = false;
+      setLitSteps((prev) => {
+        const currentStep = prev[index];
+        if (!currentStep) return prev;
+        const currentIsi = currentStep.isi || '';
 
-      const isPlaceholder = !currentIsi.trim() || 
-        currentIsi.includes('Ketik isi liturgi') || 
-        currentIsi.includes('Lirik Lagu Ende...');
+        const isPlaceholder = !currentIsi.trim() ||
+          currentIsi.includes('Ketik isi liturgi') ||
+          currentIsi.includes('Lirik Lagu Ende...');
 
-      const isSongLyrics = /^\s*\d+\./.test(currentIsi) || currentIsi.includes('\n2.') || currentIsi.includes('\n3.');
+        const isSongLyrics = /^\s*\d+\./.test(currentIsi) || currentIsi.includes('\n2.') || currentIsi.includes('\n3.');
 
-      if (forceOverwrite || isPlaceholder || isSongLyrics) {
-        updated[index] = {
-          ...currentStep,
-          isi: result.lyrics
-        };
-        setLitSteps(updated);
+        if (forceOverwrite || isPlaceholder || isSongLyrics) {
+          applied = true;
+          const updated = [...prev];
+          updated[index] = {
+            ...currentStep,
+            isi: result.lyrics
+          };
+          return updated;
+        }
+        return prev;
+      });
+      if (applied) {
         showToast(`✓ Lirik resmi ${result.formattedLabel} dari hkbp.or.id otomatis diisi!`);
       }
     }
@@ -1651,26 +1686,34 @@ export default function AdminView({
 
     const res = await fetchAndFormatScriptureFromLabel(targetLabel);
     if (res.found && res.formattedText) {
-      const updated = [...litSteps];
-      const currentStep = updated[index];
-      const currentIsi = currentStep?.isi || '';
+      let applied = false;
+      setLitSteps((prev) => {
+        const currentStep = prev[index];
+        if (!currentStep) return prev;
+        const currentIsi = currentStep.isi || '';
 
-      const isPlaceholder = !currentIsi.trim() || 
-        currentIsi.includes('Ketik isi liturgi') || 
-        currentIsi.includes('Lirik Lagu Ende...');
+        const isPlaceholder = !currentIsi.trim() ||
+          currentIsi.includes('Ketik isi liturgi') ||
+          currentIsi.includes('Lirik Lagu Ende...');
 
-      const isScriptureText = currentIsi.includes('[Bahasa Indonesia') || currentIsi.includes('[Biblia Bahasa Batak');
+        const isScriptureText = currentIsi.includes('[Bahasa Indonesia') || currentIsi.includes('[Biblia Bahasa Batak');
 
-      if (forceOverwrite || isPlaceholder || isScriptureText) {
-        updated[index] = {
-          ...currentStep,
-          isi: res.formattedText
-        };
-        setLitSteps(updated);
+        if (forceOverwrite || isPlaceholder || isScriptureText) {
+          applied = true;
+          const updated = [...prev];
+          updated[index] = {
+            ...currentStep,
+            isi: res.formattedText
+          };
+          return updated;
+        }
+        return prev;
+      });
+      if (applied) {
         showToast(`✓ Nats Alkitab ${res.referenceLabel} dari hkbp.or.id/alkitab otomatis diisi!`);
       }
     } else {
-      showToast(`⚠️ Nats Alkitab tidak ditemukan untuk "${targetLabel}"`);
+      showToast(`⚠️ Nats Alkitab tidak ditemukan untuk "${targetLabel}"`, true);
     }
   };
 
@@ -1697,7 +1740,7 @@ export default function AdminView({
     if (songPickerStepIndex === null) return;
     const nomorNum = parseInt(songPickerNomor, 10);
     if (isNaN(nomorNum) || nomorNum <= 0) {
-      alert('Mohon masukkan nomor lagu yang valid!');
+      showToast('Mohon masukkan nomor lagu yang valid!', true);
       return;
     }
 
@@ -1763,15 +1806,15 @@ export default function AdminView({
   const handleSaveNewSongToDb = () => {
     const nomorNum = parseInt(newSongNomor, 10);
     if (isNaN(nomorNum) || nomorNum <= 0) {
-      alert('Mohon masukkan nomor lagu yang valid!');
+      showToast('Mohon masukkan nomor lagu yang valid!', true);
       return;
     }
     if (!newSongJudul.trim()) {
-      alert('Mohon masukkan judul lagu!');
+      showToast('Mohon masukkan judul lagu!', true);
       return;
     }
     if (!newSongRawLyrics.trim()) {
-      alert('Mohon masukkan bait / lirik lagu!');
+      showToast('Mohon masukkan bait / lirik lagu!', true);
       return;
     }
 
@@ -1848,12 +1891,12 @@ export default function AdminView({
 
   const handleProcessImportDb = () => {
     if (!importDbJsonText.trim()) {
-      alert('Mohon masukkan atau tempel format data JSON database lagu.');
+      showToast('Mohon masukkan atau tempel format data JSON database lagu.', true);
       return;
     }
     const songs = normalizeSongImport(importDbJsonText);
     if (songs.length === 0) {
-      alert('Tidak ada lagu yang valid dikenali. Pastikan struktur data JSON berisi kategori, nomor, judul, dan ayatList atau lirik.');
+      showToast('Tidak ada lagu yang valid dikenali. Pastikan struktur data JSON valid.', true);
       return;
     }
 
@@ -1882,7 +1925,7 @@ export default function AdminView({
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bukuNyanyianDb, null, 2));
     const dlAnchorElem = document.createElement('a');
     dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", `database_buku_nyanyian_hkbp_${new Date().toISOString().split('T')[0]}.json`);
+    dlAnchorElem.setAttribute("download", `database_buku_nyanyian_hkbp_${formatLocalYmd()}.json`);
     dlAnchorElem.click();
     showToast('Database buku nyanyian berhasil diekspor!');
   };
@@ -1906,7 +1949,7 @@ export default function AdminView({
     const bookPath = syncBook === 'BN' ? 'buku-nyanyian' : syncBook === 'KJ' ? 'kidung' : 'buku-ende';
 
     if (isNaN(s) || isNaN(e) || s <= 0 || e < s || e > maxVal) {
-      alert(`Mohon masukkan rentang nomor lagu yang valid antara 1 hingga ${maxVal}.`);
+      showToast(`Mohon masukkan rentang nomor lagu yang valid antara 1 hingga ${maxVal}.`, true);
       return;
     }
 
@@ -1916,7 +1959,7 @@ export default function AdminView({
     try {
       const fetchedSongs = await fetchBatchFromApi(s, e, syncBook);
       if (fetchedSongs.length === 0) {
-        alert(`Gagal mengambil lagu dari portal resmi HKBP (hkbp.or.id/${bookPath}). Pastikan server terhubung ke internet.`);
+        showToast(`Gagal mengambil lagu dari portal resmi HKBP (hkbp.or.id/${bookPath}). Pastikan server terhubung ke internet.`, true);
         setIsSyncingApi(false);
         return;
       }
@@ -1935,7 +1978,7 @@ export default function AdminView({
       showToast(`✓ Berhasil menyinkronkan ${fetchedSongs.length} lagu ${syncBook} dari hkbp.or.id!`);
       setIsSyncApiModalOpen(false);
     } catch (err: any) {
-      alert(`Terjadi kesalahan saat sinkronisasi: ${err.message}`);
+      showToast(`Terjadi kesalahan saat sinkronisasi: ${err.message}`, true);
     } finally {
       setIsSyncingApi(false);
       setSyncProgress('');
@@ -1969,7 +2012,7 @@ export default function AdminView({
       id: editingWartaId === 'new' ? `warta-custom-${Date.now()}` : editingWartaId!,
       judul: wartaTitle,
       isi: wartaIsi,
-      tanggal: new Date().toISOString().split('T')[0],
+      tanggal: formatLocalYmd(),
       kategori: wartaKategori,
       penulis: wartaPenulis || undefined,
       prioritas: wartaPrioritas
@@ -1989,7 +2032,7 @@ export default function AdminView({
       id: `arsip-warta-${newW.id}`,
       judul: `Warta: ${newW.judul}`,
       keterangan: newW.isi ? (newW.isi.length > 160 ? newW.isi.slice(0, 160) + '...' : newW.isi) : 'Warta Jemaat Resmi HKBP Hinalang Silalahi',
-      tanggalUpload: new Date().toISOString().split('T')[0],
+      tanggalUpload: formatLocalYmd(),
       tanggalMinggu: newW.tanggal,
       kategori: 'warta',
       isPdfMode: false,
@@ -2034,7 +2077,7 @@ export default function AdminView({
     setTxTipe('pemasukan');
     setTxKategori('Pelean IA (Umum)');
     setTxJumlah(0);
-    setTxTanggal(new Date().toISOString().split('T')[0]);
+    setTxTanggal(formatLocalYmd());
     setTxKeterangan('');
     setTxTipeKas('Kas Huria');
     setTxSentralisasiPersen(0);
@@ -2067,8 +2110,8 @@ export default function AdminView({
       id: `arsip-transaksi-${newT.id}`,
       judul: `Catatan Kas (${newT.tipe.toUpperCase()}): ${newT.kategori}`,
       keterangan: `${newT.keterangan || 'Transaksi kas gereja'} - Nilai: Rp ${Number(newT.jumlah || 0).toLocaleString('id-ID')} (${newT.tipeKas || 'Kas Huria'})`,
-      tanggalUpload: new Date().toISOString().split('T')[0],
-      tanggalMinggu: newT.tanggal || new Date().toISOString().split('T')[0],
+      tanggalUpload: formatLocalYmd(),
+      tanggalMinggu: newT.tanggal || formatLocalYmd(),
       kategori: 'keuangan',
       isPdfMode: false,
       transaksiData: newT
@@ -2276,7 +2319,10 @@ export default function AdminView({
           if (!val) return '';
           if (typeof val === 'number') {
             const date = new Date(Math.round((val - 25569) * 86400 * 1000));
-            return date.toISOString().split('T')[0];
+            const uy = date.getUTCFullYear();
+            const um = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const ud = String(date.getUTCDate()).padStart(2, '0');
+            return `${uy}-${um}-${ud}`;
           }
           
           const str = val.toString().trim();
@@ -2286,7 +2332,7 @@ export default function AdminView({
 
           const parsedDate = new Date(str);
           if (!isNaN(parsedDate.getTime())) {
-            return parsedDate.toISOString().split('T')[0];
+            return formatLocalYmd(parsedDate);
           }
 
           const parts = str.split(/[-/]/);
@@ -2391,7 +2437,7 @@ export default function AdminView({
 
   const handleSaveAccount = async () => {
     if (!accountFormUsername || !accountFormEmail || !accountFormPassword || !accountFormNamaGereja) {
-      alert('Mohon isi seluruh data akun!');
+      showToast('Mohon isi seluruh data akun!', true);
       return;
     }
 
@@ -2400,7 +2446,7 @@ export default function AdminView({
     // Email format validation (standard RFC 5322 regex)
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(emailTrimmed)) {
-      alert('Format email tidak valid! Mohon masukkan email aktif yang benar (contoh: nama@domain.com).');
+      showToast('Format email tidak valid! Mohon masukkan email aktif yang benar (contoh: nama@domain.com).', true);
       return;
     }
 
@@ -2411,7 +2457,7 @@ export default function AdminView({
     ];
     const emailDomain = emailTrimmed.split('@')[1];
     if (fakeDomains.includes(emailDomain)) {
-      alert('Maaf, pendaftaran menggunakan email sementara tidak diizinkan. Mohon gunakan email aktif Anda yang sesungguhnya (misal Gmail, Yahoo, Outlook, dll).');
+      showToast('Maaf, email sementara tidak diizinkan. Mohon gunakan email aktif Anda yang sesungguhnya.', true);
       return;
     }
 
@@ -2432,7 +2478,7 @@ export default function AdminView({
           a.email.toLowerCase() === newAccount.email.toLowerCase()
       );
       if (isDuplicate) {
-        alert('Username atau Email sudah terdaftar!');
+        showToast('Username atau Email sudah terdaftar!', true);
         return;
       }
     }
@@ -2445,6 +2491,7 @@ export default function AdminView({
     setIsVerifying(true);
     setOtpDeliveryStatus('sending');
     setOtpErrorMessage('');
+    setOtpValidationError('');
 
     try {
       const res = await fetch('/api/send-otp', {
@@ -2481,15 +2528,16 @@ export default function AdminView({
 
   const handleConfirmVerificationCode = () => {
     if (!userTypedCode.trim()) {
-      alert('Mohon masukkan 6 digit kode verifikasi!');
+      setOtpValidationError('Mohon masukkan 6 digit kode verifikasi!');
       return;
     }
     const isValid = userTypedCode.trim() === verificationCode.trim();
 
     if (!isValid) {
-      alert('Kode verifikasi tidak cocok! Silakan periksa kembali email Anda.');
+      setOtpValidationError('Kode verifikasi tidak cocok! Silakan periksa kembali email Anda.');
       return;
     }
+    setOtpValidationError('');
     if (!pendingAccountToSave) return;
 
     const updated = [...accountsList];
@@ -2525,6 +2573,7 @@ export default function AdminView({
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
     setVerificationCode(newCode);
     setUserTypedCode('');
+    setOtpValidationError('');
     setOtpDeliveryStatus('sending');
     setOtpErrorMessage('');
     try {
@@ -2813,8 +2862,12 @@ export default function AdminView({
         
         {/* RE-USABLE TOAST FEEDBACK ALERT */}
         {savedSuccessMessage && (
-          <div className="fixed top-4 right-4 z-50 bg-[#0F2447] border border-[#1D3B6E] text-white text-xs font-bold px-4 py-3 rounded-xl flex items-center space-x-2 shadow-2xl animate-fadeIn">
-            <Check className="w-4 h-4" />
+          <div className={`fixed top-4 right-4 z-50 border text-white text-xs font-bold px-4 py-3 rounded-xl flex items-center space-x-2 shadow-2xl animate-fadeIn ${
+            toastIsError
+              ? 'bg-red-700 border-red-800'
+              : 'bg-[#0F2447] border-[#1D3B6E]'
+          }`}>
+            {toastIsError ? <AlertCircle className="w-4 h-4 shrink-0" /> : <Check className="w-4 h-4 shrink-0" />}
             <span>{savedSuccessMessage}</span>
           </div>
         )}
@@ -3214,8 +3267,17 @@ export default function AdminView({
                     const lit = liturgiMinggu[0];
                     setLitTitle(lit.judul);
                     setLitDate(lit.tanggal);
+                    setLitTopik(lit.topik || '');
                     setLitRef(lit.ayatReferensi || '');
+                    setLitBacaan(lit.ayatBacaan || '');
                     setLitSteps([...(lit.teksLiturgi || [])]);
+                  } else {
+                    setLitTitle('');
+                    setLitDate(formatLocalYmd());
+                    setLitTopik('');
+                    setLitRef('');
+                    setLitBacaan('');
+                    setLitSteps([]);
                   }
                 }}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide uppercase transition cursor-pointer ${
@@ -3295,11 +3357,16 @@ export default function AdminView({
                           if (!val.trim()) return;
                           const res = await fetchAndFormatScriptureFromLabel(val);
                           if (res.found && res.formattedText) {
-                            const stepIdx = litSteps.findIndex(s => s.label.toLowerCase().includes('epistel'));
-                            if (stepIdx !== -1) {
-                              const updated = [...litSteps];
+                            let matched = false;
+                            setLitSteps(prev => {
+                              const stepIdx = prev.findIndex(s => s.label.toLowerCase().includes('epistel'));
+                              if (stepIdx === -1) return prev;
+                              matched = true;
+                              const updated = [...prev];
                               updated[stepIdx] = { ...updated[stepIdx], isi: res.formattedText };
-                              setLitSteps(updated);
+                              return updated;
+                            });
+                            if (matched) {
                               showToast(`✓ Teks Epistel (${res.referenceLabel}) otomatis diisi ke baris acara!`);
                             }
                           }
@@ -3337,6 +3404,28 @@ export default function AdminView({
                         type="text"
                         value={litBacaan}
                         onChange={(e) => setLitBacaan(e.target.value)}
+                        onBlur={async (e) => {
+                          const val = e.target.value;
+                          if (!val.trim()) return;
+                          const res = await fetchAndFormatScriptureFromLabel(val);
+                          if (res.found && res.formattedText) {
+                            let matched = false;
+                            setLitSteps(prev => {
+                              const stepIdx = prev.findIndex(s => {
+                                const lower = s.label.toLowerCase();
+                                return lower.includes('khotbah') || lower.includes('jamita');
+                              });
+                              if (stepIdx === -1) return prev;
+                              matched = true;
+                              const updated = [...prev];
+                              updated[stepIdx] = { ...updated[stepIdx], isi: res.formattedText };
+                              return updated;
+                            });
+                            if (matched) {
+                              showToast(`✓ Teks Khotbah (${res.referenceLabel}) otomatis diisi ke baris acara!`);
+                            }
+                          }
+                        }}
                         className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                         placeholder="Contoh: Johanes 3 : 16 atau 1 Musa 1:1-3"
                       />
@@ -3507,12 +3596,13 @@ export default function AdminView({
                         uploadedPdfSize: null
                       };
                       const rest = liturgiMinggu.length > 0 ? liturgiMinggu.slice(1) : [];
+                      lastSyncedSundayJsonRef.current = JSON.stringify(updatedSunday);
                       onUpdateLiturgiMinggu([updatedSunday, ...rest]);
                       backupToArsip({
                         id: `arsip-liturgi-${updatedSunday.id}`,
                         judul: updatedSunday.judul,
                         keterangan: `Tata Ibadah Minggu (Teks Manual) untuk tanggal ${updatedSunday.tanggal}.`,
-                        tanggalUpload: new Date().toISOString().split('T')[0],
+                        tanggalUpload: formatLocalYmd(),
                         tanggalMinggu: updatedSunday.tanggal,
                         isPdfMode: false,
                         teksLiturgi: updatedSunday.teksLiturgi,
@@ -3642,6 +3732,25 @@ export default function AdminView({
                           type="text"
                           value={litRef}
                           onChange={(e) => setLitRef(e.target.value)}
+                          onBlur={async (e) => {
+                            const val = e.target.value;
+                            if (!val.trim()) return;
+                            const res = await fetchAndFormatScriptureFromLabel(val);
+                            if (res.found && res.formattedText) {
+                              let matched = false;
+                              setLitSteps(prev => {
+                                const stepIdx = prev.findIndex(s => s.label.toLowerCase().includes('epistel'));
+                                if (stepIdx === -1) return prev;
+                                matched = true;
+                                const updated = [...prev];
+                                updated[stepIdx] = { ...updated[stepIdx], isi: res.formattedText };
+                                return updated;
+                              });
+                              if (matched) {
+                                showToast(`✓ Teks Epistel (${res.referenceLabel}) otomatis diisi ke baris acara!`);
+                              }
+                            }
+                          }}
                           className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                           placeholder="Contoh: Mateus 5 : 13 - 16"
                         />
@@ -3675,6 +3784,28 @@ export default function AdminView({
                           type="text"
                           value={litBacaan}
                           onChange={(e) => setLitBacaan(e.target.value)}
+                          onBlur={async (e) => {
+                            const val = e.target.value;
+                            if (!val.trim()) return;
+                            const res = await fetchAndFormatScriptureFromLabel(val);
+                            if (res.found && res.formattedText) {
+                              let matched = false;
+                              setLitSteps(prev => {
+                                const stepIdx = prev.findIndex(s => {
+                                  const lower = s.label.toLowerCase();
+                                  return lower.includes('khotbah') || lower.includes('jamita');
+                                });
+                                if (stepIdx === -1) return prev;
+                                matched = true;
+                                const updated = [...prev];
+                                updated[stepIdx] = { ...updated[stepIdx], isi: res.formattedText };
+                                return updated;
+                              });
+                              if (matched) {
+                                showToast(`✓ Teks Khotbah (${res.referenceLabel}) otomatis diisi ke baris acara!`);
+                              }
+                            }
+                          }}
                           className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
                           placeholder="Contoh: Johanes 3 : 16"
                         />
@@ -3775,11 +3906,11 @@ export default function AdminView({
                               type="text"
                               value={step.label}
                               onChange={(e) => updateStepRow(index, 'label', e.target.value)}
-                              onBlur={(e) => handleAutoFillSongLyrics(index, e.target.value, true)}
+                              onBlur={(e) => handleAutoDetectAndFillStep(index, e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                   e.preventDefault();
-                                  handleAutoFillSongLyrics(index, (e.target as HTMLInputElement).value, true);
+                                  handleAutoDetectAndFillStep(index, (e.target as HTMLInputElement).value);
                                 }
                               }}
                               className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-black font-medium outline-none focus:border-[#0F2447]"
@@ -4448,7 +4579,6 @@ export default function AdminView({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                     {/* Opsi 1: Tabel Standar */}
                     <label
-                      onClick={() => onUpdatePartangianganMode?.('normal')}
                       className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
                         partangianganMode === 'normal'
                           ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] shadow-xs'
@@ -4475,7 +4605,6 @@ export default function AdminView({
 
                     {/* Opsi 2: Partangiangan Keluarga */}
                     <label
-                      onClick={() => onUpdatePartangianganMode?.('keluarga')}
                       className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
                         partangianganMode === 'keluarga'
                           ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] shadow-xs'
@@ -4502,7 +4631,6 @@ export default function AdminView({
 
                     {/* Opsi 3: Tidak Ada Ibadah Partangiangan */}
                     <label
-                      onClick={() => onUpdatePartangianganMode?.('selesai')}
                       className={`p-4 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between space-y-3 ${
                         partangianganMode === 'selesai'
                           ? 'bg-[#EDF2F9] border-[#0F2447] text-[#0F2447] shadow-xs'
@@ -4543,7 +4671,7 @@ export default function AdminView({
             {(() => {
               const trendsList = tempAttendanceTrends.length > 0 ? tempAttendanceTrends : (attendanceTrends && attendanceTrends.length > 0 ? attendanceTrends : INITIAL_ATTENDANCE_TRENDS);
               const latestIdx = trendsList.length - 1;
-              const latest1W = trendsList[latestIdx] || INITIAL_ATTENDANCE_TRENDS[0];
+              const latest1W = trendsList[latestIdx] || INITIAL_ATTENDANCE_TRENDS[INITIAL_ATTENDANCE_TRENDS.length - 1];
               const smCount = latest1W.sekolahMinggu ?? latest1W.mingguSm ?? 95;
               const shift1Count = latest1W.shift1 ?? latest1W.mingguAma ?? 215;
               const shift2Count = latest1W.shift2 ?? latest1W.mingguIna ?? 212;
@@ -4594,6 +4722,8 @@ export default function AdminView({
                               sekolahMinggu: val
                             };
                             setTempAttendanceTrends(updated);
+                            isTrendsDirtyRef.current = false;
+                            lastSyncedTrendsRef.current = JSON.stringify(updated);
                             if (onUpdateAttendanceTrends) {
                               onUpdateAttendanceTrends(updated);
                             }
@@ -4625,6 +4755,8 @@ export default function AdminView({
                               shift1: val
                             };
                             setTempAttendanceTrends(updated);
+                            isTrendsDirtyRef.current = false;
+                            lastSyncedTrendsRef.current = JSON.stringify(updated);
                             if (onUpdateAttendanceTrends) {
                               onUpdateAttendanceTrends(updated);
                             }
@@ -4656,6 +4788,8 @@ export default function AdminView({
                               shift2: val
                             };
                             setTempAttendanceTrends(updated);
+                            isTrendsDirtyRef.current = false;
+                            lastSyncedTrendsRef.current = JSON.stringify(updated);
                             if (onUpdateAttendanceTrends) {
                               onUpdateAttendanceTrends(updated);
                             }
@@ -4940,7 +5074,7 @@ export default function AdminView({
                         type="button"
                         onClick={() => {
                           if (!tempCustomTitle.trim()) {
-                            alert('Judul saldo kustom tidak boleh kosong.');
+                            showToast('Judul saldo kustom tidak boleh kosong.', true);
                             return;
                           }
                           onUpdateCustomBalanceTitle(tempCustomTitle);
@@ -5294,7 +5428,7 @@ export default function AdminView({
                           const thisMonth = new Date().getMonth(); // 0-11
                           return jemaatList.filter(j => {
                             if (!j.tanggalLahir) return false;
-                            const d = new Date(j.tanggalLahir);
+                            const d = parseLocalDate(j.tanggalLahir);
                             return !isNaN(d.getTime()) && d.getMonth() === thisMonth;
                           }).length;
                         })()} <span className="text-xs text-black font-bold">Warga</span>
@@ -6126,18 +6260,18 @@ export default function AdminView({
                     <button
                       onClick={() => {
                         if (!newArsipJudul) {
-                          alert('Mohon masukkan Judul Dokumen!');
+                          showToast('Mohon masukkan Judul Dokumen!', true);
                           return;
                         }
                         if (!newArsipPdfUrl) {
-                          alert('Mohon pilih file PDF dokumen!');
+                          showToast('Mohon pilih file PDF dokumen!', true);
                           return;
                         }
                         const newDoc = {
                           id: `arsip-custom-${Date.now()}`,
                           judul: newArsipJudul,
                           keterangan: newArsipKet || 'Tidak ada deskripsi tambahan.',
-                          tanggalUpload: new Date().toISOString().split('T')[0],
+                          tanggalUpload: formatLocalYmd(),
                           tanggalMinggu: newArsipTanggalMinggu,
                           kategori: newArsipKategori,
                           fileName: newArsipFileName,
@@ -6199,7 +6333,7 @@ export default function AdminView({
                   // Helper function to format date
                   const formatTanggalMingguIndo = (dateStr: string) => {
                     try {
-                      const date = new Date(dateStr);
+                      const date = parseLocalDate(dateStr);
                       if (isNaN(date.getTime())) return dateStr;
                       const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                       return date.toLocaleDateString('id-ID', options);
@@ -6695,7 +6829,7 @@ export default function AdminView({
                                 saveBukuNyanyianDb(updated);
                                 showToast(`✓ Berhasil mengunduh BE ${item.nomorLagu} "${s.judul}" dari hkbp.or.id!`);
                               } else {
-                                alert(`Gagal mengambil BE ${item.nomorLagu} dari hkbp.or.id`);
+                                showToast(`Gagal mengambil BE ${item.nomorLagu} dari hkbp.or.id`, true);
                               }
                             }}
                             className="px-2.5 py-1.5 bg-[#0F2447] hover:bg-[#173361] text-white rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center space-x-1 shrink-0 ml-2"
@@ -6931,7 +7065,7 @@ export default function AdminView({
                       if (editingTentangId !== null) {
                         // Save Edit
                         if (!tentangFormJudul.trim() || !tentangFormIsi.trim()) {
-                          alert('Judul dan isi konten tidak boleh kosong!');
+                          showToast('Judul dan isi konten tidak boleh kosong!', true);
                           return;
                         }
                         const updatedList = tentangGerejaList.map((item) =>
@@ -6943,7 +7077,7 @@ export default function AdminView({
                                 gambar: tentangFormGambar,
                                 judulGambar: tentangFormGambar ? tentangFormJudulGambar.trim() : '',
                                 keteranganGambar: tentangFormGambar ? tentangFormKeteranganGambar.trim() : '',
-                                tanggalUpdate: new Date().toISOString().split('T')[0]
+                                tanggalUpdate: formatLocalYmd()
                               }
                             : item
                         );
@@ -6954,7 +7088,7 @@ export default function AdminView({
                       } else {
                         // Add New
                         if (!tentangFormJudul.trim() || !tentangFormIsi.trim()) {
-                          alert('Judul dan isi konten tidak boleh kosong!');
+                          showToast('Judul dan isi konten tidak boleh kosong!', true);
                           return;
                         }
                         const newItem: TentangGerejaItem = {
@@ -6964,7 +7098,7 @@ export default function AdminView({
                           gambar: tentangFormGambar,
                           judulGambar: tentangFormGambar ? tentangFormJudulGambar.trim() : '',
                           keteranganGambar: tentangFormGambar ? tentangFormKeteranganGambar.trim() : '',
-                          tanggalUpdate: new Date().toISOString().split('T')[0]
+                          tanggalUpdate: formatLocalYmd()
                         };
                         onUpdateTentangGerejaList([...tentangGerejaList, newItem]);
                         showToast('Konten Informasi baru berhasil ditambahkan!');
@@ -7146,7 +7280,7 @@ export default function AdminView({
                     type="button"
                     onClick={() => {
                       if (!parhaladoFormNama || !parhaladoFormJabatan) {
-                        alert('Mohon isi nama lengkap dan jabatan!');
+                        showToast('Mohon isi nama lengkap dan jabatan!', true);
                         return;
                       }
 
@@ -7201,67 +7335,69 @@ export default function AdminView({
 
             {/* TABEL PELAYAN / PARHALADO LIST */}
             <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-              <table className="w-full text-left border-collapse font-sans text-xs">
-                <thead>
-                  <tr className="bg-[#0F2447] text-white">
-                    <th className="p-3.5 font-bold">Nama Pelayan</th>
-                    <th className="p-3.5 font-bold">Jabatan / Sektor</th>
-                    <th className="p-3.5 font-bold">No. Telepon / WA</th>
-                    <th className="p-3.5 font-bold text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {parhaladoList.length > 0 ? (
-                    parhaladoList.map((member) => (
-                      <tr key={member.id} className="hover:bg-slate-50/50 transition">
-                        <td className="p-3.5 font-bold text-black">{member.nama}</td>
-                        <td className="p-3.5 font-semibold text-black">{member.jabatan}</td>
-                        <td className="p-3.5 font-semibold text-black font-mono">{member.noTelp || '-'}</td>
-                        <td className="p-3.5 text-right">
-                          <div className="flex items-center justify-end space-x-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingParhaladoId(member.id);
-                                setParhaladoFormNama(member.nama);
-                                setParhaladoFormJabatan(member.jabatan);
-                                setParhaladoFormNoTelp(member.noTelp || '');
-                                setIsAddingParhalado(false);
-                              }}
-                              className="p-1.5 bg-white border border-slate-300 hover:bg-[#EDF2F9] text-[#0F2447] rounded transition cursor-pointer"
-                              title="Sunting"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                triggerConfirm(
-                                  'Hapus Pelayan',
-                                  `Apakah Anda yakin ingin menghapus "${member.nama}" dari daftar pelayan huria aktif?`,
-                                  () => {
-                                    const updated = parhaladoList.filter(item => item.id !== member.id);
-                                    onUpdateParhaladoList(updated);
-                                    showToast('Pelayan Berhasil Dihapus.');
-                                  }
-                                );
-                              }}
-                              className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black rounded transition cursor-pointer"
-                              title="Hapus"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="p-6 text-black text-center italic">Tidak ada data pelayan parhalado.</td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse font-sans text-xs">
+                  <thead>
+                    <tr className="bg-[#0F2447] text-white">
+                      <th className="p-3.5 font-bold">Nama Pelayan</th>
+                      <th className="p-3.5 font-bold">Jabatan / Sektor</th>
+                      <th className="p-3.5 font-bold">No. Telepon / WA</th>
+                      <th className="p-3.5 font-bold text-right">Aksi</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {parhaladoList.length > 0 ? (
+                      parhaladoList.map((member) => (
+                        <tr key={member.id} className="hover:bg-slate-50/50 transition">
+                          <td className="p-3.5 font-bold text-black">{member.nama}</td>
+                          <td className="p-3.5 font-semibold text-black">{member.jabatan}</td>
+                          <td className="p-3.5 font-semibold text-black font-mono">{member.noTelp || '-'}</td>
+                          <td className="p-3.5 text-right">
+                            <div className="flex items-center justify-end space-x-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingParhaladoId(member.id);
+                                  setParhaladoFormNama(member.nama);
+                                  setParhaladoFormJabatan(member.jabatan);
+                                  setParhaladoFormNoTelp(member.noTelp || '');
+                                  setIsAddingParhalado(false);
+                                }}
+                                className="p-1.5 bg-white border border-slate-300 hover:bg-[#EDF2F9] text-[#0F2447] rounded transition cursor-pointer"
+                                title="Sunting"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  triggerConfirm(
+                                    'Hapus Pelayan',
+                                    `Apakah Anda yakin ingin menghapus "${member.nama}" dari daftar pelayan huria aktif?`,
+                                    () => {
+                                      const updated = parhaladoList.filter(item => item.id !== member.id);
+                                      onUpdateParhaladoList(updated);
+                                      showToast('Pelayan Berhasil Dihapus.');
+                                    }
+                                  );
+                                }}
+                                className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black rounded transition cursor-pointer"
+                                title="Hapus"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="p-6 text-black text-center italic">Tidak ada data pelayan parhalado.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -7422,126 +7558,128 @@ export default function AdminView({
 
               {/* TABLE OF ACCOUNTS */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-                <table className="w-full text-left border-collapse font-sans text-xs">
-                  <thead>
-                    <tr className="bg-[#0F2447] text-white">
-                      <th className="p-3.5 font-semibold">Username</th>
-                      <th className="p-3.5 font-semibold">Email</th>
-                      <th className="p-3.5 font-semibold">Password</th>
-                      <th className="p-3.5 font-semibold">Nama Gereja</th>
-                      <th className="p-3.5 font-semibold">Akses</th>
-                      <th className="p-3.5 font-semibold">Status</th>
-                      <th className="p-3.5 font-semibold text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {accountsList.length > 0 ? (
-                      accountsList.map((acc, index) => (
-                        <tr key={acc.username + '_' + index} className={`transition ${acc.isActive === false ? 'bg-slate-50/70 opacity-75' : 'hover:bg-slate-50/50'}`}>
-                          <td className="p-3.5 font-black text-black">{acc.username}</td>
-                          <td className="p-3.5 font-bold text-black">{acc.email}</td>
-                          <td className="p-3.5 font-medium text-black font-mono">
-                            {acc.password ? (
-                              <div className="flex items-center space-x-2">
-                                <span className={showPasswordMap[acc.username] ? "" : "tracking-widest text-[10px]"}>
-                                  {showPasswordMap[acc.username] ? acc.password : '••••••••'}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => setShowPasswordMap(prev => ({ ...prev, [acc.username]: !prev[acc.username] }))}
-                                  className="text-black hover:text-black transition p-0.5 cursor-pointer flex items-center justify-center rounded hover:bg-slate-100"
-                                  title={showPasswordMap[acc.username] ? "Sembunyikan Password" : "Tampilkan Password"}
-                                >
-                                  {showPasswordMap[acc.username] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="text-black italic">No password</span>
-                            )}
-                          </td>
-                          <td className="p-3.5 font-bold text-black">{acc.namaGereja || 'HKBP Hinalang Silalahi'}</td>
-                          <td className="p-3.5 font-bold">
-                            <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider border ${
-                              acc.status === 'parhalado' 
-                                ? 'bg-[#0F2447] border-[#0F2447] text-white' 
-                                : 'bg-[#EDF2F9] border-[#CBD7EA] text-[#0F2447]'
-                            }`}>
-                              {acc.status || 'ruas'}
-                            </span>
-                          </td>
-                          <td className="p-3.5 font-bold">
-                            <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider border ${
-                              acc.isActive === false
-                                ? 'bg-slate-100 border-slate-300 text-black'
-                                : 'bg-[#EDF2F9] border-[#CBD7EA] text-[#0F2447]'
-                            }`}>
-                              {acc.isActive === false ? 'Nonaktif' : 'Aktif'}
-                            </span>
-                          </td>
-                          <td className="p-3.5 text-right">
-                            <div className="flex items-center justify-end space-x-1.5">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingAccountIdx(index);
-                                  setAccountFormUsername(acc.username);
-                                  setAccountFormEmail(acc.email);
-                                  setAccountFormPassword(acc.password || '');
-                                  setAccountFormNamaGereja(acc.namaGereja || 'HKBP Hinalang Silalahi');
-                                  setAccountFormStatus(acc.status || 'ruas');
-                                  setIsAddingAccount(false);
-                                }}
-                                className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black rounded-lg transition cursor-pointer"
-                                title="Sunting"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              
-                              {acc.isActive !== false ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleAccountActive(index)}
-                                  disabled={acc.username === 'admin'}
-                                  className={`p-1.5 rounded-lg transition cursor-pointer ${
-                                    acc.username === 'admin' 
-                                      ? 'bg-slate-100 border border-slate-200 text-black cursor-not-allowed'
-                                      : 'bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black'
-                                  }`}
-                                  title={acc.username === 'admin' ? 'Admin utama tidak bisa dinonaktifkan' : 'Nonaktifkan Akun'}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse font-sans text-xs">
+                    <thead>
+                      <tr className="bg-[#0F2447] text-white">
+                        <th className="p-3.5 font-semibold">Username</th>
+                        <th className="p-3.5 font-semibold">Email</th>
+                        <th className="p-3.5 font-semibold">Password</th>
+                        <th className="p-3.5 font-semibold">Nama Gereja</th>
+                        <th className="p-3.5 font-semibold">Akses</th>
+                        <th className="p-3.5 font-semibold">Status</th>
+                        <th className="p-3.5 font-semibold text-right">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {accountsList.length > 0 ? (
+                        accountsList.map((acc, index) => (
+                          <tr key={acc.username + '_' + index} className={`transition ${acc.isActive === false ? 'bg-slate-50/70 opacity-75' : 'hover:bg-slate-50/50'}`}>
+                            <td className="p-3.5 font-black text-black">{acc.username}</td>
+                            <td className="p-3.5 font-bold text-black">{acc.email}</td>
+                            <td className="p-3.5 font-medium text-black font-mono">
+                              {acc.password ? (
+                                <div className="flex items-center space-x-2">
+                                  <span className={showPasswordMap[acc.username] ? "" : "tracking-widest text-[10px]"}>
+                                    {showPasswordMap[acc.username] ? acc.password : '••••••••'}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowPasswordMap(prev => ({ ...prev, [acc.username]: !prev[acc.username] }))}
+                                    className="text-black hover:text-black transition p-0.5 cursor-pointer flex items-center justify-center rounded hover:bg-slate-100"
+                                    title={showPasswordMap[acc.username] ? "Sembunyikan Password" : "Tampilkan Password"}
+                                  >
+                                    {showPasswordMap[acc.username] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                  </button>
+                                </div>
                               ) : (
-                                <>
+                                <span className="text-black italic">No password</span>
+                              )}
+                            </td>
+                            <td className="p-3.5 font-bold text-black">{acc.namaGereja || 'HKBP Hinalang Silalahi'}</td>
+                            <td className="p-3.5 font-bold">
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider border ${
+                                acc.status === 'parhalado' 
+                                  ? 'bg-[#0F2447] border-[#0F2447] text-white' 
+                                  : 'bg-[#EDF2F9] border-[#CBD7EA] text-[#0F2447]'
+                              }`}>
+                                {acc.status || 'ruas'}
+                              </span>
+                            </td>
+                            <td className="p-3.5 font-bold">
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider border ${
+                                acc.isActive === false
+                                  ? 'bg-slate-100 border-slate-300 text-black'
+                                  : 'bg-[#EDF2F9] border-[#CBD7EA] text-[#0F2447]'
+                              }`}>
+                                {acc.isActive === false ? 'Nonaktif' : 'Aktif'}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-right">
+                              <div className="flex items-center justify-end space-x-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingAccountIdx(index);
+                                    setAccountFormUsername(acc.username);
+                                    setAccountFormEmail(acc.email);
+                                    setAccountFormPassword(acc.password || '');
+                                    setAccountFormNamaGereja(acc.namaGereja || 'HKBP Hinalang Silalahi');
+                                    setAccountFormStatus(acc.status || 'ruas');
+                                    setIsAddingAccount(false);
+                                  }}
+                                  className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black rounded-lg transition cursor-pointer"
+                                  title="Sunting"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                
+                                {acc.isActive !== false ? (
                                   <button
                                     type="button"
                                     onClick={() => handleToggleAccountActive(index)}
-                                    className="p-1.5 bg-[#EDF2F9] border border-[#CBD7EA] hover:bg-[#0F2447] text-[#0F2447] hover:text-white rounded-lg transition cursor-pointer flex items-center space-x-1"
-                                    title="Aktifkan Kembali Akun"
-                                  >
-                                    <Check className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handlePermanentDeleteAccount(index)}
-                                    className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black rounded-lg transition cursor-pointer"
-                                    title="Hapus Permanen Dari Database"
+                                    disabled={acc.username === 'admin'}
+                                    className={`p-1.5 rounded-lg transition cursor-pointer ${
+                                      acc.username === 'admin' 
+                                        ? 'bg-slate-100 border border-slate-200 text-black cursor-not-allowed' 
+                                        : 'bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black'
+                                    }`}
+                                    title={acc.username === 'admin' ? 'Admin utama tidak bisa dinonaktifkan' : 'Nonaktifkan Akun'}
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
-                                </>
-                              )}
-                            </div>
-                          </td>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleAccountActive(index)}
+                                      className="p-1.5 bg-[#EDF2F9] border border-[#CBD7EA] hover:bg-[#0F2447] text-[#0F2447] hover:text-white rounded-lg transition cursor-pointer flex items-center space-x-1"
+                                      title="Aktifkan Kembali Akun"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handlePermanentDeleteAccount(index)}
+                                      className="p-1.5 bg-slate-100 border border-slate-200 hover:bg-[#EDF2F9] text-black hover:text-black rounded-lg transition cursor-pointer"
+                                      title="Hapus Permanen Dari Database"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="p-6 text-black text-center italic">Tidak ada database akun terdaftar.</td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={7} className="p-6 text-black text-center italic">Tidak ada database akun terdaftar.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -7588,15 +7726,20 @@ export default function AdminView({
           setIsVerifying(false);
           setPendingAccountToSave(null);
           setUserTypedCode('');
+          setOtpValidationError('');
         }}
         email={pendingAccountToSave?.email || accountFormEmail}
         senderEmail="pirmasiahaan1234@gmail.com"
         username={pendingAccountToSave?.username || accountFormUsername}
         verificationCode={verificationCode}
         userTypedCode={userTypedCode}
-        setUserTypedCode={setUserTypedCode}
+        setUserTypedCode={(val) => {
+          setUserTypedCode(val);
+          if (otpValidationError) setOtpValidationError('');
+        }}
         otpDeliveryStatus={otpDeliveryStatus}
         otpErrorMessage={otpErrorMessage}
+        otpValidationError={otpValidationError}
         onConfirm={handleConfirmVerificationCode}
         onResend={handleResendOtp}
       />
@@ -7810,15 +7953,35 @@ export default function AdminView({
             <div className="p-4 border-t border-slate-200 bg-[#F4F6FA] shrink-0 flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   let textToCopy = `${previewManualLit.judul}\n${previewManualLit.keterangan || ''}\n\n`;
                   if (previewManualLit.isiWarta) {
                     textToCopy += `Isi Warta:\n${previewManualLit.isiWarta}`;
                   } else if (previewManualLit.teksLiturgi) {
                     textToCopy += previewManualLit.teksLiturgi.map((s: any) => `${s.label}:\n${s.isi}`).join('\n\n');
                   }
-                  navigator.clipboard.writeText(textToCopy);
-                  showToast('✓ Konten berhasil disalin ke clipboard!');
+                  try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                      await navigator.clipboard.writeText(textToCopy);
+                    } else {
+                      throw new Error('Clipboard API unavailable');
+                    }
+                    showToast('✓ Konten berhasil disalin ke clipboard!');
+                  } catch {
+                    try {
+                      const ta = document.createElement('textarea');
+                      ta.value = textToCopy;
+                      ta.style.position = 'fixed';
+                      ta.style.opacity = '0';
+                      document.body.appendChild(ta);
+                      ta.select();
+                      document.execCommand('copy');
+                      document.body.removeChild(ta);
+                      showToast('✓ Konten berhasil disalin ke clipboard!');
+                    } catch {
+                      showToast('Gagal menyalin teks ke clipboard.', true);
+                    }
+                  }
                 }}
                 className="px-3.5 py-2 bg-white hover:bg-[#EDF2F9] border border-slate-300 text-[#0F2447] rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-xs"
               >
@@ -8021,10 +8184,10 @@ export default function AdminView({
                                 saveBukuNyanyianDb(updated);
                                 showToast(`Berhasil mengambil ${songPickerKategori} No. ${n} "${s.judul}" dari portal resmi HKBP!`);
                               } else {
-                                alert(`Lagu ${songPickerKategori} No. ${n} tidak ditemukan di portal hkbp.or.id.`);
+                                showToast(`Lagu ${songPickerKategori} No. ${n} tidak ditemukan di portal hkbp.or.id.`, true);
                               }
                             } catch (e: any) {
-                              alert(`Gagal mengambil lagu: ${e.message}`);
+                              showToast(`Gagal mengambil lagu: ${e.message}`, true);
                             }
                           }}
                           className="px-3 py-1.5 bg-[#0F2447] hover:bg-[#173361] text-white rounded-lg text-xs font-semibold transition flex items-center space-x-1 cursor-pointer shadow-xs"

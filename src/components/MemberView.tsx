@@ -656,6 +656,7 @@ export default function MemberView({
 
               {kebaktianSubTab === 'minggu' ? (
                 /* Sunday Liturgy */
+                liturgiMinggu.length > 0 ? (
                 liturgiMinggu.slice(0, 1).map((liturgy) => {
                   return (
                     <div key={liturgy.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10" id="agenda-minggu-container">
@@ -770,6 +771,12 @@ export default function MemberView({
                     </div>
                   );
                 })
+                ) : (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-xs">
+                    <FileText className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                    <p className="text-xs font-bold text-black">Acara ibadah Minggu belum diisi oleh pengurus</p>
+                  </div>
+                )
               ) : partangianganMode === 'selesai' ? (
                 <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10">
                   <div className="p-8 bg-[#EDF2F9]/60 text-center space-y-3">
@@ -822,6 +829,7 @@ export default function MemberView({
                   )}
 
                   {(partangianganMode === 'normal' || (partangianganMode === 'keluarga' && showKeluargaLiturgy)) &&
+                    (liturgiPartangiangan.length > 0 ? (
                     liturgiPartangiangan.slice(0, 1).map((liturgy) => {
                       return (
                         <div key={liturgy.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10" id="agenda-partangiangan-container">
@@ -933,7 +941,13 @@ export default function MemberView({
                           </div>
                         </div>
                       );
-                    })}
+                    })
+                  ) : (
+                    <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-xs">
+                      <FileText className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                      <p className="text-xs font-bold text-black">Acara ibadah partangiangan belum diisi oleh pengurus</p>
+                    </div>
+                  ))}
                 </div>
               )}
             </motion.div>
@@ -2190,7 +2204,10 @@ export default function MemberView({
                   type="button"
                   onClick={() => {
                     setIsDrawerOpen(false);
-                    window.open(window.location.origin + window.location.pathname + '?view=tentang', '_blank');
+                    const win = window.open(window.location.origin + window.location.pathname + '?view=tentang', '_blank');
+                    if (!win || win.closed || typeof win.closed === 'undefined') {
+                      setActiveMenuModal('sejarah');
+                    }
                   }}
                   className="w-full flex items-center space-x-3.5 p-3 rounded-xl hover:bg-[#EDF2F9] text-black font-extrabold text-xs transition-all text-left border border-transparent hover:border-[#CBD7EA] cursor-pointer"
                 >
@@ -2561,9 +2578,24 @@ export default function MemberView({
                     <div className="text-center pt-0.5">
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
                           const textToCopy = 'HKBP Hinalang Silalahi Lutheran Church, Desa Hinalang Bagasan, Kec. Balige, Kab. Toba, Sumatera Utara 22312, Indonesia (Titik Koordinat: 2.3346565, 99.0417933)';
-                          navigator.clipboard.writeText(textToCopy);
+                          try {
+                            if (navigator.clipboard?.writeText) {
+                              await navigator.clipboard.writeText(textToCopy);
+                            } else {
+                              throw new Error('Clipboard API unavailable');
+                            }
+                          } catch {
+                            const textarea = document.createElement('textarea');
+                            textarea.value = textToCopy;
+                            textarea.style.position = 'fixed';
+                            textarea.style.opacity = '0';
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            try { document.execCommand('copy'); } catch {}
+                            document.body.removeChild(textarea);
+                          }
                           setCopiedLocation(true);
                           setTimeout(() => setCopiedLocation(false), 2500);
                         }}
