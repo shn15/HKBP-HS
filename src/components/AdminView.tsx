@@ -4651,7 +4651,7 @@ export default function AdminView({
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#E8EEF6] text-[#0F2447] border border-[#CBD7EA] uppercase">Opsi 2</span>
                       </div>
                       <p className="text-[11px] text-black leading-snug bg-white/90 p-2.5 rounded-xl border border-[#CBD7EA] font-medium">
-                        "tidak ada ibadah partangiangan karena ibadah partangiangann untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
+                        "tidak ada ibadah partangiangan karena ibadah partangiangan untuk tahun ini sudah selesai, akan dimulai lagi tahun depan"
                       </p>
                     </label>
                   </div>

@@ -44,14 +44,6 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
       } else {
         const defaultAdmins: AdminCredentials[] = [
           {
-            username: 'Pirma 15',
-            email: 'pirmasiahaan12342@gmail.com',
-            password: 'Pirma 08',
-            namaGereja: 'HKBP Hinalang Silalahi',
-            status: 'ruas',
-            isActive: true
-          },
-          {
             username: 'admin',
             email: 'admin@hkbp.or.id',
             password: 'adminpassword123',
@@ -515,7 +507,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Masukkan username (contoh: Pirma)"
+                  placeholder="Masukkan Username"
                   className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm text-black placeholder:text-slate-500 focus:outline-none focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447]/20 transition-all"
                   required
                 />
@@ -533,7 +525,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="administrator@hkbp.or.id"
+                  placeholder="Masukkan E-mail"
                   className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-11 pr-4 text-sm text-black placeholder:text-slate-500 focus:outline-none focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447]/20 transition-all"
                   required
                 />
@@ -551,7 +543,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Masukkan Password"
                   className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-11 pr-10 text-sm text-black placeholder:text-slate-500 focus:outline-none focus:border-[#0F2447] focus:ring-1 focus:ring-[#0F2447]/20 transition-all"
                   required
                 />

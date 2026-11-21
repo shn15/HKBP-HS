@@ -840,7 +840,7 @@ export default function MemberView({
                               <div>
                                 <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
                                   <span className="text-[10px] bg-[#0F2447] text-white font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
-                                    Ibadah Lingkungan/Keluarga
+                                    Ibadah Lingkungan/Keluarga/PHD/dll
                                   </span>
                                 </div>
                                 <h3 
