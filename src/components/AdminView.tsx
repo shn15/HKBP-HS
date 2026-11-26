@@ -27,6 +27,29 @@ function parseLocalDate(dateStr: string): Date {
   }
   return new Date(trimmed);
 }
+
+function formatLiturgiDateRange(tanggal: string, tanggalAkhir?: string): string {
+  if (!tanggal) return '';
+  const m1 = tanggal.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!tanggalAkhir || tanggalAkhir === tanggal) {
+    if (!m1) return tanggal;
+    return `${Number(m1[3])}/${m1[2]}/${m1[1]}`;
+  }
+  const m2 = tanggalAkhir.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m1 || !m2) {
+    return `${tanggal} - ${tanggalAkhir}`;
+  }
+  const [s, e] = tanggal <= tanggalAkhir ? [m1, m2] : [m2, m1];
+  const [y1, mo1, d1] = [s[1], s[2], Number(s[3])];
+  const [y2, mo2, d2] = [e[1], e[2], Number(e[3])];
+  if (y1 === y2 && mo1 === mo2) {
+    return `${d1}-${d2}/${mo1}/${y1}`;
+  }
+  if (y1 === y2) {
+    return `${d1}/${mo1} - ${d2}/${mo2}/${y2}`;
+  }
+  return `${d1}/${mo1}/${y1} - ${d2}/${mo2}/${y2}`;
+}
 import {
   ResponsiveContainer,
   AreaChart,
@@ -78,13 +101,24 @@ import {
   Eye,
   EyeOff,
   Music,
-  Copy
+  Copy,
+  Image as ImageIcon,
+  Video
 } from 'lucide-react';
-import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, TransaksiTipe, LiturgiSection, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, AdminCredentials, TentangGerejaItem, WeeklyAttendanceTrend, PartangianganMode } from '../types';
+import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, TransaksiTipe, LiturgiSection, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, AdminCredentials, TentangGerejaItem, TentangMediaItem, WeeklyAttendanceTrend, PartangianganMode } from '../types';
 import { INITIAL_ATTENDANCE_TRENDS } from '../data/mockData';
 import { BukuSong, INITIAL_BUKU_NYANYIAN_DB, parseSongFromLabel, findSongAndFormatLyrics, parseVerseRange, normalizeSongImport, fetchOfficialSongFromHkbp, BUKU_ENDE_CATALOG } from '../data/bukuNyanyianData';
 import { fetchSongFromApi, fetchBatchFromApi } from '../services/bukuEndeService';
 import { fetchAndFormatScriptureFromLabel, parseAlkitabReference, ALKITAB_BOOKS_CATALOG, fetchDualAlkitabChapter } from '../services/alkitabService';
+import {
+  MAX_MEDIA_SIZE_BYTES,
+  MAX_MEDIA_SIZE_MB,
+  formatFileSize,
+  getTentangMediaList,
+  uploadTentangMedia,
+  deleteFirestoreMediaByUrl
+} from '../services/mediaStorage';
+import { ResolvedTentangImage, ResolvedTentangVideo } from './TentangMediaRenderer';
 import { OtpVerificationModal } from './OtpVerificationModal';
 
 interface AdminViewProps {
@@ -374,23 +408,66 @@ export default function AdminView({
   const [editingTentangId, setEditingTentangId] = useState<string | null>(null);
   const [tentangFormJudul, setTentangFormJudul] = useState('');
   const [tentangFormIsi, setTentangFormIsi] = useState('');
-  const [tentangFormGambar, setTentangFormGambar] = useState('');
-  const [tentangFormJudulGambar, setTentangFormJudulGambar] = useState('');
-  const [tentangFormKeteranganGambar, setTentangFormKeteranganGambar] = useState('');
+  const [tentangFormMediaList, setTentangFormMediaList] = useState<TentangMediaItem[]>([]);
+  const [tentangUploadingItems, setTentangUploadingItems] = useState<Array<{ tempId: string; type: 'image' | 'video'; name: string; progress: number }>>([]);
   const [isAddingTentang, setIsAddingTentang] = useState(false);
+  const tentangPendingDeleteUrlsRef = useRef<string[]>([]);
+  const tentangSessionUploadedUrlsRef = useRef<string[]>([]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        showToast('Ukuran berkas gambar terlalu besar! Maksimal ukuran adalah 2MB.', true);
-        return;
+  const handleTentangMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, mediaType: 'image' | 'video') => {
+    const files: File[] = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (files.length === 0) return;
+
+    for (const file of files) {
+      if (file.size > MAX_MEDIA_SIZE_BYTES) {
+        showToast(`Ukuran berkas "${file.name}" terlalu besar! Maksimal ukuran adalah ${MAX_MEDIA_SIZE_MB} MB.`, true);
+        continue;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setTentangFormGambar(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+
+      const isImageFile = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(file.name);
+      const isVideoFile = file.type.startsWith('video/') || /\.(mp4|webm|mov|m4v|avi|mkv|3gp)$/i.test(file.name);
+      if (mediaType === 'image' && !isImageFile) {
+        showToast(`"${file.name}" bukan berkas gambar yang valid.`, true);
+        continue;
+      }
+      if (mediaType === 'video' && !isVideoFile) {
+        showToast(`"${file.name}" bukan berkas video yang valid.`, true);
+        continue;
+      }
+
+      const tempId = `up_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      setTentangUploadingItems((prev) => [
+        ...prev,
+        { tempId, type: mediaType, name: file.name, progress: 0 },
+      ]);
+
+      try {
+        const uploadedItem = await uploadTentangMedia(file, mediaType, (pct) => {
+          setTentangUploadingItems((prev) =>
+            prev.map((u) => (u.tempId === tempId ? { ...u, progress: pct } : u))
+          );
+        });
+        tentangSessionUploadedUrlsRef.current.push(uploadedItem.url);
+        setTentangFormMediaList((prev) => [...prev, uploadedItem]);
+      } catch (err: any) {
+        showToast(err?.message || `Gagal mengunggah ${file.name}`, true);
+      } finally {
+        setTentangUploadingItems((prev) => prev.filter((u) => u.tempId !== tempId));
+      }
+    }
+  };
+
+  const handleUpdateTentangMediaField = (mediaId: string, field: 'judul' | 'keterangan', value: string) => {
+    setTentangFormMediaList((prev) =>
+      prev.map((m) => (m.id === mediaId ? { ...m, [field]: value } : m))
+    );
+  };
+
+  const handleRemoveTentangMedia = (mediaItem: TentangMediaItem) => {
+    setTentangFormMediaList((prev) => prev.filter((m) => m.id !== mediaItem.id));
+    if (mediaItem.url) {
+      tentangPendingDeleteUrlsRef.current.push(mediaItem.url);
     }
   };
 
@@ -901,7 +978,7 @@ export default function AdminView({
         current.push({
           id: archId,
           judul: lit.judul,
-          keterangan: `Tata Ibadah Minggu (${lit.isPdfMode ? 'Berkas PDF' : 'Teks Manual'}) untuk ${lit.tanggal}`,
+          keterangan: `Tata Ibadah Minggu (${lit.isPdfMode ? 'Berkas PDF' : 'Teks Manual'}) untuk ${formatLiturgiDateRange(lit.tanggal, lit.tanggalAkhir)}`,
           tanggalUpload: formatLocalYmd(),
           tanggalMinggu: lit.tanggal,
           fileName: lit.isPdfMode ? (lit.uploadedPdfName || 'tata_ibadah.pdf') : undefined,
@@ -925,7 +1002,7 @@ export default function AdminView({
         current.push({
           id: archId,
           judul: lit.judul,
-          keterangan: `Tata Ibadah Partangiangan (${lit.isPdfMode ? 'Berkas PDF' : 'Teks Manual'}) untuk ${lit.tanggal}`,
+          keterangan: `Tata Ibadah Partangiangan (${lit.isPdfMode ? 'Berkas PDF' : 'Teks Manual'}) untuk ${formatLiturgiDateRange(lit.tanggal, lit.tanggalAkhir)}`,
           tanggalUpload: formatLocalYmd(),
           tanggalMinggu: lit.tanggal,
           fileName: lit.isPdfMode ? (lit.uploadedPdfName || 'tata_ibadah.pdf') : undefined,
@@ -1139,6 +1216,8 @@ export default function AdminView({
   const [litType, setLitType] = useState<'minggu' | 'partangiangan'>('minggu');
   const [litTitle, setLitTitle] = useState('');
   const [litDate, setLitDate] = useState('');
+  const [litEndDate, setLitEndDate] = useState('');
+  const [litWaktu, setLitWaktu] = useState('19:30 WIB');
   const [litTopik, setLitTopik] = useState('');
   const [litRef, setLitRef] = useState('');
   const [litBacaan, setLitBacaan] = useState('');
@@ -1451,6 +1530,8 @@ export default function AdminView({
         lastSyncedSundayJsonRef.current = serialized;
         setLitTitle(lit.judul);
         setLitDate(lit.tanggal);
+        setLitEndDate(lit.tanggalAkhir || '');
+        setLitWaktu('');
         setLitTopik(lit.topik || '');
         setLitRef(lit.ayatReferensi || '');
         setLitBacaan(lit.ayatBacaan || '');
@@ -1491,6 +1572,8 @@ export default function AdminView({
     setLitType(tipe);
     setLitTitle(lit.judul);
     setLitDate(lit.tanggal);
+    setLitEndDate(lit.tanggalAkhir || '');
+    setLitWaktu(lit.waktu || (tipe === 'partangiangan' ? '19:30 WIB' : ''));
     setLitTopik(lit.topik || '');
     setLitRef(lit.ayatReferensi || '');
     setLitBacaan(lit.ayatBacaan || '');
@@ -1502,6 +1585,8 @@ export default function AdminView({
     setLitType(tipe);
     setLitTitle(tipe === 'minggu' ? 'Ibadah Minggu Baru (HKBP)' : 'Ibadah Partangiangan Baru');
     setLitDate(formatLocalYmd());
+    setLitEndDate('');
+    setLitWaktu(tipe === 'partangiangan' ? '19:30 WIB' : '');
     setLitTopik('');
     setLitRef('');
     setLitBacaan('');
@@ -1511,19 +1596,60 @@ export default function AdminView({
     ]);
   };
 
-  const handleApplyPartangianganToMain = (lit: Liturgi) => {
-    const filtered = liturgiPartangiangan.filter(item => item.id !== lit.id);
-    const updated = [lit, ...filtered];
+  const handleTogglePartangianganMain = (targetId: string) => {
+    const hasExplicitSelection = liturgiPartangiangan.some(
+      (item) => typeof item.tampilDiBeranda === 'boolean'
+    );
+    const updated = liturgiPartangiangan.map((item, idx) => {
+      const currentShown = hasExplicitSelection ? Boolean(item.tampilDiBeranda) : idx === 0;
+      return {
+        ...item,
+        tampilDiBeranda: item.id === targetId ? !currentShown : currentShown
+      };
+    });
     onUpdateLiturgiPartangiangan(updated);
-    showToast(`✓ Acara "${lit.judul}" sekarang aktif di Halaman Utama!`);
+    const targetItem = updated.find((item) => item.id === targetId);
+    if (targetItem?.tampilDiBeranda) {
+      showToast(`✓ Acara "${targetItem.judul}" ditampilkan di Halaman User!`);
+    } else {
+      showToast(`Acara "${targetItem?.judul || ''}" disembunyikan dari Halaman User.`);
+    }
+  };
+
+  const handleApplyPartangianganToMain = (lit: Liturgi) => {
+    const others = liturgiPartangiangan
+      .filter(item => item.id !== lit.id)
+      .map(item => ({ ...item, tampilDiBeranda: false }));
+    const updated = [{ ...lit, tampilDiBeranda: true }, ...others];
+    onUpdateLiturgiPartangiangan(updated);
+    showToast(`✓ Hanya acara "${lit.judul}" yang ditampilkan di Halaman User!`);
   };
 
   const handleSaveLiturgy = () => {
     const list = litType === 'minggu' ? [...liturgiMinggu] : [...liturgiPartangiangan];
+    const startDt = litEndDate && litDate && litEndDate < litDate ? litEndDate : litDate;
+    const endDtRaw = litEndDate && litDate && litEndDate < litDate ? litDate : litEndDate;
+    const normalizedEndDate = endDtRaw && endDtRaw !== startDt ? endDtRaw : undefined;
+
+    const existingIdx = editingLiturgyId !== 'new' ? list.findIndex((l) => l.id === editingLiturgyId) : -1;
+    const existingItem = existingIdx !== -1 ? list[existingIdx] : undefined;
+    const hasExplicitSelection = list.some((item) => typeof item.tampilDiBeranda === 'boolean');
+    const preservedShown =
+      litType === 'partangiangan'
+        ? editingLiturgyId === 'new'
+          ? true
+          : hasExplicitSelection
+          ? Boolean(existingItem?.tampilDiBeranda)
+          : existingIdx === 0
+        : undefined;
+
     const newLiturgy: Liturgi = {
       id: editingLiturgyId === 'new' ? `liturgi-custom-${Date.now()}` : editingLiturgyId!,
       judul: litTitle,
-      tanggal: litDate,
+      tanggal: startDt,
+      tanggalAkhir: normalizedEndDate,
+      waktu: litType === 'partangiangan' ? (litWaktu.trim() || undefined) : undefined,
+      tampilDiBeranda: preservedShown,
       topik: litType === 'minggu' ? (litTopik || undefined) : undefined,
       ayatReferensi: litRef || undefined,
       ayatBacaan: litBacaan || undefined,
@@ -1535,7 +1661,16 @@ export default function AdminView({
     };
 
     let updatedList: Liturgi[];
-    if (editingLiturgyId === 'new') {
+    if (litType === 'partangiangan') {
+      const normalizedList = hasExplicitSelection
+        ? list
+        : list.map((item, idx) => ({ ...item, tampilDiBeranda: idx === 0 }));
+      if (editingLiturgyId === 'new') {
+        updatedList = [newLiturgy, ...normalizedList];
+      } else {
+        updatedList = normalizedList.map((l) => (l.id === editingLiturgyId ? newLiturgy : l));
+      }
+    } else if (editingLiturgyId === 'new') {
       // Prepend so newly created acara is at index 0 and immediately live on main page
       updatedList = [newLiturgy, ...list];
     } else {
@@ -1551,9 +1686,10 @@ export default function AdminView({
     }
 
     // Automatically backup to arsipPdfs (Arsip Berkas & PDF)
+    const formattedDateLabel = formatLiturgiDateRange(newLiturgy.tanggal, newLiturgy.tanggalAkhir);
     const descText = newLiturgy.isPdfMode 
-      ? `Tata Ibadah ${litType === 'minggu' ? 'Minggu' : 'Partangiangan'} (Berkas PDF) untuk tanggal ${newLiturgy.tanggal}.`
-      : `Tata Ibadah ${litType === 'minggu' ? 'Minggu' : 'Partangiangan'} (Teks Manual) untuk tanggal ${newLiturgy.tanggal}.`;
+      ? `Tata Ibadah ${litType === 'minggu' ? 'Minggu' : 'Partangiangan'} (Berkas PDF) untuk tanggal ${formattedDateLabel}.`
+      : `Tata Ibadah ${litType === 'minggu' ? 'Minggu' : 'Partangiangan'} (Teks Manual) untuk tanggal ${formattedDateLabel}.`;
 
     backupToArsip({
       id: `arsip-liturgi-${newLiturgy.id}`,
@@ -3267,6 +3403,8 @@ export default function AdminView({
                     const lit = liturgiMinggu[0];
                     setLitTitle(lit.judul);
                     setLitDate(lit.tanggal);
+                    setLitEndDate('');
+                    setLitWaktu('');
                     setLitTopik(lit.topik || '');
                     setLitRef(lit.ayatReferensi || '');
                     setLitBacaan(lit.ayatBacaan || '');
@@ -3274,6 +3412,8 @@ export default function AdminView({
                   } else {
                     setLitTitle('');
                     setLitDate(formatLocalYmd());
+                    setLitEndDate('');
+                    setLitWaktu('');
                     setLitTopik('');
                     setLitRef('');
                     setLitBacaan('');
@@ -3586,6 +3726,7 @@ export default function AdminView({
                         ...mainSunday,
                         judul: litTitle,
                         tanggal: litDate,
+                        tanggalAkhir: undefined,
                         topik: litTopik || undefined,
                         ayatReferensi: litRef || undefined,
                         ayatBacaan: litBacaan || undefined,
@@ -3624,37 +3765,119 @@ export default function AdminView({
               /* DETAILED LIST / EDITING FOR LITURGI PARTANGIANGAN */
               !editingLiturgyId ? (
                 <div className="space-y-4">
+                  {liturgiPartangiangan.length > 0 && (() => {
+                    const hasExplicitSelection = liturgiPartangiangan.some(
+                      (item) => typeof item.tampilDiBeranda === 'boolean'
+                    );
+                    const activeCount = liturgiPartangiangan.filter((item, idx) =>
+                      hasExplicitSelection ? Boolean(item.tampilDiBeranda) : idx === 0
+                    ).length;
+                    return (
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                          <div>
+                            <h4 className="text-xs font-extrabold text-[#0F2447] uppercase tracking-wider flex items-center space-x-1.5">
+                              <Check className="w-4 h-4 text-[#0F2447]" />
+                              <span>Pilih Acara yang Ditampilkan di Halaman User</span>
+                            </h4>
+                            <p className="text-[11px] text-black mt-0.5">
+                              Jika tersedia lebih dari 1 acara Partangiangan, pilih acara mana yang ingin ditampilkan ke jemaat di Halaman User.
+                            </p>
+                          </div>
+                          <span className="text-[10px] font-bold bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] px-2.5 py-1 rounded-lg shrink-0 self-start sm:self-auto">
+                            {activeCount} dari {liturgiPartangiangan.length} Acara Ditampilkan
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {liturgiPartangiangan.map((lit, pIdx) => {
+                            const isShown = hasExplicitSelection ? Boolean(lit.tampilDiBeranda) : pIdx === 0;
+                            return (
+                              <label
+                                key={`select-${lit.id}`}
+                                className={`p-3 rounded-xl border-2 transition cursor-pointer flex items-start space-x-3 ${
+                                  isShown
+                                    ? 'bg-[#EDF2F9] border-[#0F2447] shadow-2xs'
+                                    : 'bg-slate-50/70 border-slate-200 hover:bg-slate-100/80'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isShown}
+                                  onChange={() => handleTogglePartangianganMain(lit.id)}
+                                  className="mt-0.5 w-4 h-4 rounded accent-[#0F2447] cursor-pointer shrink-0"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="text-xs font-bold text-black truncate">{lit.judul}</span>
+                                    <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded uppercase shrink-0 ${
+                                      isShown ? 'bg-[#0F2447] text-white' : 'bg-slate-200 text-black'
+                                    }`}>
+                                      {isShown ? 'Tampil' : 'Tersembunyi'}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-black/80 font-mono mt-0.5">
+                                    {formatLiturgiDateRange(lit.tanggal, lit.tanggalAkhir)} • {lit.waktu || '19:30 WIB'}
+                                  </p>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {liturgiPartangiangan.map((lit, pIdx) => (
+                    {liturgiPartangiangan.map((lit, pIdx) => {
+                      const hasExplicitSelection = liturgiPartangiangan.some(
+                        (item) => typeof item.tampilDiBeranda === 'boolean'
+                      );
+                      const isShown = hasExplicitSelection ? Boolean(lit.tampilDiBeranda) : pIdx === 0;
+                      const activeCount = liturgiPartangiangan.filter((item, idx) =>
+                        hasExplicitSelection ? Boolean(item.tampilDiBeranda) : idx === 0
+                      ).length;
+
+                      return (
                       <div key={lit.id} className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between hover:border-[#CBD7EA] hover:shadow-md transition shadow-sm font-sans">
                         <div>
-                          <div className="flex items-center justify-between mb-3 text-sans">
+                          <div className="flex items-center justify-between mb-3 text-sans gap-2">
                             <div className="flex items-center space-x-1.5 flex-wrap gap-1">
                               <span className="text-[9px] bg-[#EDF2F9] border border-[#CBD7EA] text-[#0F2447] font-extrabold px-2 py-0.5 rounded tracking-wide uppercase">
                                 Partangiangan
                               </span>
-                              {pIdx === 0 && (
+                              {isShown ? (
                                 <span className="text-[9px] bg-[#0F2447] border border-[#0F2447] text-white font-extrabold px-2 py-0.5 rounded tracking-wide flex items-center space-x-1 shadow-2xs">
                                   <Check className="w-3 h-3 text-white" />
                                   <span>Aktif di Halaman Utama</span>
                                 </span>
+                              ) : (
+                                <span className="text-[9px] bg-slate-100 border border-slate-200 text-black font-bold px-2 py-0.5 rounded tracking-wide">
+                                  Tidak Ditampilkan
+                                </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-black font-mono font-medium">{lit.tanggal}</span>
+                            <div className="text-right shrink-0">
+                              <span className="text-[10px] text-black font-mono font-semibold block">
+                                {formatLiturgiDateRange(lit.tanggal, lit.tanggalAkhir)}
+                              </span>
+                              <span className="text-[9px] text-[#0F2447] font-mono font-bold block">
+                                {lit.waktu || '19:30 WIB'}
+                              </span>
+                            </div>
                           </div>
                           <h4 className="text-sm font-bold text-black leading-tight">{lit.judul}</h4>
                         </div>
 
                         <div className="space-y-2 mt-5 pt-4 border-t border-slate-200">
-                          {pIdx > 0 && (
+                          {liturgiPartangiangan.length > 1 && (!isShown || activeCount > 1) && (
                             <button
                               type="button"
                               onClick={() => handleApplyPartangianganToMain(lit)}
                               className="w-full bg-[#EDF2F9] hover:bg-[#E8EEF6] text-[#0F2447] border border-[#CBD7EA] font-black text-xs py-1.5 px-3 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer"
-                              title="Terapkan acara ini agar langsung tampil di Halaman Utama"
+                              title="Tampilkan hanya acara ini di Halaman User"
                             >
                               <Check className="w-3.5 h-3.5 text-[#0F2447]" />
-                              <span>Terapkan ke Halaman Utama</span>
+                              <span>Tampilkan Hanya Acara Ini di Halaman User</span>
                             </button>
                           )}
                           <div className="flex items-center space-x-2">
@@ -3675,7 +3898,8 @@ export default function AdminView({
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
 
                     <button
                       onClick={() => startNewLiturgy('partangiangan')}
@@ -3704,7 +3928,7 @@ export default function AdminView({
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <div className="md:col-span-2">
                       <label className="block text-xs font-semibold text-black mb-1.5">Nama Ibadah Partangiangan</label>
                       <input
                         type="text"
@@ -3715,14 +3939,64 @@ export default function AdminView({
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-black mb-1.5">Tanggal Ibadah</label>
-                      <input
-                        type="date"
-                        value={litDate}
-                        onChange={(e) => setLitDate(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
-                      />
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="md:col-span-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div>
+                            <span className="block text-[10px] font-semibold text-black/70 mb-1">Tanggal Ibadah</span>
+                            <input
+                              type="date"
+                              value={litDate}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setLitDate(val);
+                                if (litEndDate && val && litEndDate < val) {
+                                  setLitEndDate(val);
+                                }
+                              }}
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
+                            />
+                          </div>
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="block text-[10px] font-semibold text-black/70">Tanggal Kedua (Opsional)</span>
+                              {litEndDate && (
+                                <button
+                                  type="button"
+                                  onClick={() => setLitEndDate('')}
+                                  className="text-[10px] font-bold text-[#0F2447] hover:underline cursor-pointer"
+                                >
+                                  Reset
+                                </button>
+                              )}
+                            </div>
+                            <input
+                              type="date"
+                              value={litEndDate}
+                              min={litDate || undefined}
+                              onChange={(e) => setLitEndDate(e.target.value)}
+                              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
+                            />
+                          </div>
+                        </div>
+                        {litDate && (
+                          <p className="text-[10px] text-black/75 mt-1 font-medium">
+                            Format tanggal tampil: <span className="font-bold text-[#0F2447]">{formatLiturgiDateRange(litDate, litEndDate)}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-black mb-1.5">Waktu Ibadah</label>
+                        <span className="block text-[10px] font-semibold text-black/70 mb-1">Jam Ibadah</span>
+                        <input
+                          type="text"
+                          value={litWaktu}
+                          onChange={(e) => setLitWaktu(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-black outline-none focus:border-[#0F2447] transition-all font-semibold"
+                          placeholder="Contoh: 19:30 WIB"
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -6004,7 +6278,7 @@ export default function AdminView({
                           <span className="w-2 h-2 rounded-full bg-[#0F2447] shrink-0"></span>
                           <span>{lit.judul} (Minggu)</span>
                         </td>
-                        <td className="p-3 text-black font-mono">{lit.tanggal}</td>
+                        <td className="p-3 text-black font-mono">{formatLiturgiDateRange(lit.tanggal, lit.tanggalAkhir)}</td>
                         <td className="p-3 text-black font-medium">
                           {lit.isPdfMode ? (
                             <span className="text-black italic font-medium">{lit.uploadedPdfName || (lit.pdfUrl ? 'Tata_Ibadah_Minggu.pdf' : '-')}</span>
@@ -6059,7 +6333,7 @@ export default function AdminView({
                           <span className="w-2 h-2 rounded-full bg-[#4C6B9E] shrink-0"></span>
                           <span>{lit.judul} (Partangiangan)</span>
                         </td>
-                        <td className="p-3 text-black font-mono">{lit.tanggal}</td>
+                        <td className="p-3 text-black font-mono">{formatLiturgiDateRange(lit.tanggal, lit.tanggalAkhir)}</td>
                         <td className="p-3 text-black font-medium">
                           {lit.isPdfMode ? (
                             <span className="text-black italic font-medium">{lit.uploadedPdfName || (lit.pdfUrl ? 'Tata_Ibadah_Partangiangan.pdf' : '-')}</span>
@@ -6942,9 +7216,9 @@ export default function AdminView({
                     setEditingTentangId(null);
                     setTentangFormJudul('');
                     setTentangFormIsi('');
-                    setTentangFormGambar('');
-                    setTentangFormJudulGambar('');
-                    setTentangFormKeteranganGambar('');
+                    setTentangFormMediaList([]);
+                    tentangPendingDeleteUrlsRef.current = [];
+                    tentangSessionUploadedUrlsRef.current = [];
                     setIsAddingTentang(true);
                   }}
                   className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center space-x-1.5 cursor-pointer self-start sm:self-auto"
@@ -6990,94 +7264,260 @@ export default function AdminView({
                     </p>
                   </div>
  
-                  {/* Upload Gambar */}
-                  <div className="space-y-3.5 border-t border-slate-200 pt-3">
-                    <label className="text-xs font-bold text-black block">Gambar Dokumentasi (Opsional)</label>
-                    
-                    {tentangFormGambar ? (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
-                        <div className="md:col-span-1 space-y-2">
-                          <div className="w-full aspect-[2/1] bg-slate-100 rounded-xl overflow-hidden border border-slate-200 relative">
-                            <img
-                              src={tentangFormGambar}
-                              alt="Preview"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setTentangFormGambar('');
-                              setTentangFormJudulGambar('');
-                              setTentangFormKeteranganGambar('');
-                            }}
-                            className="w-full px-2.5 py-1.5 bg-slate-100 text-black hover:bg-[#EDF2F9] hover:text-black border border-slate-300 rounded-lg text-[10px] font-semibold transition flex items-center justify-center space-x-1 cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Hapus Gambar</span>
-                          </button>
-                        </div>
+                  {/* Upload Multi-Foto Dokumentasi (Maksimal 100 MB) */}
+                  {(() => {
+                    const photoList = tentangFormMediaList.filter((m) => m.type === 'image');
+                    const videoList = tentangFormMediaList.filter((m) => m.type === 'video');
+                    const uploadingPhotos = tentangUploadingItems.filter((u) => u.type === 'image');
+                    const uploadingVideos = tentangUploadingItems.filter((u) => u.type === 'video');
 
-                        <div className="md:col-span-2 space-y-3">
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-black block">Judul Gambar / Caption Singkat</label>
+                    return (
+                      <>
+                        <div className="space-y-3.5 border-t border-slate-200 pt-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <label className="text-xs font-bold text-black flex items-center gap-1.5">
+                              <ImageIcon className="w-4 h-4 text-[#0F2447]" />
+                              <span>Gambar Dokumentasi (Opsional)</span>
+                            </label>
+                            {photoList.length > 0 && (
+                              <span className="text-[10px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-2.5 py-0.5 rounded-md">
+                                {photoList.length} Foto Ditambahkan
+                              </span>
+                            )}
+                          </div>
+
+                          {photoList.length > 0 && (
+                            <div className="space-y-3">
+                              {photoList.map((photo, idx) => (
+                                <div key={photo.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
+                                  <div className="md:col-span-1 space-y-2">
+                                    <div className="w-full aspect-[2/1] bg-slate-100 rounded-xl overflow-hidden border border-slate-200 relative">
+                                      <ResolvedTentangImage
+                                        src={photo.url}
+                                        alt={photo.judul || `Foto ${idx + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                      <span className="absolute top-1.5 left-1.5 bg-[#0F2447]/85 text-white text-[9px] font-bold px-2 py-0.5 rounded">
+                                        Foto #{idx + 1}
+                                      </span>
+                                    </div>
+                                    {(photo.fileName || photo.fileSize) && (
+                                      <p className="text-[10px] text-black font-medium truncate">
+                                        {photo.fileName || 'Foto'}{photo.fileSize ? ` (${formatFileSize(photo.fileSize)})` : ''}
+                                      </p>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveTentangMedia(photo)}
+                                      className="w-full px-2.5 py-1.5 bg-slate-100 text-black hover:bg-[#EDF2F9] hover:text-black border border-slate-300 rounded-lg text-[10px] font-semibold transition flex items-center justify-center space-x-1 cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <span>Hapus Foto</span>
+                                    </button>
+                                  </div>
+
+                                  <div className="md:col-span-2 space-y-3">
+                                    <div className="space-y-1">
+                                      <label className="text-[11px] font-bold text-black block">Judul Foto / Caption Singkat</label>
+                                      <input
+                                        type="text"
+                                        value={photo.judul || ''}
+                                        onChange={(e) => handleUpdateTentangMediaField(photo.id, 'judul', e.target.value)}
+                                        placeholder="Contoh: Gedung Depan Gereja, Penyerahan Bantuan..."
+                                        className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-black focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none"
+                                      />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <label className="text-[11px] font-bold text-black block">Keterangan / Deskripsi Foto</label>
+                                      <textarea
+                                        rows={3}
+                                        value={photo.keterangan || ''}
+                                        onChange={(e) => handleUpdateTentangMediaField(photo.id, 'keterangan', e.target.value)}
+                                        placeholder="Contoh: Diambil pada acara ulang tahun gereja ke-50..."
+                                        className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-black leading-relaxed focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none resize-none"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {uploadingPhotos.map((u) => (
+                            <div key={u.tempId} className="bg-white border border-slate-200 rounded-xl p-3 space-y-1.5">
+                              <div className="flex items-center justify-between text-[11px] font-bold text-black">
+                                <span className="flex items-center gap-1.5 truncate">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0F2447] shrink-0" />
+                                  <span className="truncate">Mengunggah foto: {u.name}</span>
+                                </span>
+                                <span className="font-mono text-[#0F2447] shrink-0">{u.progress}%</span>
+                              </div>
+                              <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-[#0F2447] transition-all duration-200" style={{ width: `${u.progress}%` }} />
+                              </div>
+                            </div>
+                          ))}
+
+                          <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center bg-white hover:border-[#0F2447] hover:bg-[#EDF2F9]/40 transition relative">
                             <input
-                              type="text"
-                              value={tentangFormJudulGambar}
-                              onChange={(e) => setTentangFormJudulGambar(e.target.value)}
-                              placeholder="Contoh: Gedung Depan Gereja, Penyerahan Bantuan..."
-                              className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-black focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none"
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              onChange={(e) => handleTentangMediaUpload(e, 'image')}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[11px] font-bold text-black block">Keterangan / Deskripsi Gambar</label>
-                            <textarea
-                              rows={3}
-                              value={tentangFormKeteranganGambar}
-                              onChange={(e) => setTentangFormKeteranganGambar(e.target.value)}
-                              placeholder="Contoh: Diambil pada acara ulang tahun gereja ke-50..."
-                              className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-black leading-relaxed focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none resize-none"
-                            />
+                            <Upload className="w-5 h-5 text-[#0F2447] mx-auto mb-1.5" />
+                            <p className="text-xs font-bold text-[#0F2447]">
+                              {photoList.length > 0 ? '+ Tambah Foto Dokumentasi Lainnya' : 'Klik atau seret foto dokumentasi ke sini'}
+                            </p>
+                            <p className="text-[10px] text-black mt-0.5">
+                              PNG, JPG, JPEG, atau WebP • Maksimal {MAX_MEDIA_SIZE_MB} MB per foto (bisa pilih banyak foto)
+                            </p>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center bg-white hover:border-[#0F2447] hover:bg-[#EDF2F9]/40 transition relative">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <Upload className="w-5 h-5 text-[#0F2447] mx-auto mb-1.5" />
-                        <p className="text-xs font-bold text-[#0F2447]">Klik atau seret gambar ke sini</p>
-                        <p className="text-[9px] text-black">PNG, JPG, atau JPEG up to 2MB</p>
-                      </div>
-                    )}
-                  </div>
+
+                        {/* Upload Video Dokumentasi (Maksimal 100 MB) */}
+                        <div className="space-y-3.5 border-t border-slate-200 pt-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <label className="text-xs font-bold text-black flex items-center gap-1.5">
+                              <Video className="w-4 h-4 text-[#0F2447]" />
+                              <span>Video Dokumentasi (Opsional)</span>
+                            </label>
+                            {videoList.length > 0 && (
+                              <span className="text-[10px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-2.5 py-0.5 rounded-md">
+                                {videoList.length} Video Ditambahkan
+                              </span>
+                            )}
+                          </div>
+
+                          {videoList.length > 0 && (
+                            <div className="space-y-3">
+                              {videoList.map((video, idx) => (
+                                <div key={video.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs">
+                                  <div className="md:col-span-1 space-y-2">
+                                    <div className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-slate-200 relative">
+                                      <ResolvedTentangVideo
+                                        src={video.url}
+                                        title={video.judul || video.fileName || `Video ${idx + 1}`}
+                                        className="w-full h-full object-contain bg-black"
+                                      />
+                                      <span className="absolute top-1.5 left-1.5 bg-[#0F2447]/90 text-white text-[9px] font-bold px-2 py-0.5 rounded pointer-events-none">
+                                        Video #{idx + 1}
+                                      </span>
+                                    </div>
+                                    {(video.fileName || video.fileSize) && (
+                                      <p className="text-[10px] text-black font-medium truncate">
+                                        {video.fileName || 'Video'}{video.fileSize ? ` (${formatFileSize(video.fileSize)})` : ''}
+                                      </p>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveTentangMedia(video)}
+                                      className="w-full px-2.5 py-1.5 bg-slate-100 text-black hover:bg-[#EDF2F9] hover:text-black border border-slate-300 rounded-lg text-[10px] font-semibold transition flex items-center justify-center space-x-1 cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <span>Hapus Video</span>
+                                    </button>
+                                  </div>
+
+                                  <div className="md:col-span-2 space-y-3">
+                                    <div className="space-y-1">
+                                      <label className="text-[11px] font-bold text-black block">Judul Video / Caption Singkat</label>
+                                      <input
+                                        type="text"
+                                        value={video.judul || ''}
+                                        onChange={(e) => handleUpdateTentangMediaField(video.id, 'judul', e.target.value)}
+                                        placeholder="Contoh: Cuplikan Ibadah Syukur, Paduan Suara Gereja..."
+                                        className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-black focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none"
+                                      />
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <label className="text-[11px] font-bold text-black block">Keterangan / Deskripsi Video</label>
+                                      <textarea
+                                        rows={3}
+                                        value={video.keterangan || ''}
+                                        onChange={(e) => handleUpdateTentangMediaField(video.id, 'keterangan', e.target.value)}
+                                        placeholder="Contoh: Dokumentasi video kegiatan perayaan Natal gereja..."
+                                        className="w-full p-2.5 bg-[#F4F6FA] border border-slate-300 rounded-lg text-xs font-medium text-black leading-relaxed focus:bg-white focus:ring-2 focus:ring-[#0F2447]/15 focus:border-[#0F2447] transition outline-none resize-none"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {uploadingVideos.map((u) => (
+                            <div key={u.tempId} className="bg-white border border-slate-200 rounded-xl p-3 space-y-1.5">
+                              <div className="flex items-center justify-between text-[11px] font-bold text-black">
+                                <span className="flex items-center gap-1.5 truncate">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0F2447] shrink-0" />
+                                  <span className="truncate">Mengunggah video: {u.name}</span>
+                                </span>
+                                <span className="font-mono text-[#0F2447] shrink-0">{u.progress}%</span>
+                              </div>
+                              <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div className="h-full bg-[#0F2447] transition-all duration-200" style={{ width: `${u.progress}%` }} />
+                              </div>
+                            </div>
+                          ))}
+
+                          <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center bg-white hover:border-[#0F2447] hover:bg-[#EDF2F9]/40 transition relative">
+                            <input
+                              type="file"
+                              accept="video/*"
+                              multiple
+                              onChange={(e) => handleTentangMediaUpload(e, 'video')}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <Video className="w-5 h-5 text-[#0F2447] mx-auto mb-1.5" />
+                            <p className="text-xs font-bold text-[#0F2447]">
+                              {videoList.length > 0 ? '+ Tambah Video Dokumentasi Lainnya' : 'Klik atau seret video ke sini untuk mengunggah'}
+                            </p>
+                            <p className="text-[10px] text-black mt-0.5">
+                              MP4, WebM, MOV, atau MKV • Maksimal {MAX_MEDIA_SIZE_MB} MB per video
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
  
                 <div className="pt-2 flex items-center space-x-2.5">
                   <button
                     type="button"
                     onClick={() => {
+                      if (tentangUploadingItems.length > 0) {
+                        showToast('Mohon tunggu hingga proses unggah foto/video selesai.', true);
+                        return;
+                      }
+                      if (!tentangFormJudul.trim() || !tentangFormIsi.trim()) {
+                        showToast('Judul dan isi konten tidak boleh kosong!', true);
+                        return;
+                      }
+
+                      const cleanedMediaList = tentangFormMediaList.map((m) => ({
+                        ...m,
+                        judul: (m.judul || '').trim(),
+                        keterangan: (m.keterangan || '').trim(),
+                      }));
+                      const firstPhoto = cleanedMediaList.find((m) => m.type === 'image');
+
                       if (editingTentangId !== null) {
-                        // Save Edit
-                        if (!tentangFormJudul.trim() || !tentangFormIsi.trim()) {
-                          showToast('Judul dan isi konten tidak boleh kosong!', true);
-                          return;
-                        }
                         const updatedList = tentangGerejaList.map((item) =>
                           item.id === editingTentangId
                             ? {
                                 ...item,
                                 judul: tentangFormJudul.trim(),
                                 isi: tentangFormIsi.trim(),
-                                gambar: tentangFormGambar,
-                                judulGambar: tentangFormGambar ? tentangFormJudulGambar.trim() : '',
-                                keteranganGambar: tentangFormGambar ? tentangFormKeteranganGambar.trim() : '',
-                                tanggalUpdate: formatLocalYmd()
+                                gambar: firstPhoto?.url || '',
+                                judulGambar: firstPhoto?.judul || '',
+                                keteranganGambar: firstPhoto?.keterangan || '',
+                                mediaList: cleanedMediaList,
+                                tanggalUpdate: formatLocalYmd(),
                               }
                             : item
                         );
@@ -7086,24 +7526,30 @@ export default function AdminView({
                         setEditingTentangId(null);
                         setIsAddingTentang(false);
                       } else {
-                        // Add New
-                        if (!tentangFormJudul.trim() || !tentangFormIsi.trim()) {
-                          showToast('Judul dan isi konten tidak boleh kosong!', true);
-                          return;
-                        }
                         const newItem: TentangGerejaItem = {
                           id: 'tntg-' + Date.now(),
                           judul: tentangFormJudul.trim(),
                           isi: tentangFormIsi.trim(),
-                          gambar: tentangFormGambar,
-                          judulGambar: tentangFormGambar ? tentangFormJudulGambar.trim() : '',
-                          keteranganGambar: tentangFormGambar ? tentangFormKeteranganGambar.trim() : '',
-                          tanggalUpdate: formatLocalYmd()
+                          gambar: firstPhoto?.url || '',
+                          judulGambar: firstPhoto?.judul || '',
+                          keteranganGambar: firstPhoto?.keterangan || '',
+                          mediaList: cleanedMediaList,
+                          tanggalUpdate: formatLocalYmd(),
                         };
                         onUpdateTentangGerejaList([...tentangGerejaList, newItem]);
                         showToast('Konten Informasi baru berhasil ditambahkan!');
                         setIsAddingTentang(false);
                       }
+
+                      // Clean up removed media URLs no longer referenced by any item
+                      const activeUrls = new Set(cleanedMediaList.map((m) => m.url));
+                      tentangPendingDeleteUrlsRef.current.forEach((u) => {
+                        if (!activeUrls.has(u)) {
+                          deleteFirestoreMediaByUrl(u).catch(() => {});
+                        }
+                      });
+                      tentangPendingDeleteUrlsRef.current = [];
+                      tentangSessionUploadedUrlsRef.current = [];
                     }}
                     className="px-4 py-2 bg-[#0F2447] hover:bg-[#173361] active:bg-[#091731] text-white rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer shadow-sm"
                   >
@@ -7114,6 +7560,11 @@ export default function AdminView({
                   <button
                     type="button"
                     onClick={() => {
+                      tentangSessionUploadedUrlsRef.current.forEach((u) => {
+                        deleteFirestoreMediaByUrl(u).catch(() => {});
+                      });
+                      tentangSessionUploadedUrlsRef.current = [];
+                      tentangPendingDeleteUrlsRef.current = [];
                       setIsAddingTentang(false);
                       setEditingTentangId(null);
                     }}
@@ -7127,73 +7578,101 @@ export default function AdminView({
             ) : (
               /* LIST KONTEN */
               <div className="space-y-3">
-                {tentangGerejaList.map((item) => (
-                  <div key={item.id} className="p-4 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#F4F6FA]/60 transition">
-                    <div className="flex items-start space-x-3.5">
-                      {item.gambar ? (
-                        <div className="w-14 h-14 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shrink-0">
-                          <img
-                            src={item.gambar}
-                            alt={item.judul}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-14 h-14 bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl flex items-center justify-center text-[#0F2447] shrink-0">
-                          <BookOpen className="w-6 h-6" />
-                        </div>
-                      )}
-                      <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-black">{item.judul}</h4>
-                        <p className="text-[10px] text-black font-medium line-clamp-2 leading-relaxed">
-                          {item.isi}
-                        </p>
-                        {item.tanggalUpdate && (
-                          <span className="inline-block text-[9px] font-medium text-black font-mono">
-                            Update: {item.tanggalUpdate}
-                          </span>
+                {tentangGerejaList.map((item) => {
+                  const mediaItems = getTentangMediaList(item);
+                  const photoCount = mediaItems.filter((m) => m.type === 'image').length;
+                  const videoCount = mediaItems.filter((m) => m.type === 'video').length;
+                  const firstImage = mediaItems.find((m) => m.type === 'image');
+
+                  return (
+                    <div key={item.id} className="p-4 border border-slate-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#F4F6FA]/60 transition">
+                      <div className="flex items-start space-x-3.5">
+                        {firstImage ? (
+                          <div className="w-14 h-14 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shrink-0">
+                            <ResolvedTentangImage
+                              src={firstImage.url}
+                              alt={item.judul}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : videoCount > 0 ? (
+                          <div className="w-14 h-14 bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl flex items-center justify-center text-[#0F2447] shrink-0">
+                            <Video className="w-6 h-6" />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 bg-[#EDF2F9] border border-[#CBD7EA] rounded-xl flex items-center justify-center text-[#0F2447] shrink-0">
+                            <BookOpen className="w-6 h-6" />
+                          </div>
                         )}
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-bold text-black">{item.judul}</h4>
+                          <p className="text-[10px] text-black font-medium line-clamp-2 leading-relaxed">
+                            {item.isi}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                            {item.tanggalUpdate && (
+                              <span className="inline-block text-[9px] font-medium text-black font-mono">
+                                Update: {item.tanggalUpdate}
+                              </span>
+                            )}
+                            {photoCount > 0 && (
+                              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-1.5 py-0.5 rounded">
+                                <ImageIcon className="w-2.5 h-2.5" />
+                                {photoCount} Foto
+                              </span>
+                            )}
+                            {videoCount > 0 && (
+                              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#0F2447] bg-[#EDF2F9] border border-[#CBD7EA] px-1.5 py-0.5 rounded">
+                                <Video className="w-2.5 h-2.5" />
+                                {videoCount} Video
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+ 
+                      <div className="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingTentangId(item.id);
+                            setTentangFormJudul(item.judul);
+                            setTentangFormIsi(item.isi);
+                            setTentangFormMediaList(getTentangMediaList(item));
+                            tentangPendingDeleteUrlsRef.current = [];
+                            tentangSessionUploadedUrlsRef.current = [];
+                            setIsAddingTentang(false);
+                          }}
+                          className="p-2 bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA] rounded-lg hover:bg-[#E8EEF6] transition cursor-pointer"
+                          title="Edit Konten"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerConfirm(
+                              'Hapus Konten Informasi',
+                              `Apakah Anda yakin ingin menghapus konten "${item.judul}"?`,
+                              () => {
+                                const updated = tentangGerejaList.filter((t) => t.id !== item.id);
+                                onUpdateTentangGerejaList(updated);
+                                mediaItems.forEach((m) => {
+                                  deleteFirestoreMediaByUrl(m.url).catch(() => {});
+                                });
+                                showToast('Konten berhasil dihapus!');
+                              }
+                            );
+                          }}
+                          className="p-2 bg-slate-100 text-black hover:bg-[#EDF2F9] hover:text-black border border-slate-200 rounded-lg transition cursor-pointer"
+                          title="Hapus Konten"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
- 
-                    <div className="flex items-center space-x-1.5 shrink-0 self-end sm:self-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingTentangId(item.id);
-                          setTentangFormJudul(item.judul);
-                          setTentangFormIsi(item.isi);
-                          setTentangFormGambar(item.gambar || '');
-                          setTentangFormJudulGambar(item.judulGambar || '');
-                          setTentangFormKeteranganGambar(item.keteranganGambar || '');
-                          setIsAddingTentang(false);
-                        }}
-                        className="p-2 bg-[#EDF2F9] text-[#0F2447] border border-[#CBD7EA] rounded-lg hover:bg-[#E8EEF6] transition cursor-pointer"
-                        title="Edit Konten"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerConfirm(
-                            'Hapus Konten Informasi',
-                            `Apakah Anda yakin ingin menghapus konten "${item.judul}"?`,
-                            () => {
-                              const updated = tentangGerejaList.filter((t) => t.id !== item.id);
-                              onUpdateTentangGerejaList(updated);
-                              showToast('Konten berhasil dihapus!');
-                            }
-                          );
-                        }}
-                        className="p-2 bg-slate-100 text-black hover:bg-[#EDF2F9] hover:text-black border border-slate-200 rounded-lg transition cursor-pointer"
-                        title="Hapus Konten"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
  
                 {tentangGerejaList.length === 0 && (
                   <div className="text-center py-12 text-black text-xs italic">

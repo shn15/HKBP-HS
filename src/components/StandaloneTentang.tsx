@@ -1,5 +1,8 @@
-import { BookOpen, MapPin, Globe, ArrowLeft, Calendar, ExternalLink, Navigation } from 'lucide-react';
-import { TentangGerejaItem } from '../types';
+import { useState } from 'react';
+import { BookOpen, MapPin, Globe, ArrowLeft, Calendar, ExternalLink, Navigation, Image as ImageIcon, Video, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TentangGerejaItem, TentangMediaItem } from '../types';
+import { getTentangMediaList } from '../services/mediaStorage';
+import { ResolvedTentangImage, ResolvedTentangVideo } from './TentangMediaRenderer';
 
 interface StandaloneTentangProps {
   tentangGerejaList: TentangGerejaItem[];
@@ -7,6 +10,8 @@ interface StandaloneTentangProps {
 }
 
 export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: StandaloneTentangProps) {
+  const [lightbox, setLightbox] = useState<{ photos: TentangMediaItem[]; index: number; itemTitle: string } | null>(null);
+
   return (
     <div className="bg-[#F4F6FA] min-h-screen font-sans flex flex-col selection:bg-[#0F2447]/15 text-black">
       
@@ -59,7 +64,7 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
               <span>Informasi Umum & Dokumentasi</span>
             </h2>
             <p className="text-xs text-black leading-relaxed font-medium">
-              Selamat datang di portal informasi resmi HKBP Hinalang Silalahi. Di sini Anda dapat menemukan sejarah pendirian gereja, visi dan misi pelayanan, profil jemaat, serta foto dokumentasi kegiatan pelayanan kami.
+              Selamat datang di portal informasi resmi HKBP Hinalang Silalahi. Di sini Anda dapat menemukan sejarah pendirian gereja, visi dan misi pelayanan, profil jemaat, serta foto dan video dokumentasi kegiatan pelayanan kami.
             </p>
           </div>
           <div className="flex items-center space-x-4 shrink-0 bg-[#F4F6FA] border border-slate-200 px-5 py-3 rounded-xl">
@@ -77,66 +82,146 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
 
         {/* Content Stream */}
         <div className="space-y-6">
-          {tentangGerejaList.map((item) => (
-            <article 
-              key={item.id} 
-              className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-sm transition-shadow duration-200 group flex flex-col"
-            >
-              {/* Image Block */}
-              {item.gambar && (
-                <div className="relative w-full aspect-[21/9] bg-slate-100 overflow-hidden border-b border-slate-200">
-                  <img
-                    src={item.gambar}
-                    alt={item.judulGambar || item.judul}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  {item.judulGambar && (
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#091731]/85 via-[#091731]/40 to-transparent p-4 text-white">
-                      <p className="text-xs font-bold tracking-wide leading-tight">
-                        {item.judulGambar}
-                      </p>
-                      {item.keteranganGambar && (
-                        <p className="text-[10px] text-white/80 font-medium leading-normal mt-0.5 max-w-2xl">
-                          {item.keteranganGambar}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+          {tentangGerejaList.map((item) => {
+            const mediaList = getTentangMediaList(item);
+            const photoList = mediaList.filter((m) => m.type === 'image');
+            const videoList = mediaList.filter((m) => m.type === 'video');
 
-              {/* Text Block */}
-              <div className="p-6 md:p-8 space-y-4">
-                <div className="space-y-2 pb-3 border-b border-slate-100">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <h3 className="text-base md:text-lg font-extrabold text-black tracking-tight">
-                      {item.judul}
-                    </h3>
-                    
-                    {item.tanggalUpdate && (
-                      <div className="flex items-center space-x-1.5 text-[11px] text-black font-medium font-mono">
-                        <Calendar className="w-3.5 h-3.5 text-[#0F2447]" />
-                        <span>Update: {item.tanggalUpdate}</span>
+            return (
+              <article 
+                key={item.id} 
+                className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-sm transition-shadow duration-200 group flex flex-col"
+              >
+                {/* Featured Image Block */}
+                {photoList.length > 0 && (
+                  <div
+                    onClick={() => setLightbox({ photos: photoList, index: 0, itemTitle: item.judul })}
+                    className="relative w-full aspect-[21/9] bg-slate-100 overflow-hidden border-b border-slate-200 cursor-zoom-in"
+                  >
+                    <ResolvedTentangImage
+                      src={photoList[0].url}
+                      alt={photoList[0].judul || item.judul}
+                      className="w-full h-full object-cover"
+                    />
+                    {photoList[0].judul && (
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#091731]/85 via-[#091731]/40 to-transparent p-4 text-white">
+                        <p className="text-xs font-bold tracking-wide leading-tight">
+                          {photoList[0].judul}
+                        </p>
+                        {photoList[0].keterangan && (
+                          <p className="text-[10px] text-white/80 font-medium leading-normal mt-0.5 max-w-2xl">
+                            {photoList[0].keterangan}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
-                </div>
+                )}
 
-                <div className="space-y-4">
-                  {item.isi.split('\n\n').map((paragraph, index) => (
-                    <p 
-                      key={index} 
-                      className="text-black leading-relaxed text-xs md:text-sm font-medium text-justify"
-                      style={{ textIndent: paragraph.trim().length > 40 ? '2rem' : '0' }}
-                    >
-                      {paragraph}
-                    </p>
-                  ))}
+                {/* Text + Additional Media Block */}
+                <div className="p-6 md:p-8 space-y-5">
+                  <div className="space-y-2 pb-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <h3 className="text-base md:text-lg font-extrabold text-black tracking-tight">
+                        {item.judul}
+                      </h3>
+                      
+                      {item.tanggalUpdate && (
+                        <div className="flex items-center space-x-1.5 text-[11px] text-black font-medium font-mono">
+                          <Calendar className="w-3.5 h-3.5 text-[#0F2447]" />
+                          <span>Update: {item.tanggalUpdate}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {item.isi.split('\n\n').map((paragraph, index) => (
+                      <p 
+                        key={index} 
+                        className="text-black leading-relaxed text-xs md:text-sm font-medium text-justify"
+                        style={{ textIndent: paragraph.trim().length > 40 ? '2rem' : '0' }}
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+
+                  {/* Additional Photos Gallery */}
+                  {photoList.length > 1 && (
+                    <div className="pt-3 border-t border-slate-100 space-y-3">
+                      <h4 className="text-xs font-extrabold text-[#0F2447] uppercase tracking-wider flex items-center gap-1.5">
+                        <ImageIcon className="w-4 h-4" />
+                        <span>Galeri Foto Dokumentasi ({photoList.length} Foto)</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {photoList.map((photo, pIdx) => (
+                          <div key={photo.id} className="bg-[#F4F6FA] border border-slate-200 rounded-xl overflow-hidden flex flex-col">
+                            <div
+                              onClick={() => setLightbox({ photos: photoList, index: pIdx, itemTitle: item.judul })}
+                              className="w-full aspect-[16/10] bg-slate-100 overflow-hidden relative cursor-zoom-in"
+                            >
+                              <ResolvedTentangImage
+                                src={photo.url}
+                                alt={photo.judul || `${item.judul} - Foto ${pIdx + 1}`}
+                                className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-300"
+                              />
+                              <span className="absolute top-2 left-2 bg-[#0F2447]/85 text-white text-[9px] font-bold px-2 py-0.5 rounded">
+                                {pIdx + 1} / {photoList.length}
+                              </span>
+                            </div>
+                            {(photo.judul || photo.keterangan) && (
+                              <div className="p-3 bg-white border-t border-slate-200 space-y-0.5">
+                                {photo.judul && (
+                                  <p className="text-xs font-extrabold text-black">{photo.judul}</p>
+                                )}
+                                {photo.keterangan && (
+                                  <p className="text-[11px] text-black font-medium leading-relaxed">{photo.keterangan}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Videos Documentation */}
+                  {videoList.length > 0 && (
+                    <div className="pt-3 border-t border-slate-100 space-y-3">
+                      <h4 className="text-xs font-extrabold text-[#0F2447] uppercase tracking-wider flex items-center gap-1.5">
+                        <Video className="w-4 h-4" />
+                        <span>Video Dokumentasi ({videoList.length})</span>
+                      </h4>
+                      <div className="space-y-4">
+                        {videoList.map((video, vIdx) => (
+                          <div key={video.id} className="bg-[#F4F6FA] border border-slate-200 rounded-xl overflow-hidden">
+                            <div className="w-full aspect-video bg-black">
+                              <ResolvedTentangVideo
+                                src={video.url}
+                                title={video.judul || `${item.judul} - Video ${vIdx + 1}`}
+                                className="w-full h-full object-contain bg-black"
+                              />
+                            </div>
+                            {(video.judul || video.keterangan) && (
+                              <div className="p-3.5 bg-white border-t border-slate-200 space-y-0.5">
+                                {video.judul && (
+                                  <p className="text-xs font-extrabold text-black">{video.judul}</p>
+                                )}
+                                {video.keterangan && (
+                                  <p className="text-[11px] text-black font-medium leading-relaxed">{video.keterangan}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
 
           {tentangGerejaList.length === 0 && (
             <div className="bg-white border border-slate-200 rounded-2xl py-16 text-center space-y-3">
@@ -147,6 +232,77 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
             </div>
           )}
         </div>
+
+        {/* Lightbox Foto Dokumentasi */}
+        {lightbox && (
+          <div
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4"
+            onClick={() => setLightbox(null)}
+          >
+            <div
+              className="relative max-w-4xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-[#0F2447] text-white px-4 py-3 flex items-center justify-between">
+                <div className="min-w-0 pr-3">
+                  <p className="text-xs font-extrabold truncate">
+                    {lightbox.photos[lightbox.index]?.judul || lightbox.itemTitle}
+                  </p>
+                  <p className="text-[10px] text-white/75">
+                    Foto {lightbox.index + 1} dari {lightbox.photos.length}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setLightbox(null)}
+                  className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="relative bg-black flex items-center justify-center max-h-[70vh] min-h-[260px]">
+                <ResolvedTentangImage
+                  src={lightbox.photos[lightbox.index]?.url}
+                  alt={lightbox.photos[lightbox.index]?.judul || 'Foto Dokumentasi'}
+                  className="max-h-[70vh] w-auto max-w-full object-contain"
+                />
+                {lightbox.photos.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLightbox((prev) =>
+                          prev ? { ...prev, index: (prev.index - 1 + prev.photos.length) % prev.photos.length } : null
+                        )
+                      }
+                      className="absolute left-3 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition cursor-pointer"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLightbox((prev) =>
+                          prev ? { ...prev, index: (prev.index + 1) % prev.photos.length } : null
+                        )
+                      }
+                      className="absolute right-3 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition cursor-pointer"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+              </div>
+              {lightbox.photos[lightbox.index]?.keterangan && (
+                <div className="p-4 bg-white border-t border-slate-200">
+                  <p className="text-xs text-black font-medium leading-relaxed">
+                    {lightbox.photos[lightbox.index].keterangan}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Section: Lokasi & Peta Google Maps */}
         <section className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 space-y-5 shadow-xs">

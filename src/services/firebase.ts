@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import firebaseConfigFile from '../../firebase-applet-config.json';
 
 export interface FirebaseAppletConfig {
@@ -14,8 +15,16 @@ export interface FirebaseAppletConfig {
 
 export const firebaseConfig: FirebaseAppletConfig = firebaseConfigFile as FirebaseAppletConfig;
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const firestoreDb = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+export const firestoreDb = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+export let firebaseStorage: FirebaseStorage | null = null;
+try {
+  if (firebaseConfig.storageBucket) {
+    firebaseStorage = getStorage(firebaseApp);
+  }
+} catch (err) {
+  console.warn('Firebase Storage initialization skipped:', err);
+}
 
 export enum OperationType {
   CREATE = 'create',

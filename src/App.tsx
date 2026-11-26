@@ -64,6 +64,15 @@ export default function App() {
     }
   };
 
+  // Helper for safe localStorage writes (prevents QuotaExceededError from halting state/Firestore sync)
+  const safeSetLocalStorage = (key: string, val: string) => {
+    try {
+      localStorage.setItem(key, val);
+    } catch (e) {
+      console.warn(`Failed to write ${key} to localStorage:`, e);
+    }
+  };
+
   // Helper to save key to server/Firestore
   const saveKeyToServer = (key: string, value: any) => {
     saveDbKey(key, value).catch(err => console.error(`Failed to sync ${key}:`, err));
@@ -227,7 +236,7 @@ export default function App() {
     }
     if (db.hkbp_tentang_gereja_list !== undefined && shouldApply('hkbp_tentang_gereja_list')) {
       setIfChanged(setTentangGerejaList, db.hkbp_tentang_gereja_list);
-      localStorage.setItem('hkbp_tentang_gereja_list', JSON.stringify(db.hkbp_tentang_gereja_list));
+      safeSetLocalStorage('hkbp_tentang_gereja_list', JSON.stringify(db.hkbp_tentang_gereja_list));
     }
     if (db.hkbp_parhalado_list !== undefined && shouldApply('hkbp_parhalado_list')) {
       setIfChanged(setParhaladoList, db.hkbp_parhalado_list);
@@ -403,7 +412,7 @@ export default function App() {
 
   const handleUpdateTentangGerejaList = (data: TentangGerejaItem[]) => {
     setTentangGerejaList(data);
-    localStorage.setItem('hkbp_tentang_gereja_list', JSON.stringify(data));
+    safeSetLocalStorage('hkbp_tentang_gereja_list', JSON.stringify(data));
     saveKeyToServer('hkbp_tentang_gereja_list', data);
   };
 

@@ -38,7 +38,11 @@ import {
   ZoomOut,
   RefreshCw,
   Maximize2,
-  Minimize2
+  Minimize2,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Video
 } from 'lucide-react';
 import {
   BarChart,
@@ -50,8 +54,10 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, TentangGerejaItem, PartangianganMode, WeeklyAttendanceTrend } from '../types';
+import { Liturgi, Warta, Transaksi, Jemaat, WartaKategori, PetugasMingguRow, PartangianganAttendanceRow, PetugasPartangianganRow, JadwalIbadah, ParhaladoMember, TentangGerejaItem, TentangMediaItem, PartangianganMode, WeeklyAttendanceTrend } from '../types';
 import { INITIAL_ATTENDANCE_TRENDS } from '../data/mockData';
+import { getTentangMediaList } from '../services/mediaStorage';
+import { ResolvedTentangImage, ResolvedTentangVideo } from './TentangMediaRenderer';
 
 const BIRTHDAY_VERSES = [
   {
@@ -255,6 +261,7 @@ export default function MemberView({
   const [keuanganFilter, setKeuanganFilter] = useState<'semua' | 'pemasukan' | 'pengeluaran'>('semua');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeMenuModal, setActiveMenuModal] = useState<'jadwal' | 'sejarah' | 'parhalado' | 'alamat' | 'developer' | null>(null);
+  const [tentangLightbox, setTentangLightbox] = useState<{ photos: TentangMediaItem[]; index: number; itemTitle: string } | null>(null);
   const [copiedLocation, setCopiedLocation] = useState(false);
   const [liveFrameKey, setLiveFrameKey] = useState(0);
   const [isLiveFrameLoading, setIsLiveFrameLoading] = useState(true);
@@ -262,8 +269,7 @@ export default function MemberView({
   const [isLiveFullscreen, setIsLiveFullscreen] = useState(false);
   const liveHeaderTimerRef = useRef<number | null>(null);
 
-  const LIVE_PROJECTOR_URL = 'https://church-presenter-sandy.vercel.app/projector?mode=share&account=acc_default&room=cp-acc_default-0l7v14';
-
+  const LIVE_PROJECTOR_URL = 'https://church-presenter-sandy.vercel.app/projector?mode=share&account=acc_1795337783772_7yhm8&room=cp-acc_1795337783772_7yhm8-eppmd1';
   const clearLiveHeaderTimer = () => {
     if (liveHeaderTimerRef.current !== null) {
       window.clearTimeout(liveHeaderTimerRef.current);
@@ -368,6 +374,38 @@ export default function MemberView({
     const fallback = new Date(dateStr);
     return isNaN(fallback.getTime()) ? null : fallback;
   };
+
+  const formatLiturgiDateRange = (tanggal: string, tanggalAkhir?: string): string => {
+    if (!tanggal) return '';
+    const m1 = tanggal.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!tanggalAkhir || tanggalAkhir === tanggal) {
+      if (!m1) return tanggal;
+      return `${Number(m1[3])}/${m1[2]}/${m1[1]}`;
+    }
+    const m2 = tanggalAkhir.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m1 || !m2) {
+      return `${tanggal} - ${tanggalAkhir}`;
+    }
+    const [s, e] = tanggal <= tanggalAkhir ? [m1, m2] : [m2, m1];
+    const [y1, mo1, d1] = [s[1], s[2], Number(s[3])];
+    const [y2, mo2, d2] = [e[1], e[2], Number(e[3])];
+    if (y1 === y2 && mo1 === mo2) {
+      return `${d1}-${d2}/${mo1}/${y1}`;
+    }
+    if (y1 === y2) {
+      return `${d1}/${mo1} - ${d2}/${mo2}/${y2}`;
+    }
+    return `${d1}/${mo1}/${y1} - ${d2}/${mo2}/${y2}`;
+  };
+
+  const activePartangianganList = useMemo(() => {
+    const hasExplicitSelection = liturgiPartangiangan.some(
+      (item) => typeof item.tampilDiBeranda === 'boolean'
+    );
+    return hasExplicitSelection
+      ? liturgiPartangiangan.filter((item) => item.tampilDiBeranda)
+      : liturgiPartangiangan.slice(0, 1);
+  }, [liturgiPartangiangan]);
 
   const bdayMembersThisWeek = useMemo(() => {
     const today = new Date();
@@ -811,7 +849,7 @@ export default function MemberView({
                         <p className="text-xs sm:text-sm font-bold text-black leading-relaxed max-w-2xl mx-auto bg-white p-4 sm:p-5 rounded-2xl border border-[#CBD7EA] shadow-xs">
                           "tidak ada petugas ibadah partangiangan dikarenakan ibadah keluarga akan dilakukan di rumah masing masing"
                         </p>
-                        {liturgiPartangiangan.length > 0 && (
+                        {activePartangianganList.length > 0 && (
                           <div className="pt-2">
                             <button
                               type="button"
@@ -829,8 +867,8 @@ export default function MemberView({
                   )}
 
                   {(partangianganMode === 'normal' || (partangianganMode === 'keluarga' && showKeluargaLiturgy)) &&
-                    (liturgiPartangiangan.length > 0 ? (
-                    liturgiPartangiangan.slice(0, 1).map((liturgy) => {
+                    (activePartangianganList.length > 0 ? (
+                    activePartangianganList.map((liturgy) => {
                       return (
                         <div key={liturgy.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs relative z-10" id="agenda-partangiangan-container">
                           
@@ -854,7 +892,9 @@ export default function MemberView({
                                   className="flex items-center space-x-2 text-black mt-1.5 transition-all"
                                 >
                                   <Clock className="w-3.5 h-3.5 text-[#0F2447] shrink-0" />
-                                  <span>Jadwal: {liturgy.tanggal} (Pkl 19:30 WIB)</span>
+                                  <span>
+                                    Jadwal: {formatLiturgiDateRange(liturgy.tanggal, liturgy.tanggalAkhir)} ({liturgy.waktu || 'Pkl 19:30 WIB'})
+                                  </span>
                                 </div>
                                 {(liturgy.ayatReferensi || liturgy.ayatBacaan) && (
                                   <div className="mt-2 flex flex-wrap gap-2 items-center">
@@ -2364,58 +2404,240 @@ export default function MemberView({
 
                 {activeMenuModal === 'sejarah' && (
                   <div className="space-y-6">
-                    {tentangGerejaList.map((item) => (
-                      <div key={item.id} className="bg-slate-50 rounded-2xl border border-slate-150 p-4.5 space-y-3.5 shadow-xs">
-                        {item.gambar ? (
-                          <div className="space-y-2">
-                            <div className="w-full aspect-[2/1] bg-slate-100 rounded-xl overflow-hidden relative border border-slate-200">
-                              <img
-                                src={item.gambar}
-                                alt={item.judulGambar || item.judul}
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
+                    {tentangGerejaList.map((item) => {
+                      const mediaList = getTentangMediaList(item);
+                      const photoList = mediaList.filter((m) => m.type === 'image');
+                      const videoList = mediaList.filter((m) => m.type === 'video');
+
+                      return (
+                        <div key={item.id} className="bg-slate-50 rounded-2xl border border-slate-150 p-4.5 space-y-3.5 shadow-xs">
+                          {/* Foto Dokumentasi */}
+                          {photoList.length > 0 && (
+                            <div className="space-y-2.5">
+                              {photoList.length === 1 ? (
+                                <div className="space-y-2">
+                                  <div
+                                    onClick={() => setTentangLightbox({ photos: photoList, index: 0, itemTitle: item.judul })}
+                                    className="w-full aspect-[2/1] bg-slate-100 rounded-xl overflow-hidden relative border border-slate-200 cursor-zoom-in group"
+                                  >
+                                    <ResolvedTentangImage
+                                      src={photoList[0].url}
+                                      alt={photoList[0].judul || item.judul}
+                                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                                    />
+                                    <span className="absolute bottom-2 right-2 bg-[#0F2447]/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition">
+                                      Perbesar Foto
+                                    </span>
+                                  </div>
+                                  {(photoList[0].judul || photoList[0].keterangan) && (
+                                    <div className="bg-white border border-slate-150 rounded-xl p-3 space-y-1 shadow-xs">
+                                      {photoList[0].judul && (
+                                        <p className="text-xs font-extrabold text-black flex items-center gap-1.5">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-[#0F2447] inline-block shrink-0"></span>
+                                          <span>{photoList[0].judul}</span>
+                                        </p>
+                                      )}
+                                      {photoList[0].keterangan && (
+                                        <p className="text-[11px] text-black font-medium leading-relaxed pl-3">
+                                          {photoList[0].keterangan}
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="space-y-2.5">
+                                  <div className="flex items-center justify-between text-[11px] font-bold text-[#0F2447]">
+                                    <span className="flex items-center gap-1.5">
+                                      <ImageIcon className="w-3.5 h-3.5" />
+                                      <span>Galeri Foto Dokumentasi ({photoList.length} Foto)</span>
+                                    </span>
+                                    <span className="text-[10px] font-medium text-black">Klik foto untuk memperbesar</span>
+                                  </div>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {photoList.map((photo, pIdx) => (
+                                      <div key={photo.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs flex flex-col">
+                                        <div
+                                          onClick={() => setTentangLightbox({ photos: photoList, index: pIdx, itemTitle: item.judul })}
+                                          className="w-full aspect-[16/10] bg-slate-100 overflow-hidden relative cursor-zoom-in group"
+                                        >
+                                          <ResolvedTentangImage
+                                            src={photo.url}
+                                            alt={photo.judul || `${item.judul} - Foto ${pIdx + 1}`}
+                                            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+                                          />
+                                          <span className="absolute top-2 left-2 bg-[#0F2447]/85 text-white text-[9px] font-bold px-2 py-0.5 rounded">
+                                            {pIdx + 1} / {photoList.length}
+                                          </span>
+                                        </div>
+                                        {(photo.judul || photo.keterangan) && (
+                                          <div className="p-2.5 space-y-0.5">
+                                            {photo.judul && (
+                                              <p className="text-xs font-extrabold text-black flex items-center gap-1.5">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-[#0F2447] inline-block shrink-0"></span>
+                                                <span>{photo.judul}</span>
+                                              </p>
+                                            )}
+                                            {photo.keterangan && (
+                                              <p className="text-[11px] text-black font-medium leading-relaxed pl-3">
+                                                {photo.keterangan}
+                                              </p>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                            {(item.judulGambar || item.keteranganGambar) && (
-                              <div className="bg-white border border-slate-150 rounded-xl p-3 space-y-1 shadow-xs">
-                                {item.judulGambar && (
-                                  <p className="text-xs font-extrabold text-black flex items-center gap-1.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0F2447] inline-block shrink-0"></span>
-                                    <span>{item.judulGambar}</span>
-                                  </p>
-                                )}
-                                {item.keteranganGambar && (
-                                  <p className="text-[11px] text-black font-medium leading-relaxed pl-3">
-                                    {item.keteranganGambar}
-                                  </p>
-                                )}
+                          )}
+
+                          {/* Video Dokumentasi */}
+                          {videoList.length > 0 && (
+                            <div className="space-y-2.5">
+                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#0F2447]">
+                                <Video className="w-3.5 h-3.5" />
+                                <span>Video Dokumentasi ({videoList.length})</span>
                               </div>
-                            )}
+                              <div className="space-y-3">
+                                {videoList.map((video, vIdx) => (
+                                  <div key={video.id} className="space-y-2">
+                                    <div className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-slate-200 shadow-xs">
+                                      <ResolvedTentangVideo
+                                        src={video.url}
+                                        title={video.judul || `${item.judul} - Video ${vIdx + 1}`}
+                                        className="w-full h-full object-contain bg-black"
+                                      />
+                                    </div>
+                                    {(video.judul || video.keterangan) && (
+                                      <div className="bg-white border border-slate-150 rounded-xl p-3 space-y-1 shadow-xs">
+                                        {video.judul && (
+                                          <p className="text-xs font-extrabold text-black flex items-center gap-1.5">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#0F2447] inline-block shrink-0"></span>
+                                            <span>{video.judul}</span>
+                                          </p>
+                                        )}
+                                        {video.keterangan && (
+                                          <p className="text-[11px] text-black font-medium leading-relaxed pl-3">
+                                            {video.keterangan}
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="space-y-1">
+                            <h4 className="text-sm md:text-base font-extrabold text-black flex items-center justify-between">
+                              <span>{item.judul}</span>
+                              {item.tanggalUpdate && (
+                                <span className="text-[10px] font-medium text-black font-mono">
+                                  Diperbarui: {item.tanggalUpdate}
+                                </span>
+                              )}
+                            </h4>
+                            <div className="h-0.5 w-12 bg-[#0F2447] rounded-full" />
                           </div>
-                        ) : null}
-                        <div className="space-y-1">
-                          <h4 className="text-sm md:text-base font-extrabold text-black flex items-center justify-between">
-                            <span>{item.judul}</span>
-                            {item.tanggalUpdate && (
-                              <span className="text-[10px] font-medium text-black font-mono">
-                                Diperbarui: {item.tanggalUpdate}
-                              </span>
-                            )}
-                          </h4>
-                          <div className="h-0.5 w-12 bg-[#0F2447] rounded-full" />
+                          <div className="space-y-2.5">
+                            {item.isi.split('\n\n').map((paragraph, idx) => (
+                              <p key={idx} className="indent-6 text-black leading-relaxed text-xs md:text-sm font-medium">
+                                {paragraph}
+                              </p>
+                            ))}
+                          </div>
                         </div>
-                        <div className="space-y-2.5">
-                          {item.isi.split('\n\n').map((paragraph, idx) => (
-                            <p key={idx} className="indent-6 text-black leading-relaxed text-xs md:text-sm font-medium">
-                              {paragraph}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {tentangGerejaList.length === 0 && (
                       <div className="text-center py-10 text-black text-xs italic">
                         Belum ada konten informasi tentang gereja.
+                      </div>
+                    )}
+
+                    {/* Lightbox Foto Dokumentasi */}
+                    {tentangLightbox && (
+                      <div
+                        className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-xs flex items-center justify-center p-4"
+                        onClick={() => setTentangLightbox(null)}
+                      >
+                        <div
+                          className="relative max-w-4xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="bg-[#0F2447] text-white px-4 py-3 flex items-center justify-between">
+                            <div className="min-w-0 pr-3">
+                              <p className="text-xs font-extrabold truncate">
+                                {tentangLightbox.photos[tentangLightbox.index]?.judul || tentangLightbox.itemTitle}
+                              </p>
+                              <p className="text-[10px] text-white/75">
+                                Foto {tentangLightbox.index + 1} dari {tentangLightbox.photos.length}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setTentangLightbox(null)}
+                              className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition cursor-pointer"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="relative bg-black flex items-center justify-center max-h-[70vh] min-h-[260px]">
+                            <ResolvedTentangImage
+                              src={tentangLightbox.photos[tentangLightbox.index]?.url}
+                              alt={tentangLightbox.photos[tentangLightbox.index]?.judul || 'Foto Dokumentasi'}
+                              className="max-h-[70vh] w-auto max-w-full object-contain"
+                            />
+                            {tentangLightbox.photos.length > 1 && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setTentangLightbox((prev) =>
+                                      prev
+                                        ? {
+                                            ...prev,
+                                            index: (prev.index - 1 + prev.photos.length) % prev.photos.length,
+                                          }
+                                        : null
+                                    )
+                                  }
+                                  className="absolute left-3 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition cursor-pointer"
+                                >
+                                  <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setTentangLightbox((prev) =>
+                                      prev
+                                        ? {
+                                            ...prev,
+                                            index: (prev.index + 1) % prev.photos.length,
+                                          }
+                                        : null
+                                    )
+                                  }
+                                  className="absolute right-3 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition cursor-pointer"
+                                >
+                                  <ChevronRight className="w-5 h-5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+
+                          {tentangLightbox.photos[tentangLightbox.index]?.keterangan && (
+                            <div className="p-4 bg-white border-t border-slate-200">
+                              <p className="text-xs text-black font-medium leading-relaxed">
+                                {tentangLightbox.photos[tentangLightbox.index].keterangan}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

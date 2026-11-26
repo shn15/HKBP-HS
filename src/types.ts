@@ -38,6 +38,9 @@ export interface Liturgi {
   id: string;
   judul: string;
   tanggal: string;
+  tanggalAkhir?: string;
+  waktu?: string;
+  tampilDiBeranda?: boolean;
   topik?: string;
   ayatReferensi?: string;
   ayatBacaan?: string;
@@ -104,13 +107,25 @@ export interface JadwalIbadah {
   shift2: string;
 }
 
+export interface TentangMediaItem {
+  id: string;
+  type: 'image' | 'video';
+  url: string; // https:// download URL, data: URL, or firestore-media://<mediaId>
+  judul?: string;
+  keterangan?: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+}
+
 export interface TentangGerejaItem {
   id: string;
   judul: string;
   isi: string;
-  gambar?: string; // base64 data URL
+  gambar?: string; // legacy / primary image URL
   judulGambar?: string; // Judul untuk gambar dokumentasi
   keteranganGambar?: string; // Keterangan/deskripsi untuk gambar dokumentasi
+  mediaList?: TentangMediaItem[]; // Daftar foto & video dokumentasi
   tanggalUpdate?: string;
 }
 
