@@ -2375,7 +2375,7 @@ export default function MemberView({
                             <Users className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="font-black text-black text-xs md:text-sm leading-tight">Ibadah Shift 1</h4>
+                            <h4 className="font-black text-black text-xs md:text-sm leading-tight">Ibadah Shift 1 (Pagi)</h4>
                             <p className="text-[10px] text-black mt-0.5">Umum</p>
                           </div>
                         </div>
@@ -2390,7 +2390,7 @@ export default function MemberView({
                             <Building className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="font-black text-black text-xs md:text-sm leading-tight">Ibadah Shift 2</h4>
+                            <h4 className="font-black text-black text-xs md:text-sm leading-tight">Ibadah Shift 2 (Siang)</h4>
                             <p className="text-[10px] text-black mt-0.5">Umum</p>
                           </div>
                         </div>
@@ -2554,7 +2554,7 @@ export default function MemberView({
                     })}
                     {tentangGerejaList.length === 0 && (
                       <div className="text-center py-10 text-black text-xs italic">
-                        Belum ada konten informasi tentang gereja.
+                        Belum ada informasi tentang gereja.
                       </div>
                     )}
 
@@ -2646,7 +2646,7 @@ export default function MemberView({
                 {activeMenuModal === 'parhalado' && (
                   <div className="space-y-4">
                     <p className="text-black text-xs italic">
-                      Berikut adalah daftar lengkap pelayan dan pengurus (Parhalado) yang aktif melayani di HKBP Hinalang Silalahi saat ini:
+                      Berikut adalah daftar pelayan (Parhalado) yang melayani di HKBP Hinalang Silalahi pada saat ini:
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">

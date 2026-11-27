@@ -64,19 +64,8 @@ export default function StandaloneTentang({ tentangGerejaList, onBackToMain }: S
               <span>Informasi Umum & Dokumentasi</span>
             </h2>
             <p className="text-xs text-black leading-relaxed font-medium">
-              Selamat datang di portal informasi resmi HKBP Hinalang Silalahi. Di sini Anda dapat menemukan sejarah pendirian gereja, visi dan misi pelayanan, profil jemaat, serta foto dan video dokumentasi kegiatan pelayanan kami.
+              Selamat datang di portal informasi resmi HKBP Hinalang Silalahi. Di sini Anda dapat melihat dan mempelajari sejarah pendirian gereja, serta foto dan video dokumentasi segala kegiatan pelayanan kami.
             </p>
-          </div>
-          <div className="flex items-center space-x-4 shrink-0 bg-[#F4F6FA] border border-slate-200 px-5 py-3 rounded-xl">
-            <div className="text-center">
-              <p className="text-sm font-extrabold text-black leading-none font-mono">{tentangGerejaList.length}</p>
-              <p className="text-[10px] text-black font-semibold uppercase tracking-wider mt-1">Konten Aktif</p>
-            </div>
-            <div className="h-8 w-[1px] bg-slate-200" />
-            <div className="text-center">
-              <p className="text-xs font-extrabold text-black leading-none">Terpadu</p>
-              <p className="text-[10px] text-black font-semibold uppercase tracking-wider mt-1">Sinkronisasi</p>
-            </div>
           </div>
         </section>
 
