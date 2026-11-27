@@ -11,7 +11,7 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from 'firebase/storage';
-import { firestoreDb, firebaseStorage } from './firebase';
+import { firestoreDb, firebaseStorage, firebaseConfig } from './firebase';
 import { TentangGerejaItem, TentangMediaItem } from '../types';
 
 export const MAX_MEDIA_SIZE_MB = 100;
@@ -20,13 +20,32 @@ export const MAX_MEDIA_SIZE_BYTES = MAX_MEDIA_SIZE_MB * 1024 * 1024;
 export const FIRESTORE_MEDIA_PREFIX = 'firestore-media://';
 const MEDIA_META_COLLECTION = 'tentang_media';
 const MEDIA_CHUNK_COLLECTION = 'tentang_media_chunks';
-const BINARY_CHUNK_SIZE = 512 * 1024; // 512 KB binary per Firestore document (< 1 MB limit)
+// 768 KB binary (~1.02 MB base64 JSON payload, stored as 768 KB native bytes in Firestore < 1 MiB limit)
+const BINARY_CHUNK_SIZE = 768 * 1024;
 
 const IDB_DB_NAME = 'hkbp_tentang_media_cache_v1';
 const IDB_STORE_NAME = 'media_blobs';
 
 const objectUrlCache = new Map<string, string>();
 const pendingResolutions = new Map<string, Promise<string>>();
+
+// Remember when Firebase Storage is unavailable/unconfigured in this session to avoid repeated handshake stalls
+let storageUnavailableForSession = false;
+
+export class UploadCancelledError extends Error {
+  constructor(message = 'Proses unggah dibatalkan.') {
+    super(message);
+    this.name = 'UploadCancelledError';
+  }
+}
+
+export function isUploadCancelledError(err: unknown): boolean {
+  if (!err) return false;
+  if (err instanceof UploadCancelledError) return true;
+  if (err instanceof DOMException && err.name === 'AbortError') return true;
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.toLowerCase().includes('abort') || msg.toLowerCase().includes('cancel');
+}
 
 export function formatFileSize(bytes?: number): string {
   if (!bytes || bytes <= 0) return '0 B';
@@ -63,6 +82,29 @@ export function getTentangMediaList(item: TentangGerejaItem): TentangMediaItem[]
     ];
   }
   return [];
+}
+
+function uint8ToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const step = 0x8000;
+  for (let i = 0; i < bytes.length; i += step) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + step));
+  }
+  return btoa(binary);
+}
+
+function base64ToUint8(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function getFirestoreRestDocUrl(collectionName: string, docId: string): string {
+  return `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/${firebaseConfig.firestoreDatabaseId}/documents/${collectionName}/${encodeURIComponent(docId)}?key=${firebaseConfig.apiKey}`;
 }
 
 function openMediaIdb(): Promise<IDBDatabase | null> {
@@ -139,15 +181,18 @@ async function tryUploadToFirebaseStorage(
   file: File,
   mediaId: string,
   mediaType: 'image' | 'video',
-  onProgress?: (pct: number) => void
+  onProgress?: (pct: number) => void,
+  signal?: AbortSignal
 ): Promise<string> {
-  if (!firebaseStorage) {
-    throw new Error('Firebase Storage is not initialized');
+  if (signal?.aborted) {
+    throw new UploadCancelledError();
+  }
+  if (!firebaseStorage || storageUnavailableForSession) {
+    throw new Error('Firebase Storage is unavailable');
   }
 
-  // Fail fast so unprovisioned/locked Storage buckets fall back seamlessly to Firestore chunks
-  firebaseStorage.maxUploadRetryTime = 5000;
-  firebaseStorage.maxOperationRetryTime = 6000;
+  firebaseStorage.maxUploadRetryTime = 2500;
+  firebaseStorage.maxOperationRetryTime = 3000;
 
   const safeName = (file.name || 'media').replace(/[^a-zA-Z0-9._-]/g, '_');
   const storageRef = ref(firebaseStorage, `tentang_gereja/${mediaType}/${mediaId}_${safeName}`);
@@ -160,9 +205,31 @@ async function tryUploadToFirebaseStorage(
       contentType: file.type || (mediaType === 'video' ? 'video/mp4' : 'image/jpeg'),
     });
 
+    const cleanup = () => {
+      window.clearTimeout(stallTimer);
+      signal?.removeEventListener('abort', handleAbort);
+    };
+
+    const handleAbort = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      try {
+        task.cancel();
+      } catch {
+        // ignore
+      }
+      reject(new UploadCancelledError());
+    };
+
+    signal?.addEventListener('abort', handleAbort, { once: true });
+
+    // Detect unconfigured/CORS-blocked Firebase Storage within 2s so fallback starts fast
     const stallTimer = window.setTimeout(() => {
       if (!settled && lastBytesTransferred === 0) {
         settled = true;
+        storageUnavailableForSession = true;
+        cleanup();
         try {
           task.cancel();
         } catch {
@@ -170,7 +237,7 @@ async function tryUploadToFirebaseStorage(
         }
         reject(new Error('Firebase Storage handshake timeout'));
       }
-    }, 6000);
+    }, 2000);
 
     task.on(
       'state_changed',
@@ -180,25 +247,35 @@ async function tryUploadToFirebaseStorage(
           window.clearTimeout(stallTimer);
         }
         if (snapshot.totalBytes > 0 && onProgress) {
-          const pct = Math.min(99, Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
+          const pct = Math.min(99, Math.max(1, Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)));
           onProgress(pct);
         }
       },
       (err) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(stallTimer);
+        cleanup();
+        if (signal?.aborted || err?.code === 'storage/canceled') {
+          reject(new UploadCancelledError());
+          return;
+        }
+        storageUnavailableForSession = true;
         reject(err);
       },
       async () => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(stallTimer);
+        cleanup();
+        if (signal?.aborted) {
+          reject(new UploadCancelledError());
+          return;
+        }
         try {
           const url = await getDownloadURL(task.snapshot.ref);
           onProgress?.(100);
           resolve(url);
         } catch (err) {
+          storageUnavailableForSession = true;
           reject(err);
         }
       }
@@ -206,70 +283,170 @@ async function tryUploadToFirebaseStorage(
   });
 }
 
+async function cleanupPartialChunks(mediaId: string, chunkIndices: number[]) {
+  if (chunkIndices.length === 0) return;
+  try {
+    await Promise.all(
+      chunkIndices.map((idx) =>
+        deleteDoc(doc(firestoreDb, MEDIA_CHUNK_COLLECTION, `${mediaId}__chunk_${idx}`)).catch(() => {})
+      )
+    );
+  } catch {
+    // Non-fatal cleanup error
+  }
+}
+
+async function uploadChunkViaRestOrSdk(
+  mediaId: string,
+  idx: number,
+  uint8: Uint8Array,
+  signal?: AbortSignal
+): Promise<void> {
+  if (signal?.aborted) throw new UploadCancelledError();
+
+  const url = getFirestoreRestDocUrl(MEDIA_CHUNK_COLLECTION, `${mediaId}__chunk_${idx}`);
+  const base64 = uint8ToBase64(uint8);
+
+  try {
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      signal,
+      body: JSON.stringify({
+        fields: {
+          mediaId: { stringValue: mediaId },
+          index: { integerValue: String(idx) },
+          data: { bytesValue: base64 },
+        },
+      }),
+    });
+    if (res.ok) return;
+    if (signal?.aborted) throw new UploadCancelledError();
+  } catch (err: any) {
+    if (signal?.aborted || isUploadCancelledError(err)) {
+      throw new UploadCancelledError();
+    }
+    // Fallback to SDK if REST PATCH encountered transient issue
+  }
+
+  if (signal?.aborted) throw new UploadCancelledError();
+
+  await setDoc(doc(firestoreDb, MEDIA_CHUNK_COLLECTION, `${mediaId}__chunk_${idx}`), {
+    mediaId,
+    index: idx,
+    data: Bytes.fromUint8Array(uint8),
+    createdAt: serverTimestamp(),
+  });
+}
+
 async function uploadToFirestoreChunks(
   file: File,
   mediaId: string,
   mediaType: 'image' | 'video',
-  onProgress?: (pct: number) => void
+  onProgress?: (pct: number) => void,
+  signal?: AbortSignal
 ): Promise<string> {
+  if (signal?.aborted) throw new UploadCancelledError();
+
   const totalBytes = file.size;
   const totalChunks = Math.max(1, Math.ceil(totalBytes / BINARY_CHUNK_SIZE));
   let completedChunks = 0;
+  const uploadedIndices: number[] = [];
 
-  onProgress?.(5);
+  onProgress?.(2);
 
-  // Upload chunks with bounded concurrency (3) to avoid memory spikes for up to 100 MB files
-  const CONCURRENCY = 3;
+  // 6 concurrent HTTP/2 REST uploads significantly accelerate large video/photo uploads while bounding RAM
+  const CONCURRENCY = 6;
   let nextIdx = 0;
 
   const uploadWorker = async () => {
     while (nextIdx < totalChunks) {
+      if (signal?.aborted) {
+        throw new UploadCancelledError();
+      }
       const idx = nextIdx++;
       const start = idx * BINARY_CHUNK_SIZE;
       const end = Math.min(totalBytes, start + BINARY_CHUNK_SIZE);
       const buffer = await file.slice(start, end).arrayBuffer();
+      if (signal?.aborted) {
+        throw new UploadCancelledError();
+      }
       const uint8 = new Uint8Array(buffer);
 
-      await setDoc(doc(firestoreDb, MEDIA_CHUNK_COLLECTION, `${mediaId}__chunk_${idx}`), {
-        mediaId,
-        index: idx,
-        data: Bytes.fromUint8Array(uint8),
-        createdAt: serverTimestamp(),
-      });
+      await uploadChunkViaRestOrSdk(mediaId, idx, uint8, signal);
+      uploadedIndices.push(idx);
 
       completedChunks++;
-      const pct = Math.min(95, 5 + Math.round((completedChunks / totalChunks) * 90));
+      const pct = Math.min(96, 2 + Math.round((completedChunks / totalChunks) * 94));
       onProgress?.(pct);
     }
   };
 
-  await Promise.all(
-    Array.from({ length: Math.min(CONCURRENCY, totalChunks) }, () => uploadWorker())
-  );
+  try {
+    await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, totalChunks) }, () => uploadWorker())
+    );
 
-  await setDoc(doc(firestoreDb, MEDIA_META_COLLECTION, mediaId), {
-    mediaId,
-    type: mediaType,
-    fileName: file.name || `${mediaType}-${mediaId}`,
-    fileSize: totalBytes,
-    mimeType: file.type || (mediaType === 'video' ? 'video/mp4' : 'image/jpeg'),
-    chunkCount: totalChunks,
-    createdAt: serverTimestamp(),
-  });
+    if (signal?.aborted) {
+      throw new UploadCancelledError();
+    }
 
-  onProgress?.(100);
-  return `${FIRESTORE_MEDIA_PREFIX}${mediaId}`;
+    const mimeType = file.type || (mediaType === 'video' ? 'video/mp4' : 'image/jpeg');
+    const metaUrl = getFirestoreRestDocUrl(MEDIA_META_COLLECTION, mediaId);
+    const metaRes = await fetch(metaUrl, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      signal,
+      body: JSON.stringify({
+        fields: {
+          mediaId: { stringValue: mediaId },
+          type: { stringValue: mediaType },
+          fileName: { stringValue: file.name || `${mediaType}-${mediaId}` },
+          fileSize: { integerValue: String(totalBytes) },
+          mimeType: { stringValue: mimeType },
+          chunkCount: { integerValue: String(totalChunks) },
+        },
+      }),
+    });
+
+    if (!metaRes.ok) {
+      if (signal?.aborted) throw new UploadCancelledError();
+      await setDoc(doc(firestoreDb, MEDIA_META_COLLECTION, mediaId), {
+        mediaId,
+        type: mediaType,
+        fileName: file.name || `${mediaType}-${mediaId}`,
+        fileSize: totalBytes,
+        mimeType,
+        chunkCount: totalChunks,
+        createdAt: serverTimestamp(),
+      });
+    }
+
+    onProgress?.(100);
+    return `${FIRESTORE_MEDIA_PREFIX}${mediaId}`;
+  } catch (err) {
+    if (signal?.aborted || isUploadCancelledError(err)) {
+      cleanupPartialChunks(mediaId, uploadedIndices).catch(() => {});
+      throw new UploadCancelledError();
+    }
+    cleanupPartialChunks(mediaId, uploadedIndices).catch(() => {});
+    throw err;
+  }
 }
 
 /**
  * Validates (max 100 MB) and uploads a photo or video for Tentang Gereja.
- * Immediately caches the Blob in IndexedDB + memory ObjectURL cache so playback/preview is instant.
+ * Supports AbortSignal cancellation and non-blocking IndexedDB caching.
  */
 export async function uploadTentangMedia(
   file: File,
   mediaType: 'image' | 'video',
-  onProgress?: (pct: number) => void
+  onProgress?: (pct: number) => void,
+  signal?: AbortSignal
 ): Promise<TentangMediaItem> {
+  if (signal?.aborted) {
+    throw new UploadCancelledError();
+  }
   if (file.size > MAX_MEDIA_SIZE_BYTES) {
     throw new Error(`Ukuran berkas terlalu besar! Maksimal ukuran adalah ${MAX_MEDIA_SIZE_MB} MB.`);
   }
@@ -277,18 +454,23 @@ export async function uploadTentangMedia(
   const mediaId = `tmedia_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const mimeType = file.type || (mediaType === 'video' ? 'video/mp4' : 'image/jpeg');
 
-  // Cache locally in memory and IndexedDB right away
-  const localObjectUrl = URL.createObjectURL(file);
-  objectUrlCache.set(mediaId, localObjectUrl);
-  await saveBlobToIdb(mediaId, file);
+  onProgress?.(1);
 
   let finalUrl = '';
   try {
-    finalUrl = await tryUploadToFirebaseStorage(file, mediaId, mediaType, onProgress);
+    finalUrl = await tryUploadToFirebaseStorage(file, mediaId, mediaType, onProgress, signal);
   } catch (storageErr) {
-    console.info('Firebase Storage unavailable, using Firestore chunked media storage:', storageErr);
-    finalUrl = await uploadToFirestoreChunks(file, mediaId, mediaType, onProgress);
+    if (signal?.aborted || isUploadCancelledError(storageErr)) {
+      throw new UploadCancelledError();
+    }
+    console.info('Firebase Storage unavailable, using parallel Firestore chunked media storage:', storageErr);
+    finalUrl = await uploadToFirestoreChunks(file, mediaId, mediaType, onProgress, signal);
   }
+
+  // Cache locally in memory & IndexedDB after upload succeeds so upload itself is never delayed
+  const localObjectUrl = URL.createObjectURL(file);
+  objectUrlCache.set(mediaId, localObjectUrl);
+  saveBlobToIdb(mediaId, file).catch(() => {});
 
   return {
     id: mediaId,
@@ -347,7 +529,7 @@ export async function resolveTentangMediaUrl(url: string): Promise<string> {
     }
 
     const parts: BlobPart[] = new Array(chunkCount);
-    const BATCH_SIZE = 6;
+    const BATCH_SIZE = 8;
     for (let start = 0; start < chunkCount; start += BATCH_SIZE) {
       const end = Math.min(chunkCount, start + BATCH_SIZE);
       const batchSnaps = await Promise.all(
@@ -367,6 +549,8 @@ export async function resolveTentangMediaUrl(url: string): Promise<string> {
           parts[idx] = new Uint8Array(u8);
         } else if (rawData instanceof Uint8Array) {
           parts[idx] = new Uint8Array(rawData);
+        } else if (typeof rawData === 'string') {
+          parts[idx] = new Uint8Array(base64ToUint8(rawData));
         } else {
           throw new Error(`Format potongan media ${idx} tidak dikenali.`);
         }
@@ -374,7 +558,7 @@ export async function resolveTentangMediaUrl(url: string): Promise<string> {
     }
 
     const blob = new Blob(parts, { type: meta.mimeType || 'application/octet-stream' });
-    await saveBlobToIdb(mediaId, blob);
+    saveBlobToIdb(mediaId, blob).catch(() => {});
 
     const objUrl = URL.createObjectURL(blob);
     objectUrlCache.set(mediaId, objUrl);

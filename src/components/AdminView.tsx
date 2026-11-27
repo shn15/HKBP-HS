@@ -116,7 +116,8 @@ import {
   formatFileSize,
   getTentangMediaList,
   uploadTentangMedia,
-  deleteFirestoreMediaByUrl
+  deleteFirestoreMediaByUrl,
+  isUploadCancelledError
 } from '../services/mediaStorage';
 import { ResolvedTentangImage, ResolvedTentangVideo } from './TentangMediaRenderer';
 import { OtpVerificationModal } from './OtpVerificationModal';
@@ -413,13 +414,46 @@ export default function AdminView({
   const [isAddingTentang, setIsAddingTentang] = useState(false);
   const tentangPendingDeleteUrlsRef = useRef<string[]>([]);
   const tentangSessionUploadedUrlsRef = useRef<string[]>([]);
+  const tentangUploadControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const tentangUploadBatchCancelledRef = useRef(false);
+
+  useEffect(() => {
+    const controllers = tentangUploadControllersRef.current;
+    return () => {
+      tentangUploadBatchCancelledRef.current = true;
+      controllers.forEach((ctrl) => ctrl.abort());
+      controllers.clear();
+    };
+  }, []);
+
+  const handleCancelTentangUpload = (tempId: string, fileName?: string) => {
+    const ctrl = tentangUploadControllersRef.current.get(tempId);
+    if (ctrl) {
+      ctrl.abort();
+      tentangUploadControllersRef.current.delete(tempId);
+    }
+    setTentangUploadingItems((prev) => prev.filter((u) => u.tempId !== tempId));
+    if (fileName) {
+      showToast(`Proses unggah "${fileName}" dibatalkan.`);
+    }
+  };
+
+  const cancelAllTentangUploads = () => {
+    tentangUploadBatchCancelledRef.current = true;
+    tentangUploadControllersRef.current.forEach((ctrl) => ctrl.abort());
+    tentangUploadControllersRef.current.clear();
+    setTentangUploadingItems([]);
+  };
 
   const handleTentangMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, mediaType: 'image' | 'video') => {
     const files: File[] = Array.from(e.target.files || []);
     e.target.value = '';
     if (files.length === 0) return;
 
+    tentangUploadBatchCancelledRef.current = false;
+
     for (const file of files) {
+      if (tentangUploadBatchCancelledRef.current) break;
       if (file.size > MAX_MEDIA_SIZE_BYTES) {
         showToast(`Ukuran berkas "${file.name}" terlalu besar! Maksimal ukuran adalah ${MAX_MEDIA_SIZE_MB} MB.`, true);
         continue;
@@ -437,22 +471,36 @@ export default function AdminView({
       }
 
       const tempId = `up_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const controller = new AbortController();
+      tentangUploadControllersRef.current.set(tempId, controller);
+
       setTentangUploadingItems((prev) => [
         ...prev,
         { tempId, type: mediaType, name: file.name, progress: 0 },
       ]);
 
       try {
-        const uploadedItem = await uploadTentangMedia(file, mediaType, (pct) => {
-          setTentangUploadingItems((prev) =>
-            prev.map((u) => (u.tempId === tempId ? { ...u, progress: pct } : u))
-          );
-        });
-        tentangSessionUploadedUrlsRef.current.push(uploadedItem.url);
-        setTentangFormMediaList((prev) => [...prev, uploadedItem]);
+        const uploadedItem = await uploadTentangMedia(
+          file,
+          mediaType,
+          (pct) => {
+            if (controller.signal.aborted) return;
+            setTentangUploadingItems((prev) =>
+              prev.map((u) => (u.tempId === tempId ? { ...u, progress: pct } : u))
+            );
+          },
+          controller.signal
+        );
+        if (!controller.signal.aborted) {
+          tentangSessionUploadedUrlsRef.current.push(uploadedItem.url);
+          setTentangFormMediaList((prev) => [...prev, uploadedItem]);
+        }
       } catch (err: any) {
-        showToast(err?.message || `Gagal mengunggah ${file.name}`, true);
+        if (!isUploadCancelledError(err)) {
+          showToast(err?.message || `Gagal mengunggah ${file.name}`, true);
+        }
       } finally {
+        tentangUploadControllersRef.current.delete(tempId);
         setTentangUploadingItems((prev) => prev.filter((u) => u.tempId !== tempId));
       }
     }
@@ -7345,13 +7393,24 @@ export default function AdminView({
                           )}
 
                           {uploadingPhotos.map((u) => (
-                            <div key={u.tempId} className="bg-white border border-slate-200 rounded-xl p-3 space-y-1.5">
-                              <div className="flex items-center justify-between text-[11px] font-bold text-black">
-                                <span className="flex items-center gap-1.5 truncate">
+                            <div key={u.tempId} className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                              <div className="flex items-center justify-between gap-2 text-[11px] font-bold text-black">
+                                <span className="flex items-center gap-1.5 min-w-0">
                                   <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0F2447] shrink-0" />
                                   <span className="truncate">Mengunggah foto: {u.name}</span>
                                 </span>
-                                <span className="font-mono text-[#0F2447] shrink-0">{u.progress}%</span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="font-mono text-[#0F2447]">{u.progress}%</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCancelTentangUpload(u.tempId, u.name)}
+                                    className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-black border border-slate-300 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
+                                    title="Batalkan proses unggah foto"
+                                  >
+                                    <X className="w-3 h-3" />
+                                    <span>Batalkan</span>
+                                  </button>
+                                </div>
                               </div>
                               <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                                 <div className="h-full bg-[#0F2447] transition-all duration-200" style={{ width: `${u.progress}%` }} />
@@ -7450,13 +7509,24 @@ export default function AdminView({
                           )}
 
                           {uploadingVideos.map((u) => (
-                            <div key={u.tempId} className="bg-white border border-slate-200 rounded-xl p-3 space-y-1.5">
-                              <div className="flex items-center justify-between text-[11px] font-bold text-black">
-                                <span className="flex items-center gap-1.5 truncate">
+                            <div key={u.tempId} className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                              <div className="flex items-center justify-between gap-2 text-[11px] font-bold text-black">
+                                <span className="flex items-center gap-1.5 min-w-0">
                                   <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0F2447] shrink-0" />
                                   <span className="truncate">Mengunggah video: {u.name}</span>
                                 </span>
-                                <span className="font-mono text-[#0F2447] shrink-0">{u.progress}%</span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="font-mono text-[#0F2447]">{u.progress}%</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCancelTentangUpload(u.tempId, u.name)}
+                                    className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-black border border-slate-300 rounded-md text-[10px] font-semibold flex items-center gap-1 cursor-pointer transition"
+                                    title="Batalkan proses unggah video"
+                                  >
+                                    <X className="w-3 h-3" />
+                                    <span>Batalkan</span>
+                                  </button>
+                                </div>
                               </div>
                               <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                                 <div className="h-full bg-[#0F2447] transition-all duration-200" style={{ width: `${u.progress}%` }} />
@@ -7560,6 +7630,7 @@ export default function AdminView({
                   <button
                     type="button"
                     onClick={() => {
+                      cancelAllTentangUploads();
                       tentangSessionUploadedUrlsRef.current.forEach((u) => {
                         deleteFirestoreMediaByUrl(u).catch(() => {});
                       });
